@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 
 class AddCardTheme {
   // ============================================================
@@ -15,16 +16,12 @@ class AddCardTheme {
 
   /// Background behind bank logo
   static Color bankTileBackground(BuildContext context) {
-    return _isDark(context)
-        ? const Color.fromARGB(255, 0, 0, 0)
-        : const Color.fromARGB(255, 255, 255, 255);
+    return SwalletPalette(_isDark(context)).surfaceLow;
   }
 
   /// Press / tap overlay (NEW, CANONICAL)
   static Color bankTileOverlay(BuildContext context) {
-    return _isDark(context)
-        ? const Color.fromARGB(28, 255, 255, 255)
-        : const Color.fromARGB(19, 255, 255, 255);
+    return SwalletPalette(_isDark(context)).primary.withValues(alpha: 0.08);
   }
 
   /// 🔁 BACKWARD COMPAT (old name)
@@ -34,16 +31,12 @@ class AddCardTheme {
 
   /// Tile stroke / border
   static Color bankTileStroke(BuildContext context) {
-    return _isDark(context)
-        ? const Color.fromARGB(255, 255, 255, 255)
-        : const Color.fromARGB(255, 255, 255, 255);
+    return SwalletPalette(_isDark(context)).outline;
   }
 
   /// Bank name under logo (NEW)
   static Color bankNameText(BuildContext context) {
-    return _isDark(context)
-        ? Colors.white70
-        : const Color.fromARGB(221, 255, 255, 255);
+    return SwalletPalette(_isDark(context)).textMuted;
   }
 
   // ============================================================
@@ -51,15 +44,11 @@ class AddCardTheme {
   // ============================================================
 
   static Color sectionBackground(BuildContext context) {
-    return _isDark(context)
-        ? const Color(0xFF1C1C1E)
-        : const Color.fromARGB(255, 0, 0, 0);
+    return SwalletPalette(_isDark(context)).surface;
   }
 
   static Color handleColor(BuildContext context) {
-    return _isDark(context)
-        ? Colors.white.withValues(alpha: 0.18)
-        : const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.12);
+    return SwalletPalette(_isDark(context)).outline.withValues(alpha: 0.72);
   }
 
   // ============================================================
@@ -68,9 +57,7 @@ class AddCardTheme {
 
   /// "Select Bank" title
   static Color selectBankTitle(BuildContext context) {
-    return _isDark(context)
-        ? const Color.fromARGB(255, 9, 9, 9).withValues(alpha: 0.9)
-        : const Color.fromARGB(255, 7, 7, 7);
+    return SwalletPalette(_isDark(context)).text;
   }
 
   /// Secondary action (e.g. see more)

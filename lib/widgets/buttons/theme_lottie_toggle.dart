@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import 'package:swallet/theme/swallet_theme.dart';
+
 class ThemeLottieToggle extends StatefulWidget {
   final bool isDark;
   final ValueChanged<bool> onChanged;
@@ -17,16 +19,14 @@ class ThemeLottieToggle extends StatefulWidget {
 
 class _ThemeLottieToggleState extends State<ThemeLottieToggle>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  // 🔑 SAFE RESTING PROGRESS VALUES FOR THIS LOTTIE
-  static const double _sunProgress = 0.0;
+  static const double _sunProgress = 0;
   static const double _moonProgress = 0.65;
+
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 520),
@@ -37,7 +37,6 @@ class _ThemeLottieToggleState extends State<ThemeLottieToggle>
   @override
   void didUpdateWidget(covariant ThemeLottieToggle oldWidget) {
     super.didUpdateWidget(oldWidget);
-
     if (widget.isDark != oldWidget.isDark) {
       _animateTo(widget.isDark);
     }
@@ -52,7 +51,7 @@ class _ThemeLottieToggleState extends State<ThemeLottieToggle>
   }
 
   void _onTap() {
-    final bool next = !widget.isDark;
+    final next = !widget.isDark;
     _animateTo(next);
     widget.onChanged(next);
   }
@@ -65,9 +64,7 @@ class _ThemeLottieToggleState extends State<ThemeLottieToggle>
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = widget.isDark
-        ? const Color(0xFF1D1E1E)
-        : const Color(0xFFF2F3F5);
+    final palette = SwalletPalette(widget.isDark);
 
     return GestureDetector(
       onTap: _onTap,
@@ -76,14 +73,21 @@ class _ThemeLottieToggleState extends State<ThemeLottieToggle>
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: palette.surfaceLow,
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: palette.primary.withValues(
+                alpha: widget.isDark ? 0.10 : 0.06,
+              ),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Center(
           child: Transform.scale(
-            // 🔥 THIS FIXES THE “ICON FEELS SMALL” PROBLEM
-            // Because the Lottie canvas has huge internal padding
-            scale: 1.6, // tweak between 1.4 → 1.8 if needed
+            scale: 1.58,
             child: Lottie.asset(
               'assets/lottie/theme/sun_moon_toggle.json',
               controller: _controller,

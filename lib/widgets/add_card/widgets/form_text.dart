@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 class FormText extends StatelessWidget {
@@ -53,10 +53,9 @@ class FormText extends StatelessWidget {
         inputFormatters: inputFormatters,
         onChanged: onChanged,
         cursorColor: tokens.primary,
-        style: GoogleFonts.roboto(
+        style: SwalletText.bodyMedium.copyWith(
           fontSize: 16,
           height: 1.25,
-          fontWeight: FontWeight.w500,
           color: tokens.onSurface,
         ),
         decoration: InputDecoration(
@@ -75,22 +74,20 @@ class FormText extends StatelessWidget {
                 ? tokens.primary
                 : tokens.onSurfaceVariant;
           }),
-          labelStyle: GoogleFonts.roboto(
+          labelStyle: SwalletText.bodyMedium.copyWith(
             color: tokens.onSurfaceVariant,
             fontSize: 14,
-            fontWeight: FontWeight.w500,
           ),
-          floatingLabelStyle: GoogleFonts.roboto(
+          floatingLabelStyle: SwalletText.section.copyWith(
             color: tokens.primary,
             fontSize: 13,
-            fontWeight: FontWeight.w600,
           ),
-          hintStyle: GoogleFonts.roboto(
+          hintStyle: SwalletText.body.copyWith(
             color: tokens.onSurfaceVariant.withValues(alpha: 0.72),
             fontSize: 16,
           ),
           filled: true,
-          fillColor: tokens.surfaceContainerHigh,
+          fillColor: tokens.surfaceContainer,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 18,
@@ -98,14 +95,14 @@ class FormText extends StatelessWidget {
           enabledBorder: OutlineInputBorder(
             borderRadius: tokens.controlRadius,
             borderSide: BorderSide(
-              color: tokens.outlineVariant,
+              color: tokens.outlineVariant.withValues(alpha: 0.64),
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: tokens.controlRadius,
             borderSide: BorderSide(
               color: tokens.primary,
-              width: 2,
+              width: 1.4,
             ),
           ),
         ),

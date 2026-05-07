@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -29,6 +28,7 @@ import '../utils/device_auth.dart';
 
 import '../data/local/card_repository.dart';
 import '../data/local/hive_boxes.dart';
+import '../theme/swallet_theme.dart';
 import '../utils/adaptive_layout.dart';
 import '../utils/card_share_helper.dart';
 
@@ -68,6 +68,8 @@ class HomeScreenState extends State<HomeScreen> {
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
+  bool get isPrimarySurfaceVisible => _sidePane == null;
+
   void cancelAllReveals() {
     if (_revealedCardId != null) {
       setState(() => _revealedCardId = null);
@@ -86,7 +88,9 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   bool _usesSidePane(BuildContext context) {
-    return !AdaptiveLayout.usesPhoneCanvas(MediaQuery.sizeOf(context).width);
+    return AdaptiveLayout.windowClassForWidth(
+            MediaQuery.sizeOf(context).width) ==
+        AdaptiveWindowClass.expanded;
   }
 
   void _closeSidePane() {
@@ -488,10 +492,11 @@ class HomeScreenState extends State<HomeScreen> {
         ),
     };
 
+    final palette = SwalletPalette(widget.isDark);
+
     return Material(
-      color: Colors.transparent,
-      elevation: 18,
-      shadowColor: Colors.black.withValues(alpha: 0.35),
+      color: palette.background,
+      elevation: 0,
       child: ClipRect(
         child: Navigator(
           key: _sidePaneNavigatorKey,
@@ -510,20 +515,65 @@ class HomeScreenState extends State<HomeScreen> {
     required List<CardData> allCards,
     required List<CardData> visibleCards,
   }) {
+    final palette = SwalletPalette(widget.isDark);
+
     return SafeArea(
       child: Column(
         children: [
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _adaptiveContentShell(
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/logo_44.svg',
-                    width: 40,
-                    height: 40,
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: palette.surfaceLow,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: palette.primary.withValues(
+                                alpha: widget.isDark ? 0.12 : 0.06,
+                              ),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: SvgPicture.asset(
+                          'assets/images/logo_44.svg',
+                          width: 34,
+                          height: 34,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Swallet',
+                            style: SwalletText.title.copyWith(
+                              color: palette.text,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isEmptyState
+                                ? 'Your digital card storage'
+                                : '${allCards.length} saved cards',
+                            style: SwalletText.caption.copyWith(
+                              color: palette.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -543,7 +593,7 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (!isEmptyState) ...[
             _adaptiveContentShell(
               TopNavBar(
@@ -567,10 +617,9 @@ class HomeScreenState extends State<HomeScreen> {
                 : visibleCards.isEmpty
                     ? Center(
                         child: Text(
-                          "No cards found",
-                          style: GoogleFonts.poppins(
-                            color: widget.isDark ? Colors.white : Colors.black,
-                            fontSize: 16,
+                          'No cards found',
+                          style: SwalletText.bodyMedium.copyWith(
+                            color: palette.textMuted,
                           ),
                         ),
                       )

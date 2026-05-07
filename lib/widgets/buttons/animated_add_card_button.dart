@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/haptics.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
@@ -54,9 +54,9 @@ class AnimatedAddCardButton extends StatelessWidget {
             borderRadius: tokens.pillRadius,
             boxShadow: [
               BoxShadow(
-                color: tokens.primary.withValues(alpha: isDark ? 0.26 : 0.22),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+                color: tokens.primary.withValues(alpha: isDark ? 0.28 : 0.18),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -95,11 +95,8 @@ class AnimatedAddCardButton extends StatelessWidget {
                                   softWrap: false,
                                   overflow: TextOverflow.clip,
                                   textScaler: TextScaler.noScaling,
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                  style: SwalletText.button.copyWith(
                                     color: tokens.onPrimary,
-                                    height: 1,
                                   ),
                                 ),
                               ),

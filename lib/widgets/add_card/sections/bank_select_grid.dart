@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../data/bank_assets.dart';
 import '../../../../../utils/bank_asset_resolver.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import '../widgets/bank_grid_item.dart';
 
@@ -97,8 +97,11 @@ class _NoBanksFound extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         decoration: BoxDecoration(
-          color: tokens.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(22),
+          color: tokens.surfaceContainer,
+          borderRadius: tokens.controlRadius,
+          border: Border.all(
+            color: tokens.outlineVariant.withValues(alpha: 0.64),
+          ),
         ),
         child: Row(
           children: [
@@ -112,10 +115,9 @@ class _NoBanksFound extends StatelessWidget {
                 query.isEmpty
                     ? 'No banks found'
                     : 'No banks found for "$query"',
-                style: GoogleFonts.roboto(
+                style: SwalletText.bodyMedium.copyWith(
                   color: tokens.onSurfaceVariant,
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

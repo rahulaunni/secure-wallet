@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'screens/home_screen.dart';
-import 'screens/app_unlock/pin_lock_screen.dart';
-
 import 'data/local/card_box_migration.dart';
 import 'data/local/hive_adapters.dart';
 import 'data/local/hive_boxes.dart';
-import 'utils/adaptive_layout.dart';
+import 'screens/app_unlock/pin_lock_screen.dart';
+import 'screens/home_screen.dart';
+import 'theme/swallet_theme.dart';
 import 'utils/hive_encryption.dart';
 import 'utils/security_store.dart';
+import 'utils/size_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,16 +46,15 @@ class CardVaultApp extends StatefulWidget {
 class _CardVaultAppState extends State<CardVaultApp>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const String _themeKey = 'is_dark';
-
-  bool _isDark = true; // Default to Dark
-  bool _isUnlocked = false; // Start Locked
-
-  bool _showBlur = false;
-  Timer? _backgroundLockTimer;
-
   static const Duration _lockDelay = Duration(seconds: 10);
 
+  bool _isDark = true;
+  bool _isUnlocked = false;
+  bool _showBlur = false;
+
+  Timer? _backgroundLockTimer;
   late final AnimationController _unlockController;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
 
   @override
@@ -64,14 +63,11 @@ class _CardVaultAppState extends State<CardVaultApp>
     WidgetsBinding.instance.addObserver(this);
 
     final settingsBox = Hive.box(HiveBoxes.settings);
-
-    // 🔧 FORCE DEFAULT TO DARK MODE
-    // If no preference is saved, set it to true (Dark)
     if (!settingsBox.containsKey(_themeKey)) {
       settingsBox.put(_themeKey, true);
       _isDark = true;
     } else {
-      _isDark = settingsBox.get(_themeKey);
+      _isDark = settingsBox.get(_themeKey) == true;
     }
 
     _unlockController = AnimationController(
@@ -88,21 +84,19 @@ class _CardVaultAppState extends State<CardVaultApp>
     super.dispose();
   }
 
-  // ================= APP LIFECYCLE =================
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 1. App inactive/hidden -> Show Blur
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden) {
       setState(() => _showBlur = true);
       return;
     }
 
-    // 2. App backgrounded -> Start Timer to Lock
     if (state == AppLifecycleState.paused) {
       _backgroundLockTimer?.cancel();
       _backgroundLockTimer = Timer(_lockDelay, () {
+        if (!mounted || !_isUnlocked || !_canLockFromCurrentSurface) return;
+
         _homeKey.currentState?.cancelAllReveals();
 
         setState(() {
@@ -113,34 +107,24 @@ class _CardVaultAppState extends State<CardVaultApp>
       return;
     }
 
-    // 3. App resumed -> Clear Blur
     if (state == AppLifecycleState.resumed) {
       _backgroundLockTimer?.cancel();
       setState(() => _showBlur = false);
-      return;
     }
   }
 
-  // ================= UNLOCK FLOW =================
+  bool get _canLockFromCurrentSurface {
+    final hasRouteAboveHome = _navigatorKey.currentState?.canPop() ?? false;
+    if (hasRouteAboveHome) return false;
+
+    return _homeKey.currentState?.isPrimarySurfaceVisible ?? true;
+  }
 
   void _handleAppUnlocked() {
     _unlockController.value = 1;
     setState(() => _isUnlocked = true);
   }
 
-  // ================= SCALING & THEME HELPERS =================
-
-  EdgeInsets _scalePadding(EdgeInsets original, double scale) {
-    if (scale == 0) return original;
-    return EdgeInsets.fromLTRB(
-      original.left / scale,
-      original.top / scale,
-      original.right / scale,
-      original.bottom / scale,
-    );
-  }
-
-  /// 🔒 Force Regular/Medium weights to override system "Bold Text"
   TextTheme _buildLockedTextTheme(TextTheme base) {
     final poppins = GoogleFonts.poppinsTextTheme(base);
     return poppins.copyWith(
@@ -166,113 +150,38 @@ class _CardVaultAppState extends State<CardVaultApp>
     );
   }
 
-  /// 🔒 Force Button styles
-  ElevatedButtonThemeData _buildButtonTheme(bool isDark) {
-    return ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.white,
-        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.black,
-        textStyle: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-          height: 1.0,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        minimumSize: const Size(120, 50),
-      ),
-    );
-  }
-
-  // ================= UI =================
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
-
-      // 🔒 THE PROJECTOR FIX: Forces 390px width layout
       builder: (context, child) {
+        SizeConfig.init(context);
         final mediaQuery = MediaQuery.of(context);
-        if (!AdaptiveLayout.usesPhoneCanvas(mediaQuery.size.width)) {
-          return MediaQuery(
-            data: mediaQuery.copyWith(
-              textScaler: TextScaler.noScaling,
-              boldText: false,
-            ),
-            child: child!,
-          );
-        }
-
-        const double designWidth = AdaptiveLayout.phoneDesignWidth;
-
-        final double scale = mediaQuery.size.width / designWidth;
-        final double scaledHeight = mediaQuery.size.height / scale;
-
-        final scaledPadding = _scalePadding(mediaQuery.padding, scale);
-        final scaledViewInsets = _scalePadding(mediaQuery.viewInsets, scale);
-        final scaledViewPadding = _scalePadding(mediaQuery.viewPadding, scale);
-
         return MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: TextScaler.noScaling,
             boldText: false,
-            devicePixelRatio: mediaQuery.devicePixelRatio * scale,
-            size: Size(designWidth, scaledHeight),
-            padding: scaledPadding,
-            viewInsets: scaledViewInsets,
-            viewPadding: scaledViewPadding,
           ),
-          child: FittedBox(
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: designWidth,
-              height: scaledHeight,
-              child: child!,
-            ),
-          ),
+          child: child ?? const SizedBox.shrink(),
         );
       },
-
       themeMode: _isDark ? ThemeMode.dark : ThemeMode.light,
-
-      // ✅ LIGHT THEME
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white,
-        fontFamily: GoogleFonts.poppins().fontFamily,
+      theme: SwalletTheme.theme(false).copyWith(
         textTheme: _buildLockedTextTheme(ThemeData.light().textTheme),
-        elevatedButtonTheme: _buildButtonTheme(false),
-        filledButtonTheme:
-            FilledButtonThemeData(style: _buildButtonTheme(false).style),
       ),
-
-      // ✅ DARK THEME
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        fontFamily: GoogleFonts.poppins().fontFamily,
+      darkTheme: SwalletTheme.theme(true).copyWith(
         textTheme: _buildLockedTextTheme(ThemeData.dark().textTheme),
-        elevatedButtonTheme: _buildButtonTheme(true),
-        filledButtonTheme:
-            FilledButtonThemeData(style: _buildButtonTheme(true).style),
       ),
-
       home: Scaffold(
         body: Stack(
           children: [
-            // ================= HOME =================
             AnimatedBuilder(
               animation: _unlockController,
               builder: (_, child) {
                 final scale = Tween<double>(
                   begin: 0.98,
-                  end: 1.0,
+                  end: 1,
                 ).animate(
                   CurvedAnimation(
                     parent: _unlockController,
@@ -288,14 +197,12 @@ class _CardVaultAppState extends State<CardVaultApp>
               child: HomeScreen(
                 key: _homeKey,
                 isDark: _isDark,
-                onThemeChanged: (v) {
-                  setState(() => _isDark = v);
-                  Hive.box(HiveBoxes.settings).put(_themeKey, v);
+                onThemeChanged: (value) {
+                  setState(() => _isDark = value);
+                  Hive.box(HiveBoxes.settings).put(_themeKey, value);
                 },
               ),
             ),
-
-            // ================= BLUR OVERLAY =================
             Positioned.fill(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
@@ -317,8 +224,6 @@ class _CardVaultAppState extends State<CardVaultApp>
                       ),
               ),
             ),
-
-            // ================= PIN LOCK SCREEN =================
             if (!_isUnlocked)
               Positioned.fill(
                 child: PinLockScreen(

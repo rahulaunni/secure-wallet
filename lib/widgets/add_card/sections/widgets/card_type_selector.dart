@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:swallet/models/card_type.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 class CardTypeSelector extends StatelessWidget {
@@ -20,13 +20,16 @@ class CardTypeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(isDark);
+    const outerRadius = 16.0;
+    const innerPadding = 4.0;
+    const innerRadius = outerRadius - innerPadding;
 
     return Container(
       height: 52,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(innerPadding),
       decoration: BoxDecoration(
-        color: tokens.surfaceContainerHigh,
-        borderRadius: tokens.pillRadius,
+        color: tokens.surfaceContainer,
+        borderRadius: BorderRadius.circular(outerRadius),
       ),
       child: Row(
         children: [
@@ -35,6 +38,7 @@ class CardTypeSelector extends StatelessWidget {
             icon: CupertinoIcons.creditcard,
             selected: selected == CardType.credit,
             tokens: tokens,
+            radius: innerRadius,
             onTap: () => onChanged(CardType.credit),
           ),
           const SizedBox(width: 6),
@@ -43,6 +47,7 @@ class CardTypeSelector extends StatelessWidget {
             icon: CupertinoIcons.creditcard_fill,
             selected: selected == CardType.debit,
             tokens: tokens,
+            radius: innerRadius,
             onTap: () => onChanged(CardType.debit),
           ),
         ],
@@ -56,6 +61,7 @@ class _CardTypeChip extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final AddCardMaterialTokens tokens;
+  final double radius;
   final VoidCallback onTap;
 
   const _CardTypeChip({
@@ -63,6 +69,7 @@ class _CardTypeChip extends StatelessWidget {
     required this.icon,
     required this.selected,
     required this.tokens,
+    required this.radius,
     required this.onTap,
   });
 
@@ -71,17 +78,17 @@ class _CardTypeChip extends StatelessWidget {
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        borderRadius: tokens.pillRadius,
+        borderRadius: BorderRadius.circular(radius),
         child: InkWell(
           onTap: onTap,
-          borderRadius: tokens.pillRadius,
+          borderRadius: BorderRadius.circular(radius),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             height: double.infinity,
             decoration: BoxDecoration(
               color: selected ? tokens.primaryContainer : Colors.transparent,
-              borderRadius: tokens.pillRadius,
+              borderRadius: BorderRadius.circular(radius),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -100,9 +107,8 @@ class _CardTypeChip extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: GoogleFonts.roboto(
+                  style: SwalletText.bodyMedium.copyWith(
                     fontSize: 14,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected
                         ? tokens.onPrimaryContainer
                         : tokens.onSurfaceVariant,

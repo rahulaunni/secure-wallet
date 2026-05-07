@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+
+import 'package:swallet/theme/swallet_theme.dart';
 
 class SettingsButton extends StatefulWidget {
   final bool isDark;
@@ -42,32 +43,41 @@ class _SettingsButtonState extends State<SettingsButton>
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AddCardMaterialTokens(widget.isDark);
+    final palette = SwalletPalette(widget.isDark);
 
-    return Material(
-      color: tokens.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(
-          color: tokens.outlineVariant.withValues(alpha: 0.45),
-        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: palette.surfaceLow,
+        boxShadow: [
+          BoxShadow(
+            color:
+                palette.primary.withValues(alpha: widget.isDark ? 0.10 : 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: RotationTransition(
-              turns: CurvedAnimation(
-                parent: _controller,
-                curve: Curves.easeOutBack,
-              ),
-              child: Icon(
-                CupertinoIcons.settings,
-                color: tokens.onSurfaceVariant,
-                size: 23,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: RotationTransition(
+                turns: CurvedAnimation(
+                  parent: _controller,
+                  curve: Curves.easeOutBack,
+                ),
+                child: Icon(
+                  CupertinoIcons.settings,
+                  color: palette.text,
+                  size: 22,
+                ),
               ),
             ),
           ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:swallet/data/bank_assets.dart';
+import 'package:swallet/theme/swallet_theme.dart';
+import 'package:swallet/utils/size_config.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 import 'bank_selection_container.dart';
@@ -45,6 +46,7 @@ class _BankSelectionSectionState extends State<BankSelectionSection> {
   @override
   Widget build(BuildContext context) {
     final isDark = _isDark(context);
+    final tokens = AddCardMaterialTokens(isDark);
     final countryMenuMaxHeight = MediaQuery.of(context).size.height * 0.40;
 
     return BankSelectionContainer(
@@ -58,8 +60,8 @@ class _BankSelectionSectionState extends State<BankSelectionSection> {
             height: 4,
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color.fromARGB(46, 255, 255, 255)
-                  : const Color.fromARGB(40, 0, 0, 0),
+                  ? tokens.outlineVariant.withValues(alpha: 0.72)
+                  : tokens.outlineVariant.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -71,10 +73,8 @@ class _BankSelectionSectionState extends State<BankSelectionSection> {
             child: Text(
               'Choose a bank',
               textAlign: TextAlign.center,
-              style: GoogleFonts.roboto(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AddCardMaterialTokens(isDark).onSurface,
+              style: SwalletText.bodyMedium.copyWith(
+                color: tokens.onSurface,
               ),
             ),
           ),
@@ -145,33 +145,40 @@ class _BankSearchField extends StatelessWidget {
     final tokens = AddCardMaterialTokens(isDark);
 
     return SizedBox(
-      height: 52,
+      height: w(56),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         cursorColor: tokens.primary,
-        style: GoogleFonts.roboto(
+        style: SwalletText.bodyMedium.copyWith(
           color: tokens.onSurface,
           fontSize: 15,
-          fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           filled: true,
-          fillColor: tokens.surfaceContainerHigh,
+          fillColor: tokens.surfaceContainer,
           prefixIcon: Icon(
             CupertinoIcons.search,
             color: tokens.onSurfaceVariant,
-            size: 22,
+            size: w(24),
           ),
           hintText: 'Search bank',
-          hintStyle: GoogleFonts.roboto(
+          hintStyle: SwalletText.body.copyWith(
             color: tokens.onSurfaceVariant,
-            fontSize: 15,
+            fontSize: sp(14),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: EdgeInsets.symmetric(horizontal: w(16)),
           border: OutlineInputBorder(
-            borderRadius: tokens.pillRadius,
+            borderRadius: BorderRadius.circular(r(16)),
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(r(16)),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(r(16)),
+            borderSide: BorderSide(color: tokens.primary, width: 1.4),
           ),
         ),
       ),
@@ -226,12 +233,8 @@ class _CountrySelectorState extends State<_CountrySelector>
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeInOutCubic,
       decoration: BoxDecoration(
-        color: tokens.surfaceContainerHigh,
-        borderRadius: tokens.controlRadius,
-        border: Border.all(
-          color: _isExpanded ? tokens.primary : Colors.transparent,
-          width: _isExpanded ? 2 : 1,
-        ),
+        color: tokens.surfaceContainer,
+        borderRadius: BorderRadius.circular(r(16)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -239,21 +242,22 @@ class _CountrySelectorState extends State<_CountrySelector>
           GestureDetector(
             onTap: _toggle,
             behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            child: SizedBox(
+              height: w(56),
               child: Row(
                 children: [
+                  SizedBox(width: w(16)),
                   _CountryFlag(country: _selectedCountry),
-                  const SizedBox(width: 10),
+                  SizedBox(width: w(10)),
                   Expanded(
                     child: Text(
                       _selectedCountry.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.roboto(
+                      style: SwalletText.bodyMedium.copyWith(
                         color: tokens.onSurface,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                        fontSize: sp(14),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -265,8 +269,10 @@ class _CountrySelectorState extends State<_CountrySelector>
                       color: _isExpanded
                           ? tokens.primary
                           : tokens.onSurfaceVariant,
+                      size: w(24),
                     ),
                   ),
+                  SizedBox(width: w(12)),
                 ],
               ),
             ),
@@ -283,11 +289,14 @@ class _CountrySelectorState extends State<_CountrySelector>
                         maxHeight: widget.maxMenuHeight,
                       ),
                       child: SingleChildScrollView(
+                        padding: EdgeInsets.only(bottom: w(8)),
                         child: Column(
                           children: [
                             Divider(
-                              height: 1,
-                              color: tokens.outlineVariant,
+                              height: w(1),
+                              thickness: w(1),
+                              color:
+                                  tokens.outlineVariant.withValues(alpha: 0.64),
                             ),
                             ...widget.countries.map((country) {
                               final isSelected = country.id == widget.value;
@@ -296,25 +305,25 @@ class _CountrySelectorState extends State<_CountrySelector>
                                 onTap: () => _select(country),
                                 child: Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: w(16),
+                                    vertical: w(12),
                                   ),
                                   color: isSelected
-                                      ? tokens.primaryContainer
+                                      ? tokens.primary.withValues(alpha: 0.10)
                                       : Colors.transparent,
                                   child: Row(
                                     children: [
                                       _CountryFlag(country: country),
-                                      const SizedBox(width: 10),
+                                      SizedBox(width: w(10)),
                                       Expanded(
                                         child: Text(
                                           country.label,
-                                          style: GoogleFonts.roboto(
+                                          style: SwalletText.body.copyWith(
                                             color: isSelected
-                                                ? tokens.onPrimaryContainer
+                                                ? tokens.primary
                                                 : tokens.onSurface,
-                                            fontSize: 14,
+                                            fontSize: sp(12),
                                             fontWeight: isSelected
                                                 ? FontWeight.w600
                                                 : FontWeight.w400,
@@ -324,7 +333,7 @@ class _CountrySelectorState extends State<_CountrySelector>
                                       if (isSelected)
                                         Icon(
                                           CupertinoIcons.check_mark,
-                                          size: 16,
+                                          size: w(16),
                                           color: tokens.primary,
                                         ),
                                     ],
@@ -358,8 +367,8 @@ class _CountryFlag extends StatelessWidget {
       borderRadius: BorderRadius.circular(3),
       child: SvgPicture.asset(
         country.flagAsset,
-        width: 24,
-        height: 16,
+        width: w(24),
+        height: w(16),
         fit: BoxFit.cover,
       ),
     );

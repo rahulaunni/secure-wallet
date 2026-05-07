@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/card_number_format.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
@@ -55,7 +56,7 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
           fontSize: 16,
           height: 1.25,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.2,
+          letterSpacing: 0,
           color: tokens.onSurface,
         ),
         decoration: InputDecoration(
@@ -76,46 +77,44 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
                     widthFactor: 1,
                     child: Text(
                       'AMEX',
-                      style: GoogleFonts.roboto(
+                      style: SwalletText.section.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
                         color: tokens.primary,
-                        letterSpacing: 0.4,
                       ),
                     ),
                   ),
                 )
               : null,
-          labelStyle: GoogleFonts.roboto(
+          labelStyle: SwalletText.bodyMedium.copyWith(
             color: tokens.onSurfaceVariant,
             fontSize: 14,
-            fontWeight: FontWeight.w500,
           ),
-          floatingLabelStyle: GoogleFonts.roboto(
+          floatingLabelStyle: SwalletText.section.copyWith(
             color: tokens.primary,
             fontSize: 13,
-            fontWeight: FontWeight.w600,
           ),
           hintStyle: GoogleFonts.robotoMono(
             color: tokens.onSurfaceVariant.withValues(alpha: 0.62),
             fontSize: 15,
-            letterSpacing: 0.2,
+            letterSpacing: 0,
           ),
           filled: true,
-          fillColor: tokens.surfaceContainerHigh,
+          fillColor: tokens.surfaceContainer,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
             vertical: 18,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: tokens.controlRadius,
-            borderSide: BorderSide(color: tokens.outlineVariant),
+            borderSide: BorderSide(
+              color: tokens.outlineVariant.withValues(alpha: 0.64),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: tokens.controlRadius,
             borderSide: BorderSide(
               color: tokens.primary,
-              width: 2,
+              width: 1.4,
             ),
           ),
         ),

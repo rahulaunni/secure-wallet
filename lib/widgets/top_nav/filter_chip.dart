@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+
+import 'package:swallet/theme/swallet_theme.dart';
 
 import 'top_nav_constants.dart';
 
@@ -30,7 +30,6 @@ class FilterChipItem extends StatefulWidget {
 class _FilterChipItemState extends State<FilterChipItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _dotSizeAnimation;
   late Animation<Color?> _bgColorAnimation;
   late Animation<Color?> _borderColorAnimation;
   late Animation<Color?> _textColorAnimation;
@@ -67,13 +66,13 @@ class _FilterChipItemState extends State<FilterChipItem>
   }
 
   void _setupAnimations() {
-    final tokens = AddCardMaterialTokens(widget.isDark);
-    final activeBg = tokens.primaryContainer;
-    final inactiveBg = tokens.surfaceContainer;
-    final activeStroke = tokens.primary.withValues(alpha: 0.34);
-    final inactiveStroke = tokens.outlineVariant.withValues(alpha: 0.45);
-    final activeText = tokens.onPrimaryContainer;
-    final inactiveText = tokens.onSurfaceVariant;
+    final palette = SwalletPalette(widget.isDark);
+    final activeBg = palette.surfaceHigh;
+    final inactiveBg = palette.background;
+    final activeStroke = activeBg;
+    final inactiveStroke = palette.outline.withValues(alpha: 0.90);
+    final activeText = palette.text;
+    final inactiveText = palette.text;
 
     _bgColorAnimation = ColorTween(begin: inactiveBg, end: activeBg)
         .animate(CurvedAnimation(parent: _controller, curve: chipAnimCurve));
@@ -83,11 +82,6 @@ class _FilterChipItemState extends State<FilterChipItem>
 
     _textColorAnimation = ColorTween(begin: inactiveText, end: activeText)
         .animate(CurvedAnimation(parent: _controller, curve: chipAnimCurve));
-
-    _dotSizeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0, 1, curve: Curves.easeOutCubic),
-    );
   }
 
   @override
@@ -98,16 +92,16 @@ class _FilterChipItemState extends State<FilterChipItem>
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AddCardMaterialTokens(widget.isDark);
+    final palette = SwalletPalette(widget.isDark);
 
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(chipHeight / 2),
+        borderRadius: BorderRadius.circular(chipRadius),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(chipHeight / 2),
+          borderRadius: BorderRadius.circular(chipRadius),
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -119,7 +113,7 @@ class _FilterChipItemState extends State<FilterChipItem>
                 ),
                 decoration: BoxDecoration(
                   color: _bgColorAnimation.value,
-                  borderRadius: BorderRadius.circular(chipHeight / 2),
+                  borderRadius: BorderRadius.circular(chipRadius),
                   border: Border.all(
                     color: _borderColorAnimation.value!,
                     width: chipBorderWidth,
@@ -129,46 +123,22 @@ class _FilterChipItemState extends State<FilterChipItem>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizeTransition(
-                      sizeFactor: _dotSizeAnimation,
-                      axis: Axis.horizontal,
-                      axisAlignment: -1,
-                      child: SizedBox(
-                        height: chipHeight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: chipDotSize,
-                              height: chipDotSize,
-                              decoration: BoxDecoration(
-                                color: tokens.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: chipDotSpacing),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Text(
-                      widget.label,
-                      style: GoogleFonts.roboto(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _textColorAnimation.value,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     SvgPicture.asset(
                       widget.iconPath,
                       width: chipIconSize,
                       height: chipIconSize,
                       colorFilter: ColorFilter.mode(
-                        widget.isActive
-                            ? tokens.onPrimaryContainer
-                            : widget.iconColor.withValues(alpha: 0.86),
+                        _textColorAnimation.value ?? palette.text,
                         BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.label,
+                      style: SwalletText.body.copyWith(
+                        color: _textColorAnimation.value,
+                        fontWeight:
+                            widget.isActive ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
                   ],

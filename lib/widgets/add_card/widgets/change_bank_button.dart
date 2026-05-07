@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // ✅ Added Import
+import 'package:swallet/theme/swallet_theme.dart';
+import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 class CardTypeSelector extends StatelessWidget {
   final String value;
@@ -13,35 +14,50 @@ class CardTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: ['Credit', 'Debit'].map((type) {
-        final selected = value == type;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = AddCardMaterialTokens(isDark);
+    const outerRadius = 16.0;
+    const innerPadding = 4.0;
+    const innerRadius = outerRadius - innerPadding;
 
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => onChanged(type),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade200,
-              ),
-              child: Text(
-                type,
-                textAlign: TextAlign.center,
-                // ✅ UPDATED TO POPPINS
-                style: GoogleFonts.poppins(
-                  color: selected ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.w600,
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.all(innerPadding),
+      decoration: BoxDecoration(
+        color: tokens.surfaceContainer,
+        borderRadius: BorderRadius.circular(outerRadius),
+      ),
+      child: Row(
+        children: ['Credit', 'Debit'].map((type) {
+          final selected = value == type;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: Material(
+                color: selected ? tokens.primaryContainer : Colors.transparent,
+                borderRadius: BorderRadius.circular(innerRadius),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => onChanged(type),
+                  borderRadius: BorderRadius.circular(innerRadius),
+                  child: Center(
+                    child: Text(
+                      type,
+                      textAlign: TextAlign.center,
+                      style: SwalletText.bodyMedium.copyWith(
+                        color: selected
+                            ? tokens.onPrimaryContainer
+                            : tokens.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }

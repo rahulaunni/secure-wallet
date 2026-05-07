@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
+import 'package:swallet/theme/swallet_theme.dart';
+import 'package:swallet/utils/size_config.dart';
 import 'package:swallet/utils/security_store.dart';
-import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+import 'package:swallet/widgets/app_lock/security_question_form_widgets.dart';
 
 class SecuritySetupScreen extends StatefulWidget {
   final bool isDark;
@@ -30,26 +31,39 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
   bool _canCheckBiometrics = false;
 
   final List<String> _questions = [
-    "What is your mother's maiden name?",
-    "What was the name of your first pet?",
-    "What city were you born in?",
-    "What is your favorite food?",
-    "What was the model of your first car?",
-    "What is the name of your favorite teacher?",
+    'What was your first school name?',
+    'What is your mother\'s maiden name?',
+    'What was your childhood nickname?',
+    'What was your first pet\'s name?',
+    'What city were you born in?',
   ];
+
+  bool get _canSave {
+    return _q1 != null &&
+        _q2 != null &&
+        _q1 != _q2 &&
+        _a1Ctrl.text.trim().isNotEmpty &&
+        _a2Ctrl.text.trim().isNotEmpty;
+  }
 
   @override
   void initState() {
     super.initState();
+    _a1Ctrl.addListener(_handleTextChanged);
+    _a2Ctrl.addListener(_handleTextChanged);
     _checkBiometricAvailability();
   }
 
   @override
   void dispose() {
+    _a1Ctrl.removeListener(_handleTextChanged);
+    _a2Ctrl.removeListener(_handleTextChanged);
     _a1Ctrl.dispose();
     _a2Ctrl.dispose();
     super.dispose();
   }
+
+  void _handleTextChanged() => setState(() {});
 
   Future<void> _checkBiometricAvailability() async {
     final auth = LocalAuthentication();
@@ -62,8 +76,6 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
   }
 
   Future<void> _handleSave() async {
-    if (!_formKey.currentState!.validate()) return;
-
     if (_q1 == null || _q2 == null) {
       _showError('Please select both security questions');
       return;
@@ -73,6 +85,8 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
       _showError('Please select two different questions');
       return;
     }
+
+    if (!_canSave || !(_formKey.currentState?.validate() ?? false)) return;
 
     final box = Hive.box(HiveBoxes.settings);
 
@@ -92,7 +106,10 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.roboto()),
+        content: Text(
+          message,
+          style: SwalletText.body.copyWith(color: Colors.white),
+        ),
         backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
       ),
@@ -101,115 +118,79 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AddCardMaterialTokens(widget.isDark);
+    final style = SecurityQuestionFormStyle(isDark: widget.isDark);
 
     return Scaffold(
-      backgroundColor: tokens.surface,
+      backgroundColor: style.background,
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+            padding: EdgeInsets.symmetric(
+              horizontal: w(24),
+              vertical: w(16),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: tokens.primaryContainer,
-                          borderRadius: BorderRadius.circular(22),
-                        ),
-                        child: Icon(
-                          CupertinoIcons.shield_fill,
-                          color: tokens.onPrimaryContainer,
-                          size: 30,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Security setup',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.roboto(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Add recovery questions for PIN reset.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.roboto(
-                          color: tokens.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                SecurityQuestionBackButton(style: style),
+                SizedBox(height: w(20)),
+                SecurityQuestionHeading(
+                  title: 'Security Questions',
+                  subtitle: 'Answer your security questions to set your PIN.',
+                  style: style,
                 ),
-                const SizedBox(height: 34),
-                _buildSectionLabel('Question 1', tokens),
-                const SizedBox(height: 12),
-                ExpandableQuestionSelector(
+                SizedBox(height: h(64)),
+                SecurityQuestionLabel(
+                  text: 'Select Question 1',
+                  style: style,
+                ),
+                SizedBox(height: w(8)),
+                SecurityQuestionSelector(
                   value: _q1,
                   items: _questions,
                   hint: 'Select first question',
-                  tokens: tokens,
+                  style: style,
                   onChanged: (v) => setState(() => _q1 = v),
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
+                SizedBox(height: w(8)),
+                SecurityAnswerField(
                   controller: _a1Ctrl,
-                  hint: 'Answer',
-                  tokens: tokens,
+                  hintText: 'Answer',
+                  style: style,
+                  validator: (v) => v!.trim().isEmpty ? 'Required' : null,
                 ),
-                const SizedBox(height: 28),
-                _buildSectionLabel('Question 2', tokens),
-                const SizedBox(height: 12),
-                ExpandableQuestionSelector(
+                SizedBox(height: w(32)),
+                SecurityQuestionLabel(
+                  text: 'Select Question 2',
+                  style: style,
+                ),
+                SizedBox(height: w(8)),
+                SecurityQuestionSelector(
                   value: _q2,
                   items: _questions,
                   hint: 'Select second question',
-                  tokens: tokens,
+                  style: style,
                   onChanged: (v) => setState(() => _q2 = v),
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
+                SizedBox(height: w(8)),
+                SecurityAnswerField(
                   controller: _a2Ctrl,
-                  hint: 'Answer',
-                  tokens: tokens,
+                  hintText: 'Answer',
+                  style: style,
+                  validator: (v) => v!.trim().isEmpty ? 'Required' : null,
                 ),
                 if (_canCheckBiometrics) ...[
-                  const SizedBox(height: 30),
-                  _buildBiometricTile(tokens),
+                  SizedBox(height: w(32)),
+                  _buildBiometricTile(style),
                 ],
-                const SizedBox(height: 36),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: _handleSave,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: tokens.primary,
-                      foregroundColor: tokens.onPrimary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: tokens.pillRadius,
-                      ),
-                    ),
-                    child: Text(
-                      'Save setup',
-                      style: GoogleFonts.roboto(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                SizedBox(height: w(40)),
+                SecurityQuestionPrimaryButton(
+                  label: 'Save Setup',
+                  onPressed: _canSave ? _handleSave : null,
+                  style: style,
                 ),
+                SizedBox(height: w(40)),
               ],
             ),
           ),
@@ -218,100 +199,51 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
     );
   }
 
-  Widget _buildSectionLabel(String text, AddCardMaterialTokens tokens) {
-    return Text(
-      text.toUpperCase(),
-      style: GoogleFonts.roboto(
-        color: tokens.primary,
-        fontSize: 12,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.4,
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required AddCardMaterialTokens tokens,
-  }) {
-    return TextFormField(
-      controller: controller,
-      style: GoogleFonts.roboto(color: tokens.onSurface, fontSize: 15),
-      cursorColor: tokens.primary,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: tokens.surfaceContainer,
-        hintText: hint,
-        hintStyle: GoogleFonts.roboto(
-          color: tokens.onSurfaceVariant,
-          fontSize: 15,
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: tokens.controlRadius,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: tokens.controlRadius,
-          borderSide: BorderSide(color: tokens.primary, width: 1.2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: tokens.controlRadius,
-          borderSide: const BorderSide(color: Colors.redAccent, width: 1.2),
-        ),
-      ),
-      validator: (v) => v!.trim().isEmpty ? 'Required' : null,
-    );
-  }
-
-  Widget _buildBiometricTile(AddCardMaterialTokens tokens) {
+  Widget _buildBiometricTile(SecurityQuestionFormStyle style) {
     return Material(
-      color: tokens.surfaceContainer,
-      borderRadius: tokens.containerRadius,
+      color: style.fieldFill,
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(r(16)),
+      ),
       child: InkWell(
         onTap: () => setState(() => _useBiometrics = !_useBiometrics),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: w(16), vertical: w(12)),
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: w(40),
+                height: w(40),
                 decoration: BoxDecoration(
                   color: _useBiometrics
-                      ? tokens.primaryContainer
-                      : tokens.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(15),
+                      ? style.accentColor.withValues(alpha: 0.10)
+                      : style.background,
+                  borderRadius: BorderRadius.circular(r(16)),
                 ),
                 child: Icon(
                   CupertinoIcons.person_crop_circle_fill,
-                  color: _useBiometrics
-                      ? tokens.onPrimaryContainer
-                      : tokens.onSurfaceVariant,
+                  color:
+                      _useBiometrics ? style.accentColor : style.subtitleColor,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: w(16)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Use biometrics',
-                      style: GoogleFonts.roboto(
-                        color: tokens.onSurface,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                      style: style.body.copyWith(
+                        color: style.bodyTextColor,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: w(2)),
                     Text(
                       'Unlock faster with fingerprint or face unlock',
-                      style: GoogleFonts.roboto(
-                        color: tokens.onSurfaceVariant,
-                        fontSize: 12,
+                      style: style.caption.copyWith(
+                        color: style.subtitleColor,
                       ),
                     ),
                   ],
@@ -319,177 +251,15 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
               ),
               Switch(
                 value: _useBiometrics,
-                activeThumbColor: tokens.onPrimary,
-                activeTrackColor: tokens.primary,
-                inactiveThumbColor: tokens.onSurfaceVariant,
-                inactiveTrackColor: tokens.surfaceContainerHighest,
+                activeThumbColor: Colors.white,
+                activeTrackColor: style.accentColor,
+                inactiveThumbColor: style.bodyTextColor,
+                inactiveTrackColor: style.fieldBorder,
                 onChanged: (value) => setState(() => _useBiometrics = value),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class ExpandableQuestionSelector extends StatefulWidget {
-  final String? value;
-  final List<String> items;
-  final String hint;
-  final AddCardMaterialTokens tokens;
-  final ValueChanged<String> onChanged;
-
-  const ExpandableQuestionSelector({
-    super.key,
-    required this.value,
-    required this.items,
-    required this.hint,
-    required this.tokens,
-    required this.onChanged,
-  });
-
-  @override
-  State<ExpandableQuestionSelector> createState() =>
-      _ExpandableQuestionSelectorState();
-}
-
-class _ExpandableQuestionSelectorState
-    extends State<ExpandableQuestionSelector> {
-  bool _isExpanded = false;
-
-  void _select(String item) {
-    widget.onChanged(item);
-    setState(() => _isExpanded = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = widget.tokens;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeInOutCubic,
-      decoration: BoxDecoration(
-        color: tokens.surfaceContainer,
-        borderRadius: tokens.controlRadius,
-        border: Border.all(
-          color: _isExpanded
-              ? tokens.primary
-              : tokens.outlineVariant.withValues(alpha: 0.35),
-          width: _isExpanded ? 1.2 : 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: tokens.controlRadius,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.value ?? widget.hint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.roboto(
-                        color: widget.value == null
-                            ? tokens.onSurfaceVariant
-                            : tokens.onSurface,
-                        fontSize: 15,
-                        fontWeight: widget.value == null
-                            ? FontWeight.w400
-                            : FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: _isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 260),
-                    child: Icon(
-                      CupertinoIcons.chevron_down,
-                      color: _isExpanded
-                          ? tokens.primary
-                          : tokens.onSurfaceVariant,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              height: _isExpanded ? null : 0,
-              child: _isExpanded
-                  ? ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 240),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Divider(
-                              height: 1,
-                              color: tokens.outlineVariant.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            ...widget.items.map((item) {
-                              final isSelected = item == widget.value;
-                              return InkWell(
-                                onTap: () => _select(item),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 13,
-                                  ),
-                                  color: isSelected
-                                      ? tokens.primaryContainer
-                                      : Colors.transparent,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item,
-                                          style: GoogleFonts.roboto(
-                                            color: isSelected
-                                                ? tokens.onPrimaryContainer
-                                                : tokens.onSurface,
-                                            fontSize: 14,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w400,
-                                          ),
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        Icon(
-                                          CupertinoIcons.check_mark,
-                                          size: 17,
-                                          color: tokens.onPrimaryContainer,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ),
-        ],
       ),
     );
   }

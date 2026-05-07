@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 class AddCardCTAButton extends StatelessWidget {
@@ -40,12 +40,7 @@ class AddCardCTAButton extends StatelessWidget {
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: tokens.pillRadius),
           ),
-          textStyle: WidgetStatePropertyAll(
-            GoogleFonts.roboto(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          textStyle: WidgetStatePropertyAll(SwalletText.button),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+
+import 'package:swallet/theme/swallet_theme.dart';
+import 'package:swallet/utils/size_config.dart';
 
 class CustomBackButton extends StatefulWidget {
   final bool isDark;
@@ -61,29 +62,32 @@ class _CustomBackButtonState extends State<CustomBackButton>
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AddCardMaterialTokens(widget.isDark);
+    final palette = SwalletPalette(widget.isDark);
 
-    return Material(
-      color: tokens.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(
-          color: tokens.outlineVariant.withValues(alpha: 0.45),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _handleTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: SlideTransition(
-              position: _offsetAnimation,
-              child: Icon(
-                CupertinoIcons.chevron_left,
-                color: tokens.onSurfaceVariant,
-                size: 22,
+    return Semantics(
+      button: true,
+      label: 'Back',
+      child: Tooltip(
+        message: 'Back',
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(r(16)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _handleTap,
+            borderRadius: BorderRadius.circular(r(16)),
+            child: SizedBox(
+              width: w(40),
+              height: w(40),
+              child: Center(
+                child: SlideTransition(
+                  position: _offsetAnimation,
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: palette.text,
+                    size: w(24),
+                  ),
+                ),
               ),
             ),
           ),

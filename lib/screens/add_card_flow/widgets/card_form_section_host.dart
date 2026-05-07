@@ -22,13 +22,18 @@ class CardFormSectionHost extends StatelessWidget {
         color: tokens.surface,
         borderRadius: tokens.containerRadius,
         border: Border.all(
-          color: tokens.outlineVariant.withValues(alpha: isDark ? 0.24 : 0.55),
+          color: tokens.outlineVariant.withValues(alpha: 0.64),
         ),
         boxShadow: [
           BoxShadow(
-            color: tokens.scrim,
+            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.10),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+          BoxShadow(
+            color: tokens.primary.withValues(alpha: isDark ? 0.08 : 0.04),
             blurRadius: 24,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 4),
           ),
         ],
       ),

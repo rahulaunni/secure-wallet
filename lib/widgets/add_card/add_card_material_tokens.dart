@@ -1,38 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 
 class AddCardMaterialTokens {
   final bool isDark;
 
   const AddCardMaterialTokens(this.isDark);
 
-  Color get primary =>
-      isDark ? const Color(0xFFADC6FF) : const Color(0xFF315DA8);
-  Color get onPrimary => isDark ? const Color(0xFF082F6F) : Colors.white;
-  Color get primaryContainer =>
-      isDark ? const Color(0xFF244B8F) : const Color(0xFFD7E2FF);
-  Color get onPrimaryContainer =>
-      isDark ? const Color(0xFFD7E2FF) : const Color(0xFF001B3F);
+  SwalletPalette get _palette => SwalletPalette(isDark);
 
-  Color get surface =>
-      isDark ? const Color(0xFF111318) : const Color(0xFFFCFBFF);
-  Color get surfaceContainer =>
-      isDark ? const Color(0xFF1B1B20) : const Color(0xFFF1F3F9);
+  Color get primary => _palette.primary;
+  Color get onPrimary => _palette.onPrimary;
+  Color get primaryContainer => _palette.primaryContainer;
+  Color get onPrimaryContainer => _palette.onPrimaryContainer;
+
+  Color get surface => _palette.background;
+  Color get surfaceContainer => _palette.surfaceLow;
   Color get surfaceContainerHigh =>
-      isDark ? const Color(0xFF25262C) : const Color(0xFFE9ECF4);
-  Color get surfaceContainerHighest =>
-      isDark ? const Color(0xFF303138) : const Color(0xFFE2E6EF);
-  Color get onSurface =>
-      isDark ? const Color(0xFFE4E2E9) : const Color(0xFF1B1B20);
-  Color get onSurfaceVariant =>
-      isDark ? const Color(0xFFC5C6D0) : const Color(0xFF45464F);
-  Color get outline =>
-      isDark ? const Color(0xFF8F909A) : const Color(0xFF747780);
-  Color get outlineVariant =>
-      isDark ? const Color(0xFF45464F) : const Color(0xFFC5C6D0);
+      isDark ? const Color(0xFF141414) : const Color(0xFFEAEAEA);
+  Color get surfaceContainerHighest => _palette.surfaceHigh;
+  Color get onSurface => _palette.text;
+  Color get onSurfaceVariant => _palette.textMuted;
+  Color get outline => _palette.textMuted;
+  Color get outlineVariant => _palette.outline;
 
-  Color get scrim => Colors.black.withValues(alpha: isDark ? 0.36 : 0.08);
+  Color get scrim => Colors.black.withValues(alpha: isDark ? 0.40 : 0.15);
 
-  BorderRadius get containerRadius => BorderRadius.circular(28);
-  BorderRadius get controlRadius => BorderRadius.circular(18);
-  BorderRadius get pillRadius => BorderRadius.circular(999);
+  BorderRadius get containerRadius => BorderRadius.circular(32);
+  BorderRadius get controlRadius => BorderRadius.circular(16);
+  BorderRadius get pillRadius => BorderRadius.circular(14);
 }

@@ -17,26 +17,27 @@ class AddChipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(isDark);
 
-    return Material(
-      color: tokens.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(chipHeight / 2),
-        side: BorderSide(
-          color: tokens.outlineVariant.withValues(alpha: 0.45),
-          width: chipBorderWidth,
-        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(chipRadius),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: chipHeight,
-          width: chipHeight,
-          child: Center(
-            child: Icon(
-              CupertinoIcons.add,
-              size: 22,
-              color: tokens.onSurfaceVariant,
+      child: Material(
+        color: tokens.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(chipRadius),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: chipHeight,
+            width: chipHeight,
+            child: Center(
+              child: Icon(
+                CupertinoIcons.add,
+                size: chipIconSize,
+                color: tokens.onSurface,
+              ),
             ),
           ),
         ),

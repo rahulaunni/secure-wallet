@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:math' as math;
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/security_store.dart';
+import 'package:swallet/utils/size_config.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
 class MiniPinPad extends StatefulWidget {
@@ -24,12 +25,14 @@ class MiniPinPad extends StatefulWidget {
 class _MiniPinPadState extends State<MiniPinPad>
     with SingleTickerProviderStateMixin {
   static const int _pinLength = 4;
+  static const double _keySize = 74;
+  static const double _rowGap = 16;
+  static const double _columnGap = 20;
 
   String _enteredPin = '';
   bool _isError = false;
 
   late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation;
 
   @override
   void initState() {
@@ -38,20 +41,17 @@ class _MiniPinPadState extends State<MiniPinPad>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _shakeAnimation = Tween<double>(begin: 0, end: 24)
-        .chain(CurveTween(curve: Curves.elasticIn))
-        .animate(_shakeController)
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _shakeController.reset();
-          setState(() {
-            _enteredPin = '';
-            Timer(const Duration(milliseconds: 200), () {
-              if (mounted) setState(() => _isError = false);
-            });
+    _shakeController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _shakeController.reset();
+        setState(() {
+          _enteredPin = '';
+          Timer(const Duration(milliseconds: 200), () {
+            if (mounted) setState(() => _isError = false);
           });
-        }
-      });
+        });
+      }
+    });
   }
 
   @override
@@ -101,45 +101,80 @@ class _MiniPinPadState extends State<MiniPinPad>
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(widget.isDark);
+    final contentWidth = (w(_keySize) * 3) + (w(_columnGap) * 2);
 
-    return AnimatedBuilder(
-      animation: _shakeController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_shakeAnimation.value, 0),
-          child: child,
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: tokens.containerRadius,
-          border: Border.all(
-            color: tokens.outlineVariant.withValues(alpha: 0.45),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Enter App PIN',
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: tokens.onSurface,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(w(16), 0, w(16), w(16)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: tokens.surface,
+                borderRadius: BorderRadius.circular(r(32)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: widget.isDark ? 0.28 : 0.08,
+                    ),
+                    blurRadius: w(24),
+                    offset: Offset(0, w(14)),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  w(16),
+                  w(24),
+                  w(16),
+                  w(16),
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: contentWidth,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Enter App PIN',
+                          textAlign: TextAlign.center,
+                          style: SwalletText.title.copyWith(
+                            color: tokens.onSurface,
+                            fontSize: sp(16),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: w(24)),
+                        _buildDots(tokens),
+                        SizedBox(height: w(10)),
+                        SizedBox(
+                          height: w(18),
+                          child: AnimatedOpacity(
+                            opacity: _isError ? 1 : 0,
+                            duration: const Duration(milliseconds: 160),
+                            child: Text(
+                              'Wrong PIN',
+                              textAlign: TextAlign.center,
+                              style: SwalletText.caption.copyWith(
+                                color: SwalletColors.destructive,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: w(12)),
+                        _buildNumPad(tokens),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 22),
-            _buildDots(tokens),
-            const SizedBox(height: 30),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _buildNumPad(tokens),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -149,19 +184,64 @@ class _MiniPinPadState extends State<MiniPinPad>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (index) {
         final filled = index < _enteredPin.length;
-        final color = _isError
-            ? Colors.redAccent
-            : (filled ? tokens.primary : tokens.outlineVariant);
+        final activeColor =
+            _isError ? SwalletColors.destructive : tokens.primary;
+        final borderColor = _isError
+            ? SwalletColors.destructive.withValues(alpha: filled ? 1 : 0.34)
+            : (filled
+                ? tokens.primary
+                : tokens.primary
+                    .withValues(alpha: widget.isDark ? 0.32 : 0.24));
+        final fillColor = filled
+            ? activeColor.withValues(alpha: widget.isDark ? 0.20 : 0.16)
+            : tokens.primary.withValues(alpha: widget.isDark ? 0.12 : 0.10);
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 9),
-          width: filled ? 12 : 10,
-          height: filled ? 12 : 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: filled ? color : Colors.transparent,
-            border: Border.all(color: color, width: 1.5),
+        return TweenAnimationBuilder<double>(
+          key: ValueKey<int>(_isError ? index + 10 : index),
+          tween: Tween<double>(begin: 0, end: _isError ? 1 : 0),
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOut,
+          builder: (context, value, child) {
+            final shake = _isError
+                ? math.sin(value * math.pi * 8) * (6 * (1 - value))
+                : 0.0;
+            return Transform.translate(offset: Offset(shake, 0), child: child);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: EdgeInsets.only(
+              right: index == _pinLength - 1 ? 0 : w(8),
+            ),
+            width: w(18),
+            height: w(18),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: fillColor,
+              border: Border.all(
+                color: borderColor,
+                width: filled ? w(1.5) : w(1.1),
+              ),
+              boxShadow: filled
+                  ? [
+                      BoxShadow(
+                        color: activeColor.withValues(alpha: 0.18),
+                        blurRadius: w(8),
+                        spreadRadius: w(1.2),
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Center(
+              child: Container(
+                width: filled ? w(7) : w(6),
+                height: filled ? w(7) : w(6),
+                decoration: BoxDecoration(
+                  color: filled ? activeColor : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ),
         );
       }),
@@ -170,18 +250,21 @@ class _MiniPinPadState extends State<MiniPinPad>
 
   Widget _buildNumPad(AddCardMaterialTokens tokens) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildRow(['1', '2', '3'], tokens),
-        const SizedBox(height: 14),
+        SizedBox(height: w(_rowGap)),
         _buildRow(['4', '5', '6'], tokens),
-        const SizedBox(height: 14),
+        SizedBox(height: w(_rowGap)),
         _buildRow(['7', '8', '9'], tokens),
-        const SizedBox(height: 14),
+        SizedBox(height: w(_rowGap)),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 68, height: 68),
+            SizedBox(width: w(_keySize), height: w(_keySize)),
+            SizedBox(width: w(_columnGap)),
             _buildNumButton('0', tokens),
+            SizedBox(width: w(_columnGap)),
             _buildBackspaceButton(tokens),
           ],
         ),
@@ -191,53 +274,70 @@ class _MiniPinPadState extends State<MiniPinPad>
 
   Widget _buildRow(List<String> numbers, AddCardMaterialTokens tokens) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: numbers.map((n) => _buildNumButton(n, tokens)).toList(),
+      mainAxisSize: MainAxisSize.min,
+      children: numbers
+          .map(
+            (n) => Padding(
+              padding: EdgeInsets.only(
+                right: n == numbers.last ? 0 : w(_columnGap),
+              ),
+              child: _buildNumButton(n, tokens),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
   Widget _buildNumButton(String number, AddCardMaterialTokens tokens) {
-    return Material(
-      color: tokens.surfaceContainerHigh,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: () => _onNumTapped(number),
-        child: SizedBox(
-          width: 68,
-          height: 68,
-          child: Center(
-            child: Text(
-              number,
-              style: GoogleFonts.roboto(
-                fontSize: 26,
-                fontWeight: FontWeight.w400,
-                color: tokens.onSurface,
-              ),
-            ),
-          ),
+    return _buildKeySurface(
+      tokens,
+      onTap: () => _onNumTapped(number),
+      child: Text(
+        number,
+        style: SwalletText.title.copyWith(
+          fontSize: sp(18),
+          fontWeight: FontWeight.w500,
+          height: 1,
+          color: tokens.onSurface,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKeySurface(
+    AddCardMaterialTokens tokens, {
+    required Widget child,
+    required VoidCallback onTap,
+    bool lowEmphasis = false,
+  }) {
+    return SizedBox(
+      width: w(_keySize),
+      height: w(_keySize),
+      child: Material(
+        color: lowEmphasis ? Colors.transparent : tokens.surfaceContainerHigh,
+        shape: lowEmphasis ? null : const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTapDown: (_) => HapticFeedback.selectionClick(),
+          onTap: onTap,
+          customBorder: lowEmphasis ? null : const CircleBorder(),
+          borderRadius: lowEmphasis ? BorderRadius.circular(r(12)) : null,
+          child: Center(child: child),
         ),
       ),
     );
   }
 
   Widget _buildBackspaceButton(AddCardMaterialTokens tokens) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: _onBackspace,
-        child: SizedBox(
-          width: 68,
-          height: 68,
-          child: Icon(
-            CupertinoIcons.delete_left,
-            color: tokens.onSurfaceVariant,
-            size: 26,
-          ),
+    return _buildKeySurface(
+      tokens,
+      onTap: _onBackspace,
+      lowEmphasis: true,
+      child: Text(
+        'Delete',
+        style: SwalletText.body.copyWith(
+          color: tokens.onSurface,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

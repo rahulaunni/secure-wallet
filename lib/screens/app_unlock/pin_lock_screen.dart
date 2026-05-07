@@ -12,10 +12,10 @@ import 'package:local_auth/local_auth.dart';
 import 'package:swallet/constants/layout_constants.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
 import 'package:swallet/models/card_data.dart';
-import 'package:swallet/models/card_network.dart';
 import 'package:swallet/models/card_type.dart';
 import 'package:swallet/screens/app_unlock/security_setup_screen.dart';
 import 'package:swallet/screens/app_unlock/security_verification_screen.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/adaptive_layout.dart';
 import 'package:swallet/utils/security_store.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
@@ -41,16 +41,14 @@ class _PinLockScreenState extends State<PinLockScreen>
   final LocalAuthentication _auth = LocalAuthentication();
   final Box _settingsBox = Hive.box(HiveBoxes.settings);
   static const int _pinLength = 4;
-  static const Color _lockBgLight = Color(0xFFFAFAFC);
-  static const Color _lockBgDark = Color(0xFF101114);
+  static const Color _lockBgLight = Color(0xFFF5F5F5);
+  static const Color _lockBgDark = Color(0xFF000000);
   static const Color _lockTitleLight = Color(0xFF141414);
-  static const Color _lockTitleDark = Color(0xFFF6F7FB);
-  static const Color _lockSubtitleLight = Color(0xFF787878);
-  static const Color _lockSubtitleDark = Color(0xFFB5B8C2);
-  static const Color _keyBgLight = Color(0xFFF4F4F4);
-  static const Color _keyBgDark = Color(0xFF23242A);
-  static const Color _keyTextLight = Color(0xFF121212);
-  static const Color _keyTextDark = Color(0xFFF7F8FA);
+  static const Color _lockTitleDark = Color(0xFFF2F2F2);
+  static const Color _lockSubtitleLight = Color(0xFF70757F);
+  static const Color _lockSubtitleDark = Color(0xFFA7ACB5);
+  static const Color _keyTextLight = Color(0xFF141414);
+  static const Color _keyTextDark = Color(0xFFF2F2F2);
 
   String _enteredPin = '';
   String? _tempPinForCreation;
@@ -222,7 +220,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       return;
     }
 
-    _triggerError('Wrong PIN. Try again.');
+    _triggerError('Wrong PIN');
     setState(() => _showResetButton = true);
   }
 
@@ -348,6 +346,28 @@ class _PinLockScreenState extends State<PinLockScreen>
     required AddCardMaterialTokens tokens,
     required bool isStep2,
   }) {
+    return ValueListenableBuilder<Box<CardData>>(
+      valueListenable: Hive.box<CardData>(HiveBoxes.cards).listenable(),
+      builder: (context, cardsBox, _) {
+        final savedCards = cardsBox.values.toList(growable: false);
+        if (savedCards.isEmpty) {
+          return _buildClassicPinContent(tokens: tokens, isStep2: isStep2);
+        }
+
+        return _buildWalletPinContent(
+          tokens: tokens,
+          isStep2: isStep2,
+          savedCards: savedCards,
+        );
+      },
+    );
+  }
+
+  Widget _buildWalletPinContent({
+    required AddCardMaterialTokens tokens,
+    required bool isStep2,
+    required List<CardData> savedCards,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final mediaSize = MediaQuery.sizeOf(context);
@@ -378,7 +398,7 @@ class _PinLockScreenState extends State<PinLockScreen>
         final titleTop = mediaPadding.top + (24 * scale);
         final walletTop = titleTop + (titleHeight + titleToWalletGap) * scale;
         final keypadTop = walletTop + ((280 + walletToKeypadGap) * scale);
-        final keypadWidth = ((80 * scale) * 3) + ((24 * scale) * 2);
+        final keypadWidth = ((80 * scale) * 3) + ((28 * scale) * 2);
         final canvasWidth = maxWidth;
         final canvasHeight = maxHeight;
         final walletLeft = (canvasWidth - contentWidth) / 2;
@@ -388,51 +408,45 @@ class _PinLockScreenState extends State<PinLockScreen>
         return SizedBox(
           width: canvasWidth,
           height: canvasHeight,
-          child: ValueListenableBuilder<Box<CardData>>(
-            valueListenable: Hive.box<CardData>(HiveBoxes.cards).listenable(),
-            builder: (context, cardsBox, _) {
-              final savedCards = cardsBox.values.toList(growable: false);
-              return AnimatedBuilder(
-                animation: _unlockController,
-                builder: (context, _) {
-                  final chromeOpacity =
-                      1 - Curves.easeOut.transform(_unlockController.value);
+          child: AnimatedBuilder(
+            animation: _unlockController,
+            builder: (context, _) {
+              final chromeOpacity =
+                  1 - Curves.easeOut.transform(_unlockController.value);
 
-                  return Stack(
-                    children: [
-                      Positioned(
-                        left: 16 * scale,
-                        right: 16 * scale,
-                        top: titleTop,
-                        child: Opacity(
-                          opacity: chromeOpacity,
-                          child: _buildTitleHeader(tokens, isStep2, scale),
-                        ),
-                      ),
-                      Positioned(
-                        left: walletLeft,
-                        top: walletTop,
-                        child: _buildWalletHero(
-                          cards: _lockCards(savedCards),
-                          hasSavedCards: savedCards.isNotEmpty,
-                          scale: scale,
-                          canvasWidth: canvasWidth,
-                          walletLeftOnCanvas: walletLeft,
-                          walletTopOnCanvas: walletTop,
-                          homeFirstCardTop: homeFirstCardTop,
-                        ),
-                      ),
-                      Positioned(
-                        left: (canvasWidth - keypadWidth) / 2,
-                        top: keypadTop,
-                        child: Opacity(
-                          opacity: chromeOpacity,
-                          child: _buildNumPad(tokens, scale: scale),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              return Stack(
+                children: [
+                  Positioned(
+                    left: 16 * scale,
+                    right: 16 * scale,
+                    top: titleTop,
+                    child: Opacity(
+                      opacity: chromeOpacity,
+                      child: _buildTitleHeader(tokens, isStep2, scale),
+                    ),
+                  ),
+                  Positioned(
+                    left: walletLeft,
+                    top: walletTop,
+                    child: _buildWalletHero(
+                      cards: _lockCards(savedCards),
+                      hasSavedCards: true,
+                      scale: scale,
+                      canvasWidth: canvasWidth,
+                      walletLeftOnCanvas: walletLeft,
+                      walletTopOnCanvas: walletTop,
+                      homeFirstCardTop: homeFirstCardTop,
+                    ),
+                  ),
+                  Positioned(
+                    left: (canvasWidth - keypadWidth) / 2,
+                    top: keypadTop,
+                    child: Opacity(
+                      opacity: chromeOpacity,
+                      child: _buildNumPad(tokens, scale: scale),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -508,47 +522,8 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   List<CardData> _lockCards(List<CardData> savedCards) {
-    final cards = savedCards.take(3).toList();
-
-    if (cards.isNotEmpty) {
-      while (cards.length < 3) {
-        cards.add(_fallbackCards[cards.length]);
-      }
-      return cards;
-    }
-
-    return _fallbackCards;
+    return savedCards.take(3).toList(growable: false);
   }
-
-  static final List<CardData> _fallbackCards = [
-    const CardData(
-      bankCid: 'icici',
-      cardNetwork: CardNetwork.visa,
-      cardType: CardType.credit,
-      cardNumber: '5375000000000895',
-      expiry: '11/30',
-      holderName: 'Nidin George',
-      cvv: '123',
-    ),
-    const CardData(
-      bankCid: 'federal',
-      cardNetwork: CardNetwork.mastercard,
-      cardType: CardType.debit,
-      cardNumber: '5214000000004512',
-      expiry: '08/29',
-      holderName: 'Nidin George',
-      cvv: '456',
-    ),
-    const CardData(
-      bankCid: 'sbi',
-      cardNetwork: CardNetwork.rupay,
-      cardType: CardType.credit,
-      cardNumber: '6073000000000895',
-      expiry: '10/28',
-      holderName: 'Nidin George',
-      cvv: '789',
-    ),
-  ];
 
   Widget _buildWalletHero({
     required List<CardData> cards,
@@ -604,7 +579,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                     ),
                   ),
                 ),
-                for (var i = 0; i < 3; i++)
+                for (var i = 0; i < cards.length; i++)
                   Positioned(
                     left: hasSavedCards
                         ? _animatedCardLeft(
@@ -622,6 +597,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                     top: hasSavedCards
                         ? _animatedCardTop(
                             index: i,
+                            stackSlot: i + (3 - cards.length),
                             unlock: unlock,
                             scale: scale,
                             walletTopOnCanvas: walletTopOnCanvas,
@@ -693,18 +669,19 @@ class _PinLockScreenState extends State<PinLockScreen>
 
   double _animatedCardTop({
     required int index,
+    required int stackSlot,
     required double unlock,
     required double scale,
     required double walletTopOnCanvas,
     required double homeFirstCardTop,
     required double canvasWidth,
   }) {
-    final startTop = switch (index) {
+    final startTop = switch (stackSlot) {
       0 => 8.38098 * scale,
       1 => 47.2382 * scale,
       _ => 83.0477 * scale,
     };
-    final stackedTop = (-24 + (index * 13.0)) * scale;
+    final stackedTop = (-24 + (stackSlot * 13.0)) * scale;
     final finalTop = _homeCardTop(
           index,
           canvasWidth: canvasWidth,
@@ -861,11 +838,13 @@ class _PinLockScreenState extends State<PinLockScreen>
     required double height,
     required double scale,
   }) {
+    final hasError = _isError || _errorMessage.isNotEmpty;
     final caption = _isError || _errorMessage.isNotEmpty
         ? _errorMessage
         : _isCreating
             ? _statusMessage
             : 'Forgot PIN?';
+    final captionColor = hasError ? SwalletColors.destructive : Colors.white;
 
     return SizedBox(
       width: width,
@@ -897,10 +876,10 @@ class _PinLockScreenState extends State<PinLockScreen>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
-                  color: _isError ? Colors.white : Colors.white,
+                  color: captionColor,
                   fontSize: 14 * scale,
                   height: 1,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: hasError ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ),
@@ -911,6 +890,9 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   Widget _buildWalletPinDots(double scale) {
+    final hasError = _isError || _errorMessage.isNotEmpty;
+    final dotColor = hasError ? SwalletColors.destructive : Colors.white;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (index) {
@@ -922,11 +904,20 @@ class _PinLockScreenState extends State<PinLockScreen>
           height: filled ? 20 * scale : 18 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? Colors.white : Colors.transparent,
+            color: filled ? dotColor : Colors.transparent,
             border: Border.all(
-              color: Colors.white.withValues(alpha: filled ? 1 : 0.72),
+              color: dotColor.withValues(alpha: filled ? 1 : 0.72),
               width: 2 * scale,
             ),
+            boxShadow: hasError && filled
+                ? [
+                    BoxShadow(
+                      color: SwalletColors.destructive.withValues(alpha: 0.28),
+                      blurRadius: 12 * scale,
+                      spreadRadius: 1.5 * scale,
+                    ),
+                  ]
+                : null,
           ),
         );
       }),
@@ -956,7 +947,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isTightHeight = constraints.maxHeight < 700;
-          final headerTopPadding = isTightHeight ? 8.0 : 16.0;
+          final headerTopPadding = isTightHeight ? 8.0 : 12.0;
 
           return SingleChildScrollView(
             physics: isTightHeight
@@ -970,29 +961,20 @@ class _PinLockScreenState extends State<PinLockScreen>
                     padding: EdgeInsets.fromLTRB(
                       16,
                       headerTopPadding,
-                      20,
+                      16,
                       0,
                     ),
                     child: _buildClassicHeader(tokens, isStep2),
                   ),
-                  if (!isTightHeight) const Spacer(flex: 2),
-                  if (isTightHeight) const SizedBox(height: 16),
-                  _buildClassicLockIntro(tokens, isTightHeight),
-                  SizedBox(height: isTightHeight ? 18 : 24),
+                  const Spacer(),
+                  _buildSecureStoragePinStatus(tokens),
+                  SizedBox(height: isTightHeight ? 12 : 16),
                   _buildClassicPinDots(tokens),
-                  SizedBox(height: isTightHeight ? 10 : 18),
+                  SizedBox(height: isTightHeight ? 16 : 28),
                   _buildClassicErrorAndReset(tokens),
-                  if (!isTightHeight) const Spacer(flex: 3),
-                  if (isTightHeight) const SizedBox(height: 8),
-                  if (!_isCreating &&
-                      _settingsBox.get(
-                        'use_biometrics',
-                        defaultValue: false,
-                      ))
-                    _buildClassicBiometricButton(tokens),
-                  SizedBox(height: isTightHeight ? 10 : 14),
+                  const Spacer(),
                   _buildClassicNumPad(tokens, compact: isTightHeight),
-                  SizedBox(height: isTightHeight ? 10 : 20),
+                  SizedBox(height: isTightHeight ? 12 : 24),
                 ],
               ),
             ),
@@ -1019,9 +1001,6 @@ class _PinLockScreenState extends State<PinLockScreen>
             decoration: BoxDecoration(
               color: tokens.surfaceContainer,
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: tokens.outlineVariant.withValues(alpha: 0.45),
-              ),
             ),
             child: SvgPicture.asset(
               'assets/images/logo_44.svg',
@@ -1037,7 +1016,7 @@ class _PinLockScreenState extends State<PinLockScreen>
               Container(
                 width: 24,
                 height: 1,
-                color: tokens.outlineVariant,
+                color: tokens.outlineVariant.withValues(alpha: 0.72),
               ),
               _buildStepIndicator('2', isStep2, tokens),
             ],
@@ -1049,78 +1028,81 @@ class _PinLockScreenState extends State<PinLockScreen>
     );
   }
 
-  Widget _buildClassicLockIntro(
-    AddCardMaterialTokens tokens,
-    bool isTightHeight,
-  ) {
-    return AnimatedBuilder(
-      animation: _shakeController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_shakeAnimation.value * 2, 0),
-          child: child,
-        );
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: isTightHeight ? 72 : 78,
-            height: isTightHeight ? 72 : 78,
-            decoration: BoxDecoration(
-              color: tokens.primary,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Icon(
-              CupertinoIcons.lock_fill,
-              color: tokens.onPrimary,
-              size: isTightHeight ? 26 : 28,
-            ),
-          ),
-          SizedBox(height: isTightHeight ? 14 : 18),
-          Text(
-            _statusMessage,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.roboto(
-              fontSize: isTightHeight ? 18 : 19,
-              fontWeight: FontWeight.w600,
-              color: tokens.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _isCreating
-                ? 'This PIN protects your saved cards on this device.'
-                : 'Unlock to view your wallet.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.roboto(
-              color: tokens.onSurfaceVariant,
-              fontSize: 13,
-            ),
-          ),
-        ],
+  Widget _buildSecureStoragePinStatus(AddCardMaterialTokens tokens) {
+    final text = _isError || _errorMessage.isNotEmpty
+        ? _errorMessage
+        : _isCreating
+            ? _statusMessage
+            : 'Enter your App PIN';
+    final color = _isError || _errorMessage.isNotEmpty
+        ? SwalletColors.destructive
+        : tokens.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: SwalletText.bodyMedium.copyWith(
+          color: color,
+          height: 1.25,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
 
   Widget _buildClassicPinDots(AddCardMaterialTokens tokens) {
+    final hasError = _isError || _errorMessage.isNotEmpty;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (index) {
         final filled = index < _enteredPin.length;
-        final color = _isError
-            ? Colors.redAccent
-            : (filled ? tokens.primary : tokens.outlineVariant);
+        final activeColor =
+            hasError ? SwalletColors.destructive : tokens.primary;
+        final borderColor = hasError
+            ? SwalletColors.destructive.withValues(alpha: filled ? 1 : 0.34)
+            : (filled
+                ? tokens.primary
+                : tokens.primary.withValues(alpha: _isDark ? 0.32 : 0.24));
+        final fillColor = filled
+            ? activeColor.withValues(alpha: _isDark ? 0.20 : 0.16)
+            : tokens.primary.withValues(alpha: _isDark ? 0.12 : 0.10);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 10),
-          width: filled ? 14 : 12,
-          height: filled ? 14 : 12,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: 24,
+          height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? color : Colors.transparent,
-            border: Border.all(color: color, width: 1.8),
+            color: fillColor,
+            border: Border.all(
+              color: borderColor,
+              width: filled ? 1.6 : 1.2,
+            ),
+            boxShadow: filled
+                ? [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.18),
+                      blurRadius: 10,
+                      spreadRadius: 1.6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: filled ? 10 : 8,
+              height: filled ? 10 : 8,
+              decoration: BoxDecoration(
+                color: filled ? activeColor : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
         );
       }),
@@ -1137,7 +1119,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                   _errorMessage,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.roboto(
-                    color: Colors.redAccent,
+                    color: SwalletColors.destructive,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1164,31 +1146,13 @@ class _PinLockScreenState extends State<PinLockScreen>
     );
   }
 
-  Widget _buildClassicBiometricButton(AddCardMaterialTokens tokens) {
-    return FilledButton.tonalIcon(
-      onPressed: _triggerBiometrics,
-      style: FilledButton.styleFrom(
-        backgroundColor: tokens.primaryContainer,
-        foregroundColor: tokens.onPrimaryContainer,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: tokens.pillRadius),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      ),
-      icon: const Icon(CupertinoIcons.person_crop_circle_fill, size: 18),
-      label: Text(
-        'Use biometrics',
-        style: GoogleFonts.roboto(fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-
   Widget _buildClassicNumPad(
     AddCardMaterialTokens tokens, {
     bool compact = false,
   }) {
-    final buttonSize = compact ? 60.0 : 68.0;
-    final columnGap = compact ? 22.0 : 26.0;
-    final rowGap = compact ? 10.0 : 12.0;
+    final buttonSize = compact ? 74.0 : 80.0;
+    final columnGap = compact ? 20.0 : 28.0;
+    final rowGap = compact ? 16.0 : 20.0;
     final keypadWidth = (buttonSize * 3) + (columnGap * 2);
 
     return Center(
@@ -1205,12 +1169,44 @@ class _PinLockScreenState extends State<PinLockScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(width: buttonSize, height: buttonSize),
+                _buildClassicBiometricPadButton(tokens, buttonSize),
                 _buildClassicNumButton('0', tokens, buttonSize),
                 _buildClassicBackspaceButton(tokens, buttonSize),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassicBiometricPadButton(
+    AddCardMaterialTokens tokens,
+    double buttonSize,
+  ) {
+    final useBio = !_isCreating &&
+        _settingsBox.get(
+          'use_biometrics',
+          defaultValue: false,
+        );
+
+    if (!useBio) {
+      return SizedBox(width: buttonSize, height: buttonSize);
+    }
+
+    return SizedBox(
+      width: buttonSize,
+      height: buttonSize,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _triggerBiometrics,
+          borderRadius: BorderRadius.circular(12),
+          child: Icon(
+            Icons.fingerprint,
+            color: tokens.onSurface,
+            size: 24,
+          ),
         ),
       ),
     );
@@ -1234,26 +1230,45 @@ class _PinLockScreenState extends State<PinLockScreen>
     AddCardMaterialTokens tokens,
     double buttonSize,
   ) {
-    return Material(
-      color: tokens.surfaceContainerHigh,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: () => _onNumTapped(number),
-        child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Center(
-            child: Text(
-              number,
-              style: GoogleFonts.roboto(
-                fontSize: buttonSize < 70 ? 25 : 28,
-                fontWeight: FontWeight.w400,
-                color: tokens.onSurface,
-              ),
-            ),
-          ),
+    return _buildSecureKeySurface(
+      tokens,
+      buttonSize: buttonSize,
+      onTap: () => _onNumTapped(number),
+      child: Text(
+        number,
+        style: GoogleFonts.poppins(
+          fontSize: buttonSize < 70 ? 24 : 27,
+          fontWeight: FontWeight.w500,
+          color: tokens.onSurface,
+          height: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecureKeySurface(
+    AddCardMaterialTokens tokens, {
+    required double buttonSize,
+    required Widget child,
+    required VoidCallback onTap,
+    bool lowEmphasis = false,
+  }) {
+    final bgColor =
+        lowEmphasis ? Colors.transparent : tokens.surfaceContainerHigh;
+
+    return SizedBox(
+      width: buttonSize,
+      height: buttonSize,
+      child: Material(
+        color: bgColor,
+        shape: lowEmphasis ? null : const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTapDown: (_) => HapticFeedback.selectionClick(),
+          onTap: onTap,
+          customBorder: lowEmphasis ? null : const CircleBorder(),
+          borderRadius: lowEmphasis ? BorderRadius.circular(12) : null,
+          child: Center(child: child),
         ),
       ),
     );
@@ -1263,22 +1278,15 @@ class _PinLockScreenState extends State<PinLockScreen>
     AddCardMaterialTokens tokens,
     double buttonSize,
   ) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: _onBackspace,
-        child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Icon(
-            CupertinoIcons.delete_left,
-            color: tokens.onSurfaceVariant,
-            size: buttonSize < 70 ? 25 : 28,
-          ),
-        ),
+    return _buildSecureKeySurface(
+      tokens,
+      buttonSize: buttonSize,
+      onTap: _onBackspace,
+      lowEmphasis: true,
+      child: Icon(
+        CupertinoIcons.delete_left,
+        color: tokens.onSurfaceVariant,
+        size: buttonSize < 70 ? 24 : 27,
       ),
     );
   }
@@ -1295,7 +1303,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive ? tokens.primary : tokens.surfaceContainer,
+        color: isActive ? tokens.primaryContainer : tokens.surfaceContainer,
         border: Border.all(
           color: isActive ? tokens.primary : tokens.outlineVariant,
           width: 1.4,
@@ -1304,7 +1312,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       child: Text(
         step,
         style: GoogleFonts.roboto(
-          color: isActive ? tokens.onPrimary : tokens.onSurfaceVariant,
+          color: isActive ? tokens.onPrimaryContainer : tokens.onSurfaceVariant,
           fontWeight: FontWeight.w700,
           fontSize: 13,
         ),
@@ -1314,8 +1322,8 @@ class _PinLockScreenState extends State<PinLockScreen>
 
   Widget _buildNumPad(AddCardMaterialTokens tokens, {required double scale}) {
     final buttonSize = 80 * scale;
-    final columnGap = 24 * scale;
-    final rowGap = 12 * scale;
+    final columnGap = 28 * scale;
+    final rowGap = 20 * scale;
     final keypadWidth = (buttonSize * 3) + (columnGap * 2);
 
     return SizedBox(
@@ -1329,10 +1337,12 @@ class _PinLockScreenState extends State<PinLockScreen>
           _buildRow(['7', '8', '9'], tokens, buttonSize, scale),
           SizedBox(height: rowGap),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildBiometricPadButton(tokens, buttonSize, scale),
+              SizedBox(width: columnGap),
               _buildNumButton('0', tokens, buttonSize, scale),
+              SizedBox(width: columnGap),
               _buildDeletePadButton(tokens, buttonSize, scale),
             ],
           ),
@@ -1356,22 +1366,15 @@ class _PinLockScreenState extends State<PinLockScreen>
       return SizedBox(width: buttonSize, height: buttonSize);
     }
 
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: _triggerBiometrics,
-        child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Icon(
-            Icons.fingerprint,
-            color: _isDark ? _keyTextDark : _keyTextLight,
-            size: 27 * scale,
-          ),
-        ),
+    return _buildSecureKeySurface(
+      tokens,
+      buttonSize: buttonSize,
+      onTap: _triggerBiometrics,
+      lowEmphasis: true,
+      child: Icon(
+        Icons.fingerprint,
+        color: _isDark ? _keyTextDark : _keyTextLight,
+        size: 27 * scale,
       ),
     );
   }
@@ -1381,27 +1384,18 @@ class _PinLockScreenState extends State<PinLockScreen>
     double buttonSize,
     double scale,
   ) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18 * scale),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: _onBackspace,
-        child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Center(
-            child: Text(
-              'Delete',
-              style: GoogleFonts.poppins(
-                color: _isDark ? _keyTextDark : _keyTextLight,
-                fontSize: 16 * scale,
-                height: 1,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+    return _buildSecureKeySurface(
+      tokens,
+      buttonSize: buttonSize,
+      onTap: _onBackspace,
+      lowEmphasis: true,
+      child: Text(
+        'Delete',
+        style: SwalletText.button.copyWith(
+          color: _isDark ? _keyTextDark : _keyTextLight,
+          fontSize: 14 * scale,
+          fontWeight: FontWeight.w600,
+          height: 1,
         ),
       ),
     );
@@ -1413,11 +1407,20 @@ class _PinLockScreenState extends State<PinLockScreen>
     double buttonSize,
     double scale,
   ) {
+    final columnGap = 28 * scale;
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       children: numbers
-          .map((n) => _buildNumButton(n, tokens, buttonSize, scale))
-          .toList(),
+          .map(
+            (n) => Padding(
+              padding: EdgeInsets.only(
+                right: n == numbers.last ? 0 : columnGap,
+              ),
+              child: _buildNumButton(n, tokens, buttonSize, scale),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
@@ -1427,27 +1430,17 @@ class _PinLockScreenState extends State<PinLockScreen>
     double buttonSize,
     double scale,
   ) {
-    return Material(
-      color: _isDark ? _keyBgDark : _keyBgLight,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTapDown: (_) => HapticFeedback.selectionClick(),
-        onTap: () => _onNumTapped(number),
-        child: SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Center(
-            child: Text(
-              number,
-              style: GoogleFonts.poppins(
-                fontSize: 24 * scale,
-                height: 1,
-                fontWeight: FontWeight.w500,
-                color: _isDark ? _keyTextDark : _keyTextLight,
-              ),
-            ),
-          ),
+    return _buildSecureKeySurface(
+      tokens,
+      buttonSize: buttonSize,
+      onTap: () => _onNumTapped(number),
+      child: Text(
+        number,
+        style: GoogleFonts.poppins(
+          fontSize: 24 * scale,
+          height: 1,
+          fontWeight: FontWeight.w500,
+          color: _isDark ? _keyTextDark : _keyTextLight,
         ),
       ),
     );

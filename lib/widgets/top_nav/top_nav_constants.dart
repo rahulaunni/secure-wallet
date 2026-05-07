@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 
 // ================= LAYOUT =================
 
-const double topNavHeight = 56;
+const double topNavHeight = 44;
 const double topNavHorizontalPadding = 16;
 const double topNavChipSpacing = 6;
 
 // ================= CHIP =================
 
-const double chipHeight = 48;
-const double chipHorizontalPadding = 14;
-const double chipIconSize = 18;
+const double chipHeight = 44;
+const double chipHorizontalPadding = 16;
+const double chipRadius = 14;
+const double chipIconSize = 16;
 const double chipBorderWidth = 1;
 
 // ================= ACTIVE DOT =================

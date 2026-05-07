@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // ✅ Added Import
 
 import '../../models/card_data.dart';
+import '../../theme/swallet_theme.dart';
+import '../../utils/size_config.dart';
 import 'delete_card_preview.dart';
 
 class DeleteCardSheet extends StatelessWidget {
@@ -16,173 +17,110 @@ class DeleteCardSheet extends StatelessWidget {
     required this.onDeleteConfirmed,
   });
 
-  // =========================================================
-  // 🔒 LOCKED CONSTANTS — MANUAL TUNING ALLOWED
-  // =========================================================
-
-  // Layout
   static const double sideInset = 16;
   static const double bottomInset = 16;
-  static const double cornerRadius = 40;
-
-  // Spacing
-  static const double titleSpacing = 12;
-  static const double descSpacing = 20;
-  static const double previewSpacing = 24;
-  static const double buttonSpacing = 12;
-
-  // Buttons
-  static const double deleteButtonHeight = 54;
-  static const double cancelButtonHeight = 50;
+  static const double cornerRadius = 32;
+  static const double buttonHeight = 48;
   static const double buttonRadius = 16;
-
-  // Colors — Light
-  static const Color bgLight = Colors.white;
-  static const Color titleLight = Color(0xFF111827);
-  static const Color descLight = Color(0xFF6B7280);
-  static const Color cancelBorderLight = Color(0xFFE5E7EB);
-  static const Color cancelTextLight = Color(0xFF374151);
-
-  // Colors — Dark
-  static const Color bgDark = Color(0xFF1C1C1E);
-  static const Color titleDark = Color(0xFFF9FAFB);
-  static const Color descDark = Color(0xFF9CA3AF);
-  static const Color cancelBorderDark = Color(0xFF3A3A3C);
-  static const Color cancelTextDark = Color(0xFFE5E7EB);
-
-  // Danger
-  static const Color warningColor = Color(0xFFEF4444);
-  static const Color deleteBg = Color(0xFFDC2626);
-  static const Color deleteText = Colors.white;
-
-  // =========================================================
 
   @override
   Widget build(BuildContext context) {
+    final palette = SwalletPalette(isDark);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        sideInset,
+      padding: EdgeInsets.fromLTRB(
+        w(sideInset),
         0,
-        sideInset,
-        bottomInset,
+        w(sideInset),
+        w(bottomInset),
       ),
       child: Material(
-        color: isDark ? bgDark : bgLight,
-        borderRadius: BorderRadius.circular(cornerRadius),
+        color: palette.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(r(cornerRadius)),
+        ),
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            24,
-            20,
-            24,
-          ),
+          padding: EdgeInsets.fromLTRB(w(16), w(32), w(16), w(16)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ================= WARNING ICON =================
-              const Icon(
+              Icon(
                 Icons.warning_rounded,
-                size: 40,
-                color: warningColor,
+                size: w(40),
+                color: SwalletColors.destructive,
               ),
-
-              const SizedBox(height: titleSpacing),
-
-              // ================= TITLE =================
+              SizedBox(height: w(16)),
               Text(
                 'Delete this card?',
-                // ✅ UPDATED TO POPPINS
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? titleDark : titleLight,
-                ),
+                style: SwalletText.title.copyWith(color: palette.text),
               ),
-
-              const SizedBox(height: 6),
-
-              // ================= DESCRIPTION =================
+              SizedBox(height: w(10)),
               Text(
                 'This action is permanent and cannot be undone.',
                 textAlign: TextAlign.center,
-                // ✅ UPDATED TO POPPINS
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: isDark ? descDark : descLight,
+                style: SwalletText.bodyMedium.copyWith(
+                  color: palette.textMuted,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-
-              const SizedBox(height: descSpacing),
-
-              // ================= CARD PREVIEW =================
+              SizedBox(height: w(40)),
               DeleteCardPreview(
                 card: card,
                 isDark: isDark,
               ),
-
-              const SizedBox(height: previewSpacing),
-
-              // ================= DELETE BUTTON =================
-              SizedBox(
-                height: deleteButtonHeight,
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: deleteBg,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(buttonRadius),
+              SizedBox(height: w(44)),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: w(buttonHeight),
+                      child: Material(
+                        color: palette.surfaceHigh,
+                        borderRadius: BorderRadius.circular(r(buttonRadius)),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: SwalletText.button.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: palette.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onDeleteConfirmed();
-                  },
-                  child: Text(
-                    'Delete Card',
-                    // ✅ UPDATED TO POPPINS
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: deleteText,
+                  SizedBox(width: w(8)),
+                  Expanded(
+                    child: SizedBox(
+                      height: w(buttonHeight),
+                      child: Material(
+                        color: SwalletColors.destructive,
+                        borderRadius: BorderRadius.circular(r(buttonRadius)),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDeleteConfirmed();
+                          },
+                          child: Center(
+                            child: Text(
+                              'Delete card',
+                              style: SwalletText.button.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-
-              const SizedBox(height: buttonSpacing),
-
-              // ================= CANCEL BUTTON =================
-              SizedBox(
-                height: cancelButtonHeight,
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(buttonRadius),
-                    ),
-                    side: BorderSide(
-                      color: isDark
-                          ? cancelBorderDark
-                          : cancelBorderLight,
-                    ),
-                  ),
-                  onPressed: () =>
-                      Navigator.of(context).pop(),
-                  child: Text(
-                    'Cancel',
-                    // ✅ UPDATED TO POPPINS
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? cancelTextDark
-                          : cancelTextLight,
-                    ),
-                  ),
-                ),
+                ],
               ),
             ],
           ),

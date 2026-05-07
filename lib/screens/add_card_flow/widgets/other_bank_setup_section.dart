@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'package:swallet/widgets/add_card/widgets/add_card_cta_button.dart';
 import 'package:swallet/widgets/add_card/widgets/form_text.dart';
@@ -72,12 +72,8 @@ class _OtherBankSetupSectionState extends State<OtherBankSetupSection> {
         Center(
           child: Text(
             'Custom bank',
-            style: GoogleFonts.roboto(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: widget.isDark
-                  ? const Color.fromARGB(255, 221, 221, 221)
-                  : const Color(0xFF111827),
+            style: SwalletText.bodyMedium.copyWith(
+              color: AddCardMaterialTokens(widget.isDark).onSurface,
             ),
           ),
         ),
@@ -143,26 +139,24 @@ class _CustomBankLogoPicker extends StatelessWidget {
       children: [
         Text(
           'Bank logo',
-          style: GoogleFonts.roboto(
+          style: SwalletText.section.copyWith(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
             color: tokens.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 6),
         Material(
-          color: tokens.surfaceContainerHigh,
-          borderRadius: tokens.controlRadius,
+          color: tokens.surfaceContainer,
+          shape: RoundedRectangleBorder(
+            borderRadius: tokens.controlRadius,
+          ),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onPick,
             borderRadius: tokens.controlRadius,
             child: Container(
               constraints: const BoxConstraints(minHeight: 60),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                borderRadius: tokens.controlRadius,
-                border: Border.all(color: tokens.outlineVariant),
-              ),
               child: Row(
                 children: [
                   if (hasLogo)
@@ -187,9 +181,8 @@ class _CustomBankLogoPicker extends StatelessWidget {
                       hasLogo ? 'Logo selected' : 'Choose from gallery',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.roboto(
+                      style: SwalletText.bodyMedium.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w500,
                         color: hasLogo
                             ? tokens.onSurface
                             : tokens.onSurfaceVariant,
@@ -263,9 +256,8 @@ class _GradientColorSelectorState extends State<_GradientColorSelector> {
       children: [
         Text(
           'Card gradient',
-          style: GoogleFonts.roboto(
+          style: SwalletText.section.copyWith(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
             color: tokens.onSurfaceVariant,
           ),
         ),
@@ -309,28 +301,43 @@ class _GradientColorTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _GradientColorTab(
-            label: 'Color 1',
-            color: startColor,
-            isSelected: activeIndex == 0,
-            isDark: isDark,
-            onTap: () => onChanged(0),
+    final tokens = AddCardMaterialTokens(isDark);
+    const outerRadius = 16.0;
+    const innerPadding = 4.0;
+    const innerRadius = outerRadius - innerPadding;
+
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.all(innerPadding),
+      decoration: BoxDecoration(
+        color: tokens.surfaceContainer,
+        borderRadius: BorderRadius.circular(outerRadius),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _GradientColorTab(
+              label: 'Color 1',
+              color: startColor,
+              isSelected: activeIndex == 0,
+              isDark: isDark,
+              radius: innerRadius,
+              onTap: () => onChanged(0),
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _GradientColorTab(
-            label: 'Color 2',
-            color: endColor,
-            isSelected: activeIndex == 1,
-            isDark: isDark,
-            onTap: () => onChanged(1),
+          const SizedBox(width: 6),
+          Expanded(
+            child: _GradientColorTab(
+              label: 'Color 2',
+              color: endColor,
+              isSelected: activeIndex == 1,
+              isDark: isDark,
+              radius: innerRadius,
+              onTap: () => onChanged(1),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -340,6 +347,7 @@ class _GradientColorTab extends StatelessWidget {
   final Color color;
   final bool isSelected;
   final bool isDark;
+  final double radius;
   final VoidCallback onTap;
 
   const _GradientColorTab({
@@ -347,6 +355,7 @@ class _GradientColorTab extends StatelessWidget {
     required this.color,
     required this.isSelected,
     required this.isDark,
+    required this.radius,
     required this.onTap,
   });
 
@@ -354,20 +363,22 @@ class _GradientColorTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(isDark);
     final textColor = tokens.onSurface;
-    final borderColor = isSelected ? tokens.primary : tokens.outlineVariant;
-    final fillColor =
-        isSelected ? tokens.primaryContainer : tokens.surfaceContainerHigh;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        height: 42,
+        height: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: fillColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: isSelected ? 1.4 : 1),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(radius),
+          border: isSelected
+              ? Border.all(
+                  color: tokens.primary,
+                  width: 1.4,
+                )
+              : null,
         ),
         child: Row(
           children: [
@@ -378,10 +389,6 @@ class _GradientColorTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  width: 1,
-                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -390,10 +397,9 @@ class _GradientColorTab extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.roboto(
-                  color: isSelected ? tokens.onPrimaryContainer : textColor,
+                style: SwalletText.bodyMedium.copyWith(
+                  color: textColor,
                   fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ),

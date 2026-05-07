@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/device_auth.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 
@@ -83,9 +83,10 @@ class _AppUnlockScreenState extends State<AppUnlockScreen>
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(_isDark);
+    final palette = SwalletPalette(_isDark);
 
     return Scaffold(
-      backgroundColor: tokens.surface,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
@@ -104,6 +105,18 @@ class _AppUnlockScreenState extends State<AppUnlockScreen>
                 decoration: BoxDecoration(
                   color: tokens.surfaceContainer,
                   borderRadius: BorderRadius.circular(36),
+                  border: Border.all(
+                    color: tokens.outlineVariant.withValues(alpha: 0.64),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: tokens.primary.withValues(
+                        alpha: _isDark ? 0.14 : 0.08,
+                      ),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
                 ),
                 alignment: Alignment.center,
                 child: SizedBox(
@@ -127,10 +140,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen>
                 _state == _AuthState.failed
                     ? 'Authentication failed'
                     : 'Unlock your wallet',
-                style: GoogleFonts.roboto(
+                style: SwalletText.title.copyWith(
                   color: tokens.onSurface,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 6),
@@ -138,9 +149,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen>
                 _state == _AuthState.failed
                     ? 'Try again to access your cards.'
                     : 'Confirm it is you to continue.',
-                style: GoogleFonts.roboto(
+                style: SwalletText.caption.copyWith(
                   color: tokens.onSurfaceVariant,
-                  fontSize: 13,
                 ),
               ),
               const Spacer(),
@@ -161,9 +171,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen>
                     icon: const Icon(CupertinoIcons.lock_open_fill, size: 18),
                     label: Text(
                       'Unlock',
-                      style: GoogleFonts.roboto(
+                      style: SwalletText.bodyMedium.copyWith(
                         fontSize: 16,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

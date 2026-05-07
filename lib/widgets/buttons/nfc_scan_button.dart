@@ -23,42 +23,49 @@ class NfcScanButton extends StatelessWidget {
     final fgColor =
         isScanning ? tokens.onPrimaryContainer : tokens.onSurfaceVariant;
 
-    return Material(
-      color: bgColor,
-      borderRadius: tokens.pillRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
+    return DecoratedBox(
+      decoration: BoxDecoration(
         borderRadius: tokens.pillRadius,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: tokens.pillRadius,
-            border: Border.all(
-              color: isScanning
-                  ? tokens.primary.withValues(alpha: 0.34)
-                  : tokens.outlineVariant.withValues(alpha: 0.45),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: tokens.primary.withValues(alpha: isScanning ? 0.16 : 0.06),
+            blurRadius: isScanning ? 22 : 14,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                CupertinoIcons.radiowaves_right,
-                size: 18,
-                color: fgColor,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isScanning ? 'Scanning' : 'Tap to add',
-                style: GoogleFonts.roboto(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+        ],
+      ),
+      child: Material(
+        color: bgColor,
+        borderRadius: tokens.pillRadius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: tokens.pillRadius,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: tokens.pillRadius,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  CupertinoIcons.radiowaves_right,
+                  size: 18,
                   color: fgColor,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  isScanning ? 'Scanning' : 'Tap to add',
+                  style: GoogleFonts.roboto(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: fgColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

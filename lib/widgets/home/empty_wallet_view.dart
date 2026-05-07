@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/cupertino.dart';
+
+import 'package:swallet/theme/swallet_theme.dart';
 
 class EmptyWalletView extends StatefulWidget {
   final bool isDark;
@@ -21,7 +22,6 @@ class _EmptyWalletViewState extends State<EmptyWalletView>
   @override
   void initState() {
     super.initState();
-    // 🌊 Floating Animation (Breathing effect)
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -41,65 +41,63 @@ class _EmptyWalletViewState extends State<EmptyWalletView>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isDark ? Colors.white : Colors.black;
-    final subColor = widget.isDark ? Colors.grey[500] : Colors.grey[600];
+    final palette = SwalletPalette(widget.isDark);
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // ✨ Animated Icon
-          AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, -10 * _animation.value), // Floats up/down
-                child: child,
-              );
-            },
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 96),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, -8 * _animation.value),
+                  child: child,
+                );
+              },
+              child: Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  color: palette.surfaceLow,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: palette.outline.withValues(
+                      alpha: widget.isDark ? 0.85 : 1,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: palette.primary.withValues(
+                        alpha: widget.isDark ? 0.12 : 0.06,
+                      ),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  CupertinoIcons.lock_shield,
+                  size: 31,
+                  color: palette.primary,
+                ),
               ),
-              child: Icon(
-                Icons.credit_card_off_outlined,
-                size: 32,
-                color: color.withValues(alpha: 0.5),
-              ),
             ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // 📝 Title
-          Text(
-            "No Cards Yet",
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: color.withValues(alpha: 0.9),
-              letterSpacing: 0.5,
+            const SizedBox(height: 22),
+            Text(
+              'No cards yet',
+              style: SwalletText.title.copyWith(color: palette.text),
             ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // 📝 Subtitle
-          Text(
-            "Add your first card to get started",
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: subColor,
+            const SizedBox(height: 8),
+            Text(
+              'Add your first card to get started',
+              textAlign: TextAlign.center,
+              style: SwalletText.body.copyWith(color: palette.textMuted),
             ),
-          ),
-
-          // Space for the FAB at the bottom
-          const SizedBox(height: 100), 
-        ],
+          ],
+        ),
       ),
     );
   }

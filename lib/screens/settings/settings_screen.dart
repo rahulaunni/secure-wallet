@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:swallet/data/local/card_repository.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
 import 'package:swallet/screens/app_unlock/pin_lock_screen.dart';
 import 'package:swallet/screens/app_unlock/security_verification_screen.dart';
 import 'package:swallet/screens/home_screen.dart';
+import 'package:swallet/theme/swallet_theme.dart';
+import 'package:swallet/utils/size_config.dart';
 import 'package:swallet/utils/security_store.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'package:swallet/widgets/buttons/custom_back_button.dart';
@@ -64,8 +65,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SnackBar(
                         content: Text(
                           'New PIN set successfully',
-                          style:
-                              GoogleFonts.roboto(fontWeight: FontWeight.w600),
+                          style: SwalletText.bodyMedium.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -82,29 +84,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _handleClearData() {
     final tokens = AddCardMaterialTokens(widget.isDark);
+    final palette = SwalletPalette(widget.isDark);
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: tokens.surface,
+        backgroundColor: palette.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: tokens.containerRadius),
         title: Text(
           'Clear all data?',
-          style: GoogleFonts.roboto(
-            color: tokens.onSurface,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
+          style: SwalletText.title.copyWith(color: palette.text),
         ),
         content: Text(
           'This will delete all saved cards and reset your PIN. The app will restart.',
-          style: GoogleFonts.roboto(
-            color: tokens.onSurfaceVariant,
-            fontSize: 14,
-            height: 1.35,
-          ),
+          style: SwalletText.body.copyWith(color: palette.textMuted),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
         actions: [
@@ -116,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Text(
               'Cancel',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.w700),
+              style: SwalletText.button,
             ),
           ),
           FilledButton(
@@ -166,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Text(
               'Clear all',
-              style: GoogleFonts.roboto(fontWeight: FontWeight.w700),
+              style: SwalletText.button,
             ),
           ),
         ],
@@ -177,119 +172,129 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(widget.isDark);
+    final palette = SwalletPalette(widget.isDark);
 
     return Scaffold(
-      backgroundColor: tokens.surface,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 64,
-        leadingWidth: 72,
-        leading: Center(
-          child: CustomBackButton(
-            isDark: widget.isDark,
-            onTap: widget.onClose,
+      backgroundColor: palette.background,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: w(24),
+            vertical: w(16),
           ),
-        ),
-        title: Text(
-          'Settings',
-          style: GoogleFonts.roboto(
-            color: tokens.onSurface,
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Security', tokens),
-            const SizedBox(height: 8),
-            _buildGroup(
-              tokens,
-              children: [
-                _buildSwitchTile(
-                  title: 'Biometric unlock',
-                  subtitle: 'Use fingerprint or face unlock',
-                  icon: CupertinoIcons.person_crop_circle_fill,
-                  value: _useBiometrics,
-                  onChanged: _toggleBiometrics,
-                  tokens: tokens,
-                ),
-                _buildDivider(tokens),
-                _buildNavTile(
-                  title: 'Change PIN',
-                  subtitle: 'Verify security answers first',
-                  icon: CupertinoIcons.lock_shield_fill,
-                  tokens: tokens,
-                  onTap: _handleChangePin,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildSectionHeader('Appearance', tokens),
-            const SizedBox(height: 8),
-            _buildGroup(
-              tokens,
-              children: [
-                _buildSwitchTile(
-                  title: 'Dark mode',
-                  icon: widget.isDark
-                      ? CupertinoIcons.moon_fill
-                      : CupertinoIcons.sun_max_fill,
-                  value: widget.isDark,
-                  onChanged: widget.onThemeChanged,
-                  tokens: tokens,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildSectionHeader('Data', tokens),
-            const SizedBox(height: 8),
-            _buildGroup(
-              tokens,
-              children: [
-                _buildNavTile(
-                  title: 'Clear all data',
-                  subtitle: 'Delete cards and reset settings',
-                  icon: CupertinoIcons.xmark_circle_fill,
-                  tokens: tokens,
-                  onTap: _handleClearData,
-                  destructive: true,
-                  hideArrow: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Center(
-              child: Text(
-                'Version 1.0.0',
-                style: GoogleFonts.roboto(
-                  color: tokens.onSurfaceVariant,
-                  fontSize: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTopBar(palette),
+              SizedBox(height: w(20)),
+              _buildSectionHeader('Security', tokens),
+              SizedBox(height: w(8)),
+              _buildGroup(
+                tokens,
+                children: [
+                  _buildSwitchTile(
+                    title: 'Biometric unlock',
+                    icon: CupertinoIcons.person_crop_circle_fill,
+                    value: _useBiometrics,
+                    onChanged: _toggleBiometrics,
+                    tokens: tokens,
+                  ),
+                  _buildDivider(tokens),
+                  _buildNavTile(
+                    title: 'Change PIN',
+                    icon: CupertinoIcons.lock_shield_fill,
+                    tokens: tokens,
+                    onTap: _handleChangePin,
+                  ),
+                ],
+              ),
+              SizedBox(height: w(24)),
+              _buildSectionHeader('Appearance', tokens),
+              SizedBox(height: w(8)),
+              _buildGroup(
+                tokens,
+                children: [
+                  _buildSwitchTile(
+                    title: 'Dark mode',
+                    icon: widget.isDark
+                        ? CupertinoIcons.moon_fill
+                        : CupertinoIcons.sun_max_fill,
+                    value: widget.isDark,
+                    onChanged: widget.onThemeChanged,
+                    tokens: tokens,
+                  ),
+                ],
+              ),
+              SizedBox(height: w(24)),
+              _buildSectionHeader('Data', tokens),
+              SizedBox(height: w(8)),
+              _buildGroup(
+                tokens,
+                children: [
+                  _buildNavTile(
+                    title: 'Clear all data',
+                    icon: CupertinoIcons.xmark_circle_fill,
+                    tokens: tokens,
+                    onTap: _handleClearData,
+                    destructive: true,
+                    hideArrow: true,
+                  ),
+                ],
+              ),
+              SizedBox(height: w(32)),
+              Center(
+                child: Text(
+                  'Version 1.0.0',
+                  style: SwalletText.caption.copyWith(
+                    color: tokens.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, AddCardMaterialTokens tokens) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 12, bottom: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: GoogleFonts.roboto(
-          color: tokens.primary,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.4,
+  Widget _buildTopBar(SwalletPalette palette) {
+    return Row(
+      children: [
+        CustomBackButton(
+          isDark: widget.isDark,
+          onTap: widget.onClose,
         ),
+        SizedBox(width: w(4)),
+        Expanded(
+          child: SizedBox(
+            height: w(56),
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                'Settings',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SwalletText.title.copyWith(
+                  color: palette.text,
+                  fontSize: sp(16),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: w(44), height: w(40)),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, AddCardMaterialTokens tokens) {
+    return Text(
+      title,
+      style: SwalletText.caption.copyWith(
+        color: tokens.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
       ),
     );
   }
@@ -298,26 +303,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AddCardMaterialTokens tokens, {
     required List<Widget> children,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: tokens.surfaceContainer,
-        borderRadius: tokens.containerRadius,
-        border: Border.all(
-          color: tokens.outlineVariant.withValues(alpha: 0.35),
-        ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(r(24)),
+      child: ColoredBox(
+        color: widget.isDark
+            ? tokens.surfaceContainerHigh
+            : tokens.surfaceContainer,
+        child: Column(children: children),
       ),
-      child: Column(children: children),
     );
   }
 
   Widget _buildDivider(AddCardMaterialTokens tokens) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 74),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: tokens.outlineVariant.withValues(alpha: 0.45),
-      ),
+    return Divider(
+      height: w(1),
+      thickness: w(1),
+      color: tokens.outlineVariant,
     );
   }
 
@@ -327,22 +328,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool destructive = false,
   }) {
     final color = destructive ? Colors.redAccent : tokens.onPrimaryContainer;
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: destructive
-            ? Colors.redAccent.withValues(alpha: 0.12)
-            : tokens.primaryContainer,
-        borderRadius: BorderRadius.circular(15),
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: Icon(
+        icon,
+        color: destructive ? color : tokens.onSurface,
+        size: 24,
       ),
-      child: Icon(icon, color: color, size: 21),
     );
   }
 
   Widget _buildNavTile({
     required String title,
-    String? subtitle,
     required IconData icon,
     required AddCardMaterialTokens tokens,
     required VoidCallback onTap,
@@ -353,46 +351,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Material(
       color: Colors.transparent,
-      borderRadius: tokens.containerRadius,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: w(16),
+            vertical: w(16),
+          ),
           child: Row(
             children: [
               _buildIconShell(icon, tokens, destructive: destructive),
-              const SizedBox(width: 16),
+              SizedBox(width: w(10)),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.roboto(
-                        color: titleColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: GoogleFonts.roboto(
-                          color: tokens.onSurfaceVariant,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  title,
+                  style: SwalletText.body.copyWith(
+                    color: titleColor,
+                    fontSize: sp(14),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               if (!hideArrow)
                 Icon(
                   CupertinoIcons.chevron_right,
                   color: tokens.onSurfaceVariant,
-                  size: 18,
+                  size: w(22),
                 ),
             ],
           ),
@@ -403,50 +388,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSwitchTile({
     required String title,
-    String? subtitle,
     required IconData icon,
     required bool value,
     required ValueChanged<bool> onChanged,
     required AddCardMaterialTokens tokens,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: w(16),
+        vertical: w(12),
+      ),
       child: Row(
         children: [
           _buildIconShell(icon, tokens),
-          const SizedBox(width: 16),
+          SizedBox(width: w(10)),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.roboto(
-                    color: tokens.onSurface,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.roboto(
-                      color: tokens.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              title,
+              style: SwalletText.body.copyWith(
+                color: tokens.onSurface,
+                fontSize: sp(14),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          Switch(
-            value: value,
-            activeThumbColor: tokens.onPrimary,
-            activeTrackColor: tokens.primary,
-            inactiveThumbColor: tokens.onSurfaceVariant,
-            inactiveTrackColor: tokens.surfaceContainerHighest,
-            onChanged: onChanged,
+          Transform.scale(
+            scale: 0.86,
+            child: Switch(
+              value: value,
+              activeThumbColor: tokens.onPrimary,
+              activeTrackColor: tokens.primary,
+              inactiveThumbColor: tokens.onSurface,
+              inactiveTrackColor: tokens.surfaceContainerHighest,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              trackOutlineColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? tokens.primary.withValues(alpha: 0.36)
+                    : tokens.outlineVariant.withValues(alpha: 0.70),
+              ),
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),

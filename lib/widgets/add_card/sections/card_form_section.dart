@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:swallet/models/card_network.dart';
 import 'package:swallet/models/card_type.dart';
+import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/card_network_detector.dart';
 import 'package:swallet/utils/card_number_format.dart';
 import 'package:swallet/widgets/add_card/sections/widgets/card_number_slot_field.dart';
 import 'package:swallet/widgets/add_card/sections/widgets/card_type_selector.dart';
+import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'package:swallet/widgets/add_card/widgets/add_card_cta_button.dart';
 import 'package:swallet/widgets/add_card/widgets/form_text.dart';
 
@@ -83,6 +84,7 @@ class _CardFormSectionState extends State<CardFormSection> {
   Widget build(BuildContext context) {
     final cvvLength = CardNumberFormat.cvvLengthForNetwork(_detectedNetwork);
     final isAmex = _detectedNetwork == CardNetwork.amex;
+    final tokens = AddCardMaterialTokens(widget.isDark);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -91,12 +93,8 @@ class _CardFormSectionState extends State<CardFormSection> {
         Center(
           child: Text(
             'Add payment card',
-            style: GoogleFonts.roboto(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: widget.isDark
-                  ? _FormTitleColors.textDark
-                  : _FormTitleColors.textLight,
+            style: SwalletText.bodyMedium.copyWith(
+              color: tokens.onSurface,
             ),
           ),
         ),
@@ -214,9 +212,4 @@ class ExpiryDateInputFormatter extends TextInputFormatter {
       selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
-}
-
-class _FormTitleColors {
-  static const Color textLight = Color(0xFF111827);
-  static const Color textDark = Color.fromARGB(255, 221, 221, 221);
 }
