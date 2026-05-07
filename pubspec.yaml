@@ -1,0 +1,97 @@
+name: swallet
+description: A secure card vault app built with Flutter.
+publish_to: "none"
+
+version: 3.1.6+316
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 🔐 Device authentication (biometric / PIN)
+  local_auth: ^2.2.0
+
+  # 🧱 Local storage (offline-only)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # SVG support (for bold custom icons)
+  flutter_svg: ^2.0.9
+
+  # UI & Animations
+  lottie: ^2.7.0
+
+  # Cupertino icons
+  cupertino_icons: ^1.0.6
+
+  share_plus: ^10.0.0
+  flutter_secure_storage: ^10.0.0
+  google_fonts: ^7.0.0
+  image_picker: ^1.1.2
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+  # 🧩 Hive code generation
+  build_runner: ^2.4.8
+  hive_generator: ^2.0.1
+  change_app_package_name: ^1.5.0
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # ---------- IMAGES ----------
+    - assets/images/
+    - assets/images/networks/
+
+    # ---------- APP ICON ----------
+    - assets/app_icon/
+
+    # ---------- LOTTIE ----------
+    - assets/lottie/
+    - assets/lottie/theme/
+
+    # ---------- ICONS ----------
+    - assets/icons/
+    - assets/icons/flags/
+    - assets/icons/banks/
+    - assets/icons/banks/australia/
+    - assets/icons/banks/brazil/
+    - assets/icons/banks/canada/
+    - assets/icons/banks/china/
+    - assets/icons/banks/france/
+    - assets/icons/banks/germany/
+    - assets/icons/banks/india/
+    - assets/icons/banks/italy/
+    - assets/icons/banks/japan/
+    - assets/icons/banks/mexico/
+    - assets/icons/banks/netherlands/
+    - assets/icons/banks/nigeria/
+    - assets/icons/banks/oman/
+    - assets/icons/banks/saudi_arabia/
+    - assets/icons/banks/singapore/
+    - assets/icons/banks/south_africa/
+    - assets/icons/banks/south_korea/
+    - assets/icons/banks/spain/
+    - assets/icons/banks/sweden/
+    - assets/icons/banks/switzerland/
+    - assets/icons/banks/uae/
+    - assets/icons/banks/united_kingdom/
+    - assets/icons/banks/united_states/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/app_icon/app_icon4.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/app_icon/app_icon4.png
