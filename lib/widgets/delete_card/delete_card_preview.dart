@@ -7,6 +7,7 @@ import '../../models/card_data.dart';
 import '../../models/card_type.dart';
 import '../../utils/card_number_format.dart';
 import '../bank/bank_logo.dart';
+import '../card/card_visual_asset_layer.dart';
 
 class DeleteCardPreview extends StatelessWidget {
   final CardData card;
@@ -28,7 +29,11 @@ class DeleteCardPreview extends StatelessWidget {
     final customStart = card.customGradientStartColor;
     final customEnd = card.customGradientEndColor;
     final visual = customStart != null && customEnd != null
-        ? CardVisuals.customGradient(Color(customStart), Color(customEnd))
+        ? CardVisuals.customGradient(
+            Color(customStart),
+            Color(customEnd),
+            visualAssetPath: card.customCardPatternAssetPath,
+          )
         : CardVisuals.forBank(card.bankCid);
 
     return AspectRatio(
@@ -48,6 +53,13 @@ class DeleteCardPreview extends StatelessWidget {
             ),
             child: Stack(
               children: [
+                if (visual.visualAssetPath != null)
+                  Positioned.fill(
+                    child: CardVisualAssetLayer(
+                      visual: visual,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 Positioned(
                   top: 0,
                   left: 0,

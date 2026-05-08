@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,7 @@ import '../../constants/layout_constants.dart';
 import '../../utils/card_number_format.dart';
 import '../../constants/card_visuals.dart'; // ✅ Import Visual Engine
 import '../bank/bank_logo.dart';
+import 'card_visual_asset_layer.dart';
 import 'card_details_block.dart';
 import 'secure_reveal_wrapper.dart';
 
@@ -21,10 +24,12 @@ class BankCard extends StatelessWidget {
   final String? customBankLogoPath;
   final Color? customGradientStartColor;
   final Color? customGradientEndColor;
+  final String? customCardImagePath;
+  final Alignment customCardImageAlignment;
+  final String? customCardPatternAssetPath;
 
   final VoidCallback onEyeTap;
   final VoidCallback? onShareTap;
-  final VoidCallback? onDeleteTap;
 
   const BankCard({
     super.key,
@@ -39,10 +44,12 @@ class BankCard extends StatelessWidget {
     this.customBankLogoPath,
     this.customGradientStartColor,
     this.customGradientEndColor,
+    this.customCardImagePath,
+    this.customCardImageAlignment = Alignment.center,
+    this.customCardPatternAssetPath,
     // Gradient is removed from constructor; it is now resolved internally.
     required this.onEyeTap,
     this.onShareTap,
-    this.onDeleteTap,
   });
 
   /// ---------------- MASKED FORMAT ----------------
@@ -63,8 +70,24 @@ class BankCard extends StatelessWidget {
     final customStart = customGradientStartColor;
     final customEnd = customGradientEndColor;
     final visual = customStart != null && customEnd != null
-        ? CardVisuals.customGradient(customStart, customEnd)
+        ? CardVisuals.customGradient(
+            customStart,
+            customEnd,
+            visualAssetPath: customCardPatternAssetPath,
+          )
         : CardVisuals.forBank(bankLogo);
+    final customImagePath = customCardImagePath?.trim();
+    final customImageFile =
+        customImagePath != null && customImagePath.isNotEmpty
+            ? File(customImagePath)
+            : null;
+    final customImage = customImageFile != null && customImageFile.existsSync()
+        ? DecorationImage(
+            image: FileImage(customImageFile),
+            fit: BoxFit.cover,
+            alignment: customCardImageAlignment,
+          )
+        : null;
 
     // ================= SECURITY LOGIC (LOCKED) =================
     final bool showCvv = scope.revealed && scope.cvvVisible;
@@ -90,25 +113,24 @@ class BankCard extends StatelessWidget {
                 .zero, // Padding is handled inside Stack for full-bleed background
             decoration: BoxDecoration(
               gradient: visual.gradient, // ✅ Use Brand Gradient
+              image: customImage,
               borderRadius: BorderRadius.circular(cardBorderRadius),
               boxShadow: [
                 BoxShadow(
-                  color: visual.gradient.colors.first.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
                 ),
               ],
             ),
             child: Stack(
               children: [
-                // ✅ 1. BRAND PATTERN LAYER (Behind everything)
-                if (visual.patternPainter != null)
+                // ✅ 1. BRAND SVG VISUAL LAYER (Behind everything)
+                if (customImage == null && visual.visualAssetPath != null)
                   Positioned.fill(
-                    child: ClipRRect(
+                    child: CardVisualAssetLayer(
+                      visual: visual,
                       borderRadius: BorderRadius.circular(cardBorderRadius),
-                      child: CustomPaint(
-                        painter: visual.patternPainter,
-                      ),
                     ),
                   ),
 
@@ -187,7 +209,7 @@ class BankCard extends StatelessWidget {
                         ),
                       ),
 
-                      // ================= ACTION BUTTONS =================
+                      // ================= CARD ACTIONS =================
                       Positioned(
                         right: 0,
                         bottom: 0,
@@ -199,11 +221,13 @@ class BankCard extends StatelessWidget {
                                   : Icons.visibility,
                               onTap: onEyeTap,
                             ),
-                            const SizedBox(width: 8),
-                            _CardActionButton(
-                              icon: scope.revealed ? Icons.share : Icons.delete,
-                              onTap: scope.revealed ? onShareTap : onDeleteTap,
-                            ),
+                            if (scope.revealed) ...[
+                              const SizedBox(width: 8),
+                              _CardActionButton(
+                                icon: Icons.share,
+                                onTap: onShareTap,
+                              ),
+                            ],
                           ],
                         ),
                       ),

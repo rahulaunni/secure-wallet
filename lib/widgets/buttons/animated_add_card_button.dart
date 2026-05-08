@@ -23,6 +23,9 @@ class AnimatedAddCardButton extends StatelessWidget {
   static const double _gapWidth = 8;
   static const double _collapsedHorizontalPadding = 15;
   static const double _expandedHorizontalPadding = 14;
+  static const BorderRadius _buttonRadius = BorderRadius.all(
+    Radius.circular(_height / 2),
+  );
   static const Duration _duration = Duration(milliseconds: 260);
   static const Curve _curve = Curves.easeInOutCubic;
 
@@ -36,14 +39,14 @@ class AnimatedAddCardButton extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      borderRadius: tokens.pillRadius,
+      borderRadius: _buttonRadius,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
           SwalletHaptics.bankSelected();
           onTap();
         },
-        borderRadius: tokens.pillRadius,
+        borderRadius: _buttonRadius,
         child: AnimatedContainer(
           duration: _duration,
           curve: _curve,
@@ -51,7 +54,7 @@ class AnimatedAddCardButton extends StatelessWidget {
           width: collapsed ? _collapsedWidth : _expandedWidth,
           decoration: BoxDecoration(
             color: tokens.primary,
-            borderRadius: tokens.pillRadius,
+            borderRadius: _buttonRadius,
             boxShadow: [
               BoxShadow(
                 color: tokens.primary.withValues(alpha: isDark ? 0.28 : 0.18),
@@ -61,7 +64,7 @@ class AnimatedAddCardButton extends StatelessWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: tokens.pillRadius,
+            borderRadius: _buttonRadius,
             child: AnimatedPadding(
               duration: _duration,
               curve: _curve,
@@ -76,10 +79,10 @@ class AnimatedAddCardButton extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           CupertinoIcons.add,
                           size: _iconSize,
-                          color: tokens.onPrimary,
+                          color: Colors.white,
                         ),
                         ClipRect(
                           child: Align(
@@ -96,7 +99,7 @@ class AnimatedAddCardButton extends StatelessWidget {
                                   overflow: TextOverflow.clip,
                                   textScaler: TextScaler.noScaling,
                                   style: SwalletText.button.copyWith(
-                                    color: tokens.onPrimary,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),

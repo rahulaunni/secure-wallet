@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -11,6 +12,7 @@ import 'data/local/hive_boxes.dart';
 import 'screens/app_unlock/pin_lock_screen.dart';
 import 'screens/home_screen.dart';
 import 'theme/swallet_theme.dart';
+import 'utils/adaptive_layout.dart';
 import 'utils/hive_encryption.dart';
 import 'utils/security_store.dart';
 import 'utils/size_config.dart';
@@ -51,6 +53,7 @@ class _CardVaultAppState extends State<CardVaultApp>
   bool _isDark = true;
   bool _isUnlocked = false;
   bool _showBlur = false;
+  bool? _allowsLandscape;
 
   Timer? _backgroundLockTimer;
   late final AnimationController _unlockController;
@@ -125,6 +128,28 @@ class _CardVaultAppState extends State<CardVaultApp>
     setState(() => _isUnlocked = true);
   }
 
+  void _syncOrientationPolicy(MediaQueryData mediaQuery) {
+    final size = mediaQuery.size;
+    final allowsLandscape =
+        AdaptiveLayout.allowsLandscapeForSize(size.width, size.height);
+    if (_allowsLandscape == allowsLandscape) return;
+
+    _allowsLandscape = allowsLandscape;
+    final orientations = allowsLandscape
+        ? const <DeviceOrientation>[
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]
+        : const <DeviceOrientation>[
+            DeviceOrientation.portraitUp,
+          ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setPreferredOrientations(orientations);
+    });
+  }
+
   TextTheme _buildLockedTextTheme(TextTheme base) {
     final poppins = GoogleFonts.poppinsTextTheme(base);
     return poppins.copyWith(
@@ -158,6 +183,7 @@ class _CardVaultAppState extends State<CardVaultApp>
       builder: (context, child) {
         SizeConfig.init(context);
         final mediaQuery = MediaQuery.of(context);
+        _syncOrientationPolicy(mediaQuery);
         return MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: TextScaler.noScaling,

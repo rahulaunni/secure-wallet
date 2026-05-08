@@ -104,11 +104,8 @@ void _paintCard(Canvas canvas, Offset offset, Size size, String bankId) {
   final gradientPaint = Paint()..shader = gradient.createShader(rect);
   canvas.drawRRect(rrect, gradientPaint);
 
-  if (visual.patternPainter == null) return;
-
-  canvas.save();
-  canvas.clipRRect(rrect);
-  canvas.translate(offset.dx, offset.dy);
-  visual.patternPainter!.paint(canvas, size);
-  canvas.restore();
+  expect(
+    CardVisuals.customVisualAssetPaths,
+    contains(visual.visualAssetPath),
+  );
 }

@@ -32,6 +32,73 @@ void main() {
     expect(missing, isEmpty);
   });
 
+  test('every supported Indian bank uses one of the imported SVG visuals', () {
+    final assetPaths = CardVisuals.customVisualAssetPaths.toSet();
+
+    for (final bankId in BankAssets.supportedBanks) {
+      expect(
+        assetPaths,
+        contains(CardVisuals.forBank(bankId).visualAssetPath),
+        reason: '$bankId should resolve to one of the imported SVG assets',
+      );
+    }
+  });
+
+  test('custom visual assets have friendly picker names', () {
+    final names = <String>{};
+
+    for (final assetPath in CardVisuals.customVisualAssetPaths) {
+      final displayName = CardVisuals.customVisualAssetName(assetPath);
+
+      expect(
+        displayName,
+        isNot(anyOf(isEmpty, startsWith('style'), contains('.svg'))),
+        reason: '$assetPath should have a display name',
+      );
+      expect(
+        names.add(displayName),
+        isTrue,
+        reason: '$displayName should be unique in the picker',
+      );
+    }
+  });
+
+  test('custom visual asset files use descriptive kebab-case names', () {
+    final assetNamePattern = RegExp(r'^assets/card visuals/[a-z0-9-]+\.svg$');
+
+    for (final assetPath in CardVisuals.customVisualAssetPaths) {
+      expect(
+        assetPath,
+        matches(assetNamePattern),
+        reason: '$assetPath should not expose imported file names',
+      );
+    }
+  });
+
+  test('legacy card visual asset paths resolve to renamed assets', () {
+    final assetPaths = CardVisuals.customVisualAssetPaths.toSet();
+    const legacyPaths = [
+      'assets/card visuals/Credit Card.svg',
+      'assets/card visuals/Frame.svg',
+      'assets/card visuals/style1-02.svg',
+      'assets/card visuals/style14.svg',
+    ];
+
+    for (final legacyPath in legacyPaths) {
+      final resolvedPath = CardVisuals.resolveVisualAssetPath(legacyPath);
+
+      expect(
+        assetPaths,
+        contains(resolvedPath),
+        reason: '$legacyPath should map to one of the renamed visual assets',
+      );
+      expect(
+        CardVisuals.customVisualAssetName(legacyPath),
+        isNot(anyOf(isEmpty, startsWith('style'), contains('.svg'))),
+      );
+    }
+  });
+
   test('the twelve reference SVG card motifs stay fixed', () {
     for (final entry in fixedReferenceMotifs.entries) {
       expect(

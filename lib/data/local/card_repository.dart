@@ -27,6 +27,24 @@ class CardRepository {
     await _box.add(card);
   }
 
+  // ================= UPDATE =================
+  /// Updates by Hive key using the in-memory card instance as the lookup anchor.
+  static Future<void> update(CardData original, CardData updated) async {
+    dynamic updateKey;
+
+    for (final key in _box.keys) {
+      final stored = _box.get(key);
+      if (identical(stored, original)) {
+        updateKey = key;
+        break;
+      }
+    }
+
+    if (updateKey != null) {
+      await _box.put(updateKey, updated);
+    }
+  }
+
   // ================= DELETE =================
   /// 🔒 Deletes by Hive key (SAFE)
   /// - Does NOT rely on == override

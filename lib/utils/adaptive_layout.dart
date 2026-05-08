@@ -7,6 +7,7 @@ enum AdaptiveWindowClass {
 class AdaptiveLayout {
   static const double compactWidthMax = 600;
   static const double expandedWidthMin = 840;
+  static const double tabletLandscapeShortestSideMin = 720;
   static const double phoneDesignWidth = 390;
   static const double phoneHorizontalPadding = 16;
   static const double phoneCardWidth =
@@ -30,6 +31,12 @@ class AdaptiveLayout {
 
   static bool usesPhoneCanvas(double width) {
     return windowClassForWidth(width) == AdaptiveWindowClass.compact;
+  }
+
+  static bool allowsLandscapeForSize(double width, double height) {
+    return width < height
+        ? width >= tabletLandscapeShortestSideMin
+        : height >= tabletLandscapeShortestSideMin;
   }
 
   static int cardPaneCountForWidth(double width) {

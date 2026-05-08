@@ -51,7 +51,6 @@ class CardPreview extends StatelessWidget {
         // ❌ gradient: gradient, <--- REMOVED
         onEyeTap: () {},
         onShareTap: null,
-        onDeleteTap: null,
       ),
     );
   }

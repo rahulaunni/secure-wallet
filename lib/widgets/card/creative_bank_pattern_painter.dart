@@ -705,50 +705,85 @@ class CreativeBankPatternPainter extends CustomPainter {
 
   void _paintOrbit(Canvas canvas, Size size, Paint paint) {
     final center = _anchor(size);
-    final rings = (5 + recipe.density * 9).round();
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = recipe.strokeWidth;
-
-    for (var i = 0; i < rings; i++) {
-      final rect = Rect.fromCenter(
-        center: center,
-        width: size.width * recipe.scale * (0.25 + i * 0.095),
-        height: size.height * recipe.scale * (0.12 + i * 0.048),
-      );
-      paint.color =
-          _mixColor(i).withValues(alpha: recipe.opacity * (0.72 - i * 0.045));
-      canvas.drawOval(rect, paint);
-    }
-
+    final rect = Rect.fromCenter(
+      center: center,
+      width: size.width * recipe.scale * 0.92,
+      height: size.height * recipe.scale * 0.46,
+    );
     paint
       ..style = PaintingStyle.fill
-      ..color = secondary.withValues(alpha: recipe.opacity * 0.58);
-    canvas.drawCircle(
-      center + Offset(size.width * recipe.scale * 0.26, -size.height * 0.06),
-      _min(size) * 0.025,
-      paint,
-    );
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.lerp(primary, Colors.white, 0.34)!
+              .withValues(alpha: recipe.opacity * 1.20),
+          primary.withValues(alpha: recipe.opacity * 0.42),
+          secondary.withValues(alpha: 0),
+        ],
+        stops: const [0, 0.54, 1],
+      ).createShader(rect);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-0.20 + recipe.angle * 0.18);
+    canvas.translate(-center.dx, -center.dy);
+    canvas.drawOval(rect, paint);
+    canvas.restore();
+    paint.shader = null;
+
+    final lowerPlane = Path()
+      ..moveTo(-size.width * 0.08, size.height * 0.72)
+      ..lineTo(size.width * 0.52, size.height * 0.30)
+      ..lineTo(size.width * 1.08, size.height * 0.60)
+      ..lineTo(size.width * 1.08, size.height * 1.08)
+      ..lineTo(-size.width * 0.08, size.height * 1.08)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.bottomLeft,
+      end: Alignment.topRight,
+      colors: [
+        Color.lerp(secondary, Colors.white, 0.22)!
+            .withValues(alpha: recipe.opacity * 0.74),
+        secondary.withValues(alpha: 0),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(lowerPlane, paint);
+    paint.shader = null;
   }
 
   void _paintCoinStack(Canvas canvas, Size size, Paint paint) {
     final center = _anchor(size);
-    final count = (5 + recipe.density * 9).round();
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = recipe.strokeWidth;
+    final front = Rect.fromCenter(
+      center: center,
+      width: size.width * recipe.scale * 0.66,
+      height: size.height * recipe.scale * 0.40,
+    );
+    final rear = front.shift(Offset(size.width * 0.18, size.height * 0.10));
+    paint.style = PaintingStyle.fill;
 
-    for (var i = 0; i < count; i++) {
-      final rect = Rect.fromCenter(
-        center:
-            center + Offset(i * size.width * 0.025, i * size.height * 0.035),
-        width: size.width * (0.36 + recipe.scale * 0.12),
-        height: size.height * (0.22 + recipe.scale * 0.06),
+    void drawTile(Rect rect, Color color, double alpha) {
+      paint.shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.lerp(color, Colors.white, 0.32)!.withValues(alpha: alpha),
+          color.withValues(alpha: alpha * 0.14),
+        ],
+      ).createShader(rect);
+      canvas.save();
+      canvas.translate(rect.center.dx, rect.center.dy);
+      canvas.rotate(-0.18 + recipe.angle * 0.16);
+      canvas.translate(-rect.center.dx, -rect.center.dy);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(size.width * 0.08)),
+        paint,
       );
-      paint.color =
-          _mixColor(i).withValues(alpha: recipe.opacity * (0.68 - i * 0.035));
-      canvas.drawOval(rect, paint);
+      canvas.restore();
+      paint.shader = null;
     }
+
+    drawTile(rear, secondary, recipe.opacity * 0.78);
+    drawTile(front, primary, recipe.opacity * 0.92);
   }
 
   void _paintLotusMandala(Canvas canvas, Size size, Paint paint) {
@@ -919,30 +954,53 @@ class CreativeBankPatternPainter extends CustomPainter {
 
   void _paintPortalArcs(Canvas canvas, Size size, Paint paint) {
     final center = _anchor(size);
-    final count = (7 + recipe.density * 14).round();
+    final panelWidth = size.width * recipe.scale * 0.70;
+    final panelHeight = size.height * recipe.scale * 0.72;
+    final portal = Path()
+      ..moveTo(center.dx - panelWidth * 0.48, size.height * 1.08)
+      ..lineTo(center.dx - panelWidth * 0.48, center.dy + panelHeight * 0.08)
+      ..cubicTo(
+        center.dx - panelWidth * 0.48,
+        center.dy - panelHeight * 0.42,
+        center.dx + panelWidth * 0.48,
+        center.dy - panelHeight * 0.42,
+        center.dx + panelWidth * 0.48,
+        center.dy + panelHeight * 0.08,
+      )
+      ..lineTo(center.dx + panelWidth * 0.48, size.height * 1.08)
+      ..close();
     paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = recipe.strokeWidth * 1.35;
+      ..style = PaintingStyle.fill
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color.lerp(primary, Colors.white, 0.36)!
+              .withValues(alpha: recipe.opacity * 0.96),
+          Color.lerp(secondary, Colors.white, 0.18)!
+              .withValues(alpha: recipe.opacity * 0.26),
+          secondary.withValues(alpha: 0),
+        ],
+        stops: const [0, 0.62, 1],
+      ).createShader(Offset.zero & size);
+    canvas.drawPath(portal, paint);
+    paint.shader = null;
 
-    for (var i = 0; i < count; i++) {
-      final w = size.width * recipe.scale * (0.20 + i * 0.055);
-      final h = size.height * recipe.scale * (0.30 + i * 0.050);
-      final rect = Rect.fromCenter(center: center, width: w, height: h);
-      paint.color = _mixColor(i).withValues(
-        alpha: recipe.opacity * (0.72 - i * 0.035),
-      );
-      canvas.drawArc(rect, math.pi, math.pi, false, paint);
-      canvas.drawLine(
-        Offset(center.dx - w / 2, center.dy),
-        Offset(center.dx - w / 2, center.dy + h * 0.28),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(center.dx + w / 2, center.dy),
-        Offset(center.dx + w / 2, center.dy + h * 0.28),
-        paint,
-      );
-    }
+    final side = Path()
+      ..moveTo(center.dx + panelWidth * 0.08, size.height * 1.08)
+      ..lineTo(center.dx + panelWidth * 0.48, center.dy + panelHeight * 0.08)
+      ..lineTo(center.dx + panelWidth * 0.48, size.height * 1.08)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [
+        Colors.white.withValues(alpha: recipe.opacity * 0.12),
+        secondary.withValues(alpha: recipe.opacity * 0.24),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(side, paint);
+    paint.shader = null;
   }
 
   void _paintHexBloom(Canvas canvas, Size size, Paint paint) {
@@ -1460,64 +1518,58 @@ class CreativeBankPatternPainter extends CustomPainter {
 
   void _paintFigmaVioletArcs(Canvas canvas, Size size, Paint paint) {
     paint.style = PaintingStyle.fill;
-    final veil = Color.lerp(primary, Colors.white, 0.42)!;
-    final glow = Color.lerp(secondary, Colors.white, 0.26)!;
+    final coolGlass = Color.lerp(primary, Colors.white, 0.36)!;
+    final warmGlass = Color.lerp(secondary, Colors.white, 0.28)!;
 
-    final topCenter = _pt(size, 336, 200, 66, -2);
-    final topRadius = size.width * 126 / 336;
-    paint.shader = LinearGradient(
-      begin: Alignment.centerRight,
-      end: Alignment.topLeft,
-      colors: [
-        veil.withValues(alpha: 0.34),
-        veil.withValues(alpha: 0.08),
-        veil.withValues(alpha: 0),
-      ],
-      stops: const [0, 0.58, 1],
-    ).createShader(Rect.fromCircle(center: topCenter, radius: topRadius));
-    canvas.drawCircle(topCenter, topRadius, paint);
-    paint.shader = null;
-
-    final bottomCenter = _pt(size, 336, 200, 232, 206);
-    final bottomRadius = size.width * 148 / 336;
+    final crown = Path()
+      ..moveTo(size.width * 0.10, 0)
+      ..lineTo(size.width * 0.66, 0)
+      ..lineTo(size.width * 0.88, size.height)
+      ..lineTo(size.width * 0.28, size.height)
+      ..close();
     paint.shader = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        glow.withValues(alpha: 0.46),
-        glow.withValues(alpha: 0.16),
-        glow.withValues(alpha: 0),
+        coolGlass.withValues(alpha: 0.34),
+        primary.withValues(alpha: 0.08),
+        secondary.withValues(alpha: 0),
       ],
-      stops: const [0, 0.54, 1],
-    ).createShader(Rect.fromCircle(
-      center: bottomCenter,
-      radius: bottomRadius,
-    ));
-    canvas.drawCircle(bottomCenter, bottomRadius, paint);
+      stops: const [0, 0.56, 1],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(crown, paint);
     paint.shader = null;
 
-    final panel = Path()
-      ..moveTo(0, size.height * 0.70)
-      ..cubicTo(
-        size.width * 0.26,
-        size.height * 0.54,
-        size.width * 0.58,
-        size.height * 0.70,
-        size.width,
-        size.height * 0.52,
-      )
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
+    final inset = Path()
+      ..moveTo(size.width * 0.40, size.height * 0.12)
+      ..lineTo(size.width * 0.82, size.height * 0.12)
+      ..lineTo(size.width * 0.68, size.height * 0.82)
+      ..lineTo(size.width * 0.20, size.height * 0.82)
       ..close();
     paint.shader = LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
       colors: [
-        veil.withValues(alpha: 0.20),
-        Colors.white.withValues(alpha: 0.05),
+        warmGlass.withValues(alpha: 0.28),
+        Colors.white.withValues(alpha: 0.06),
+        warmGlass.withValues(alpha: 0),
       ],
+      stops: const [0, 0.52, 1],
     ).createShader(Offset.zero & size);
-    canvas.drawPath(panel, paint);
+    canvas.drawPath(inset, paint);
+    paint.shader = null;
+
+    final lowerGlow = Offset(size.width * 0.92, size.height * 0.86);
+    paint.shader = RadialGradient(
+      colors: [
+        warmGlass.withValues(alpha: 0.30),
+        warmGlass.withValues(alpha: 0),
+      ],
+    ).createShader(Rect.fromCircle(
+      center: lowerGlow,
+      radius: size.width * 0.34,
+    ));
+    canvas.drawCircle(lowerGlow, size.width * 0.34, paint);
     paint.shader = null;
   }
 
@@ -2036,23 +2088,36 @@ class CreativeBankPatternPainter extends CustomPainter {
       case 1:
         fillPath(
           polygon(const [
-            Offset(-0.10, 0.00),
-            Offset(0.36, 0.00),
-            Offset(0.70, 1.00),
-            Offset(0.24, 1.00),
+            Offset(-0.08, 0.00),
+            Offset(0.50, 0.00),
+            Offset(0.72, 1.00),
+            Offset(0.16, 1.00),
           ]),
           lightPrimary,
-          alpha * 0.70,
+          alpha * 0.46,
         );
         fillPath(
           polygon(const [
-            Offset(0.40, 0.00),
-            Offset(0.76, 0.00),
-            Offset(1.10, 1.00),
-            Offset(0.74, 1.00),
+            Offset(0.60, -0.04),
+            Offset(1.08, -0.04),
+            Offset(1.08, 0.46),
+            Offset(0.76, 0.72),
           ]),
           lightSecondary,
-          alpha * 0.42,
+          alpha * 0.38,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.18, 0.88),
+          0.30,
+          lightSecondary,
+          alpha * 0.36,
+          Alignment.bottomLeft,
+          Alignment.topRight,
         );
       case 2:
         _memoryCircle(
@@ -2104,41 +2169,43 @@ class CreativeBankPatternPainter extends CustomPainter {
         _memoryRibbon(
             canvas, size, paint, 0.34, 0.66, lightPrimary, alpha * 0.92);
       case 5:
-        _memoryBand(
-          canvas,
-          size,
-          paint,
-          const Offset(-0.12, -0.18),
-          const Size(0.38, 1.38),
-          -34,
+        fillRRect(
+          const Offset(0.12, 0.16),
+          const Size(0.76, 0.50),
+          0.07,
+          -8,
           lightPrimary,
-          alpha * 0.70,
-          0.035,
+          alpha * 0.46,
         );
-        _memoryBand(
-          canvas,
-          size,
-          paint,
-          const Offset(0.58, -0.16),
-          const Size(0.32, 1.34),
-          -34,
+        fillPath(
+          polygon(const [
+            Offset(0.12, 0.66),
+            Offset(0.88, 0.54),
+            Offset(1.04, 0.86),
+            Offset(0.18, 1.08),
+          ]),
           lightSecondary,
           alpha * 0.44,
-          0.035,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         );
       case 6:
-        fillRRect(
+        _memoryCapsule(
+          canvas,
+          size,
+          paint,
           const Offset(0.10, 0.26),
           const Size(0.62, 0.23),
-          0.08,
           0,
           lightPrimary,
           alpha * 0.62,
         );
-        fillRRect(
+        _memoryCapsule(
+          canvas,
+          size,
+          paint,
           const Offset(0.28, 0.54),
           const Size(0.64, 0.22),
-          0.08,
           0,
           lightSecondary,
           alpha * 0.48,
@@ -2156,24 +2223,28 @@ class CreativeBankPatternPainter extends CustomPainter {
           Alignment.bottomLeft,
         );
       case 8:
-        fillRRect(
-          const Offset(0.34, 0.12),
-          const Size(0.62, 0.76),
-          0.08,
-          0,
+        fillPath(
+          polygon(const [
+            Offset(0.02, 0.18),
+            Offset(0.52, -0.04),
+            Offset(0.90, 0.18),
+            Offset(0.62, 0.66),
+            Offset(0.12, 0.84),
+          ]),
           lightPrimary,
           alpha * 0.42,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         );
-        _memoryBand(
-          canvas,
-          size,
-          paint,
-          const Offset(0.16, -0.10),
-          const Size(0.24, 1.20),
-          -36,
+        fillRRect(
+          const Offset(0.42, 0.42),
+          const Size(0.46, 0.36),
+          0.055,
+          -10,
           lightSecondary,
-          alpha * 0.54,
-          0.035,
+          alpha * 0.36,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         );
       case 9:
         waveBand(0.58, 0.40, 1.08, lightPrimary, alpha * 0.82);
@@ -2195,65 +2266,79 @@ class CreativeBankPatternPainter extends CustomPainter {
       case 11:
         fillPath(
           polygon(const [
-            Offset(0.12, 0.12),
-            Offset(0.74, 0.12),
-            Offset(0.94, 0.50),
-            Offset(0.58, 0.88),
-            Offset(0.12, 0.78),
+            Offset(0.00, 0.00),
+            Offset(0.62, 0.00),
+            Offset(0.94, 0.46),
+            Offset(0.56, 1.00),
+            Offset(0.00, 0.72),
           ]),
           lightPrimary,
-          alpha * 0.58,
+          alpha * 0.44,
         );
         fillPath(
           polygon(const [
-            Offset(0.74, 0.12),
-            Offset(0.94, 0.50),
-            Offset(0.58, 0.88),
+            Offset(0.62, 0.00),
+            Offset(1.08, 0.00),
+            Offset(1.08, 1.00),
+            Offset(0.56, 1.00),
+            Offset(0.94, 0.46),
           ]),
           lightSecondary,
-          alpha * 0.36,
+          alpha * 0.30,
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         );
       case 12:
         fillRRect(
-          const Offset(0.08, 0.34),
-          const Size(0.78, 0.34),
-          0.05,
-          -18,
+          const Offset(0.10, 0.18),
+          const Size(0.70, 0.42),
+          0.075,
+          -14,
           lightPrimary,
-          alpha * 0.52,
+          alpha * 0.44,
         );
         fillRRect(
-          const Offset(0.46, 0.22),
-          const Size(0.48, 0.30),
-          0.05,
-          -18,
+          const Offset(0.30, 0.46),
+          const Size(0.64, 0.36),
+          0.075,
+          -14,
           lightSecondary,
-          alpha * 0.38,
+          alpha * 0.34,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.92, 0.10),
+          0.22,
+          lightSecondary,
+          alpha * 0.28,
+          Alignment.topRight,
+          Alignment.bottomLeft,
         );
       case 13:
         fillPath(
           polygon(const [
-            Offset(0.00, 0.10),
-            Offset(0.46, 0.50),
-            Offset(0.00, 0.90),
+            Offset(0.06, 0.18),
+            Offset(0.48, 0.50),
+            Offset(0.06, 0.82),
           ]),
           lightPrimary,
-          alpha * 0.58,
+          alpha * 0.42,
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         );
         fillPath(
           polygon(const [
-            Offset(0.54, 0.00),
-            Offset(1.04, 0.50),
-            Offset(0.54, 1.00),
+            Offset(0.44, 0.18),
+            Offset(0.90, 0.50),
+            Offset(0.44, 0.82),
+            Offset(0.56, 0.50),
           ]),
           lightSecondary,
-          alpha * 0.36,
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
+          alpha * 0.46,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         );
       case 14:
         fillRRect(
@@ -2318,21 +2403,27 @@ class CreativeBankPatternPainter extends CustomPainter {
           Alignment.bottomLeft,
         );
       case 17:
-        fillPath(
-          polygon(const [
-            Offset(0.00, 0.38),
-            Offset(0.34, 0.38),
-            Offset(0.34, 0.28),
-            Offset(0.68, 0.28),
-            Offset(0.68, 0.18),
-            Offset(1.08, 0.18),
-            Offset(1.08, 0.52),
-            Offset(0.00, 0.72),
-          ]),
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(-0.08, 0.22),
+          const Size(0.74, 0.34),
+          -18,
           lightPrimary,
-          alpha * 0.62,
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
+          alpha * 0.44,
+          0.08,
+        );
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(0.42, 0.44),
+          const Size(0.74, 0.30),
+          -18,
+          lightSecondary,
+          alpha * 0.36,
+          0.08,
         );
       case 18:
         fillRRect(
@@ -2412,43 +2503,65 @@ class CreativeBankPatternPainter extends CustomPainter {
           end: Alignment.bottomCenter,
         );
       case 21:
-        _memoryCapsule(
-          canvas,
-          size,
-          paint,
-          const Offset(0.12, 0.38),
-          const Size(0.76, 0.24),
-          -24,
+        fillPath(
+          polygon(const [
+            Offset(-0.08, 0.66),
+            Offset(0.42, 0.18),
+            Offset(0.80, 0.18),
+            Offset(0.28, 0.72),
+          ]),
           lightPrimary,
-          alpha * 0.56,
+          alpha * 0.44,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         );
-        _memoryCapsule(
-          canvas,
-          size,
-          paint,
-          const Offset(0.52, 0.36),
-          const Size(0.38, 0.18),
-          -24,
+        fillPath(
+          polygon(const [
+            Offset(0.34, 0.84),
+            Offset(0.78, 0.36),
+            Offset(1.08, 0.36),
+            Offset(0.68, 0.92),
+          ]),
           lightSecondary,
-          alpha * 0.38,
+          alpha * 0.34,
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
         );
       case 22:
-        final center = Offset(size.width * 0.86, size.height * 0.24);
-        final radius = size.width * 0.52;
-        paint
-          ..style = PaintingStyle.fill
-          ..shader = SweepGradient(
-            startAngle: -math.pi * 0.70,
-            endAngle: math.pi * 1.12,
-            colors: [
-              Colors.white.withValues(alpha: 0),
-              lightPrimary.withValues(alpha: alpha * 0.68),
-              lightSecondary.withValues(alpha: alpha * 0.36),
-              Colors.white.withValues(alpha: 0),
-            ],
-          ).createShader(Rect.fromCircle(center: center, radius: radius));
-        canvas.drawCircle(center, radius, paint);
-        paint.shader = null;
+        fillPath(
+          polygon(const [
+            Offset(0.00, 0.00),
+            Offset(0.50, 0.00),
+            Offset(0.62, 0.48),
+            Offset(0.30, 1.00),
+            Offset(0.00, 1.00),
+          ]),
+          lightPrimary,
+          alpha * 0.34,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.50, 0.00),
+            Offset(1.08, 0.00),
+            Offset(1.08, 0.62),
+            Offset(0.62, 0.48),
+          ]),
+          lightSecondary,
+          alpha * 0.42,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.92, 0.94),
+          0.24,
+          lightSecondary,
+          alpha * 0.30,
+          Alignment.bottomRight,
+          Alignment.topLeft,
+        );
     }
   }
 

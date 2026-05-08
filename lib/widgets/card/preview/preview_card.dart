@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +9,7 @@ import '../../../constants/card_visuals.dart'; // ✅ Import Visual Engine
 import '../../../models/card_network.dart';
 import '../../../utils/card_number_format.dart';
 import '../../bank/bank_logo.dart';
+import '../card_visual_asset_layer.dart';
 import '../card_details_block.dart';
 
 class PreviewCard extends StatelessWidget {
@@ -21,6 +24,10 @@ class PreviewCard extends StatelessWidget {
   final String? customBankLogoPath;
   final Color? customGradientStartColor;
   final Color? customGradientEndColor;
+  final String? customCardImagePath;
+  final Alignment customCardImageAlignment;
+  final String? customCardPatternAssetPath;
+  final VoidCallback? onEditVisualTap;
 
   final String cardType;
 
@@ -36,6 +43,10 @@ class PreviewCard extends StatelessWidget {
     this.customBankLogoPath,
     this.customGradientStartColor,
     this.customGradientEndColor,
+    this.customCardImagePath,
+    this.customCardImageAlignment = Alignment.center,
+    this.customCardPatternAssetPath,
+    this.onEditVisualTap,
     this.cardType = '',
   });
 
@@ -68,10 +79,26 @@ class PreviewCard extends StatelessWidget {
     final customStart = customGradientStartColor;
     final customEnd = customGradientEndColor;
     final CardVisual visual = customStart != null && customEnd != null
-        ? CardVisuals.customGradient(customStart, customEnd)
+        ? CardVisuals.customGradient(
+            customStart,
+            customEnd,
+            visualAssetPath: customCardPatternAssetPath,
+          )
         : hasBank
             ? CardVisuals.forBank(bankCid!)
             : CardVisuals.placeholder(isDark);
+    final customImagePath = customCardImagePath?.trim();
+    final customImageFile =
+        customImagePath != null && customImagePath.isNotEmpty
+            ? File(customImagePath)
+            : null;
+    final customImage = customImageFile != null && customImageFile.existsSync()
+        ? DecorationImage(
+            image: FileImage(customImageFile),
+            fit: BoxFit.cover,
+            alignment: customCardImageAlignment,
+          )
+        : null;
 
     final String? networkLogo = hasBank ? _networkAsset(cardNetwork) : null;
 
@@ -98,25 +125,24 @@ class PreviewCard extends StatelessWidget {
             padding: EdgeInsets.zero, // Padding is handled inside the Stack
             decoration: BoxDecoration(
               gradient: visual.gradient, // ✅ Use Brand Gradient
+              image: customImage,
               borderRadius: BorderRadius.circular(cardBorderRadius),
               boxShadow: [
                 BoxShadow(
-                  color: visual.gradient.colors.first.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
                 ),
               ],
             ),
             child: Stack(
               children: [
-                // ✅ 1. BRAND PATTERN LAYER (Behind everything)
-                if (visual.patternPainter != null)
+                // ✅ 1. BRAND SVG VISUAL LAYER (Behind everything)
+                if (customImage == null && visual.visualAssetPath != null)
                   Positioned.fill(
-                    child: ClipRRect(
+                    child: CardVisualAssetLayer(
+                      visual: visual,
                       borderRadius: BorderRadius.circular(cardBorderRadius),
-                      child: CustomPaint(
-                        painter: visual.patternPainter,
-                      ),
                     ),
                   ),
 
@@ -191,6 +217,15 @@ class PreviewCard extends StatelessWidget {
                           onToggleCvv: () {},
                         ),
                       ),
+                      if (onEditVisualTap != null)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: _PreviewCardActionButton(
+                            icon: Icons.tune,
+                            onTap: onEditVisualTap!,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -198,6 +233,36 @@ class PreviewCard extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _PreviewCardActionButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PreviewCardActionButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black26,
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: Colors.white,
+        ),
       ),
     );
   }

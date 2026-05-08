@@ -6,6 +6,7 @@ import 'package:swallet/models/card_network.dart';
 
 class AddCardPreviewStack extends StatelessWidget {
   final double top;
+  final EdgeInsets horizontalInsets;
   final bool isDark;
 
   final String? bankCid;
@@ -20,6 +21,10 @@ class AddCardPreviewStack extends StatelessWidget {
   final String? customBankLogoPath;
   final Color? customGradientStartColor;
   final Color? customGradientEndColor;
+  final String? customCardImagePath;
+  final Alignment customCardImageAlignment;
+  final String? customCardPatternAssetPath;
+  final VoidCallback? onEditVisualTap;
 
   // ❌ REMOVED: final VoidCallback onChangeBank;
 
@@ -29,6 +34,7 @@ class AddCardPreviewStack extends StatelessWidget {
   const AddCardPreviewStack({
     super.key,
     required this.top,
+    this.horizontalInsets = const EdgeInsets.symmetric(horizontal: 16),
     required this.isDark,
     required this.bankCid,
     required this.isBankSelected,
@@ -41,6 +47,10 @@ class AddCardPreviewStack extends StatelessWidget {
     this.customBankLogoPath,
     this.customGradientStartColor,
     this.customGradientEndColor,
+    this.customCardImagePath,
+    this.customCardImageAlignment = Alignment.center,
+    this.customCardPatternAssetPath,
+    this.onEditVisualTap,
     // ❌ REMOVED: required this.onChangeBank,
     this.scale = 1.0,
   });
@@ -54,8 +64,8 @@ class AddCardPreviewStack extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       top: top,
-      left: 16,
-      right: 16,
+      left: horizontalInsets.left,
+      right: horizontalInsets.right,
       child: AnimatedScale(
         scale: scale,
         duration: _scaleDuration,
@@ -76,6 +86,10 @@ class AddCardPreviewStack extends StatelessWidget {
               customBankLogoPath: customBankLogoPath,
               customGradientStartColor: customGradientStartColor,
               customGradientEndColor: customGradientEndColor,
+              customCardImagePath: customCardImagePath,
+              customCardImageAlignment: customCardImageAlignment,
+              customCardPatternAssetPath: customCardPatternAssetPath,
+              onEditVisualTap: onEditVisualTap,
             ),
 
             // ❌ REMOVED: The entire "Change Bank" button block

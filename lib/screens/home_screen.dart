@@ -17,6 +17,7 @@ import '../widgets/card/secure_reveal_wrapper.dart';
 import '../widgets/buttons/animated_add_card_button.dart';
 import '../widgets/buttons/theme_lottie_toggle.dart';
 import '../widgets/buttons/settings_button.dart';
+import '../widgets/actions/card_action_button.dart';
 
 import '../widgets/delete_card/delete_card_sheet.dart';
 // ✅ IMPORT THE ANIMATION WRAPPER
@@ -65,15 +66,22 @@ class HomeScreenState extends State<HomeScreen> {
   final Set<String> _activeFilters = {};
 
   _HomeSidePane? _sidePane;
+  CardData? _editingCard;
+  String? _editingCardId;
+  int _swipeResetToken = 0;
+  String? _activeSwipeCardId;
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
   bool get isPrimarySurfaceVisible => _sidePane == null;
 
   void cancelAllReveals() {
-    if (_revealedCardId != null) {
-      setState(() => _revealedCardId = null);
-    }
+    if (!mounted) return;
+    setState(() {
+      _revealedCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
   }
 
   void refreshCardsFromStorage() {
@@ -84,6 +92,8 @@ class HomeScreenState extends State<HomeScreen> {
         ..addAll(CardRepository.getAll());
       _revealedCardId = null;
       _activeFilters.clear();
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
     });
   }
 
@@ -95,20 +105,30 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _closeSidePane() {
     if (_sidePane == null) return;
-    setState(() => _sidePane = null);
+    setState(() {
+      _sidePane = null;
+      _editingCard = null;
+      _editingCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
   }
 
-  void _openAddCard() {
+  Future<void> _openAddCard() async {
     cancelAllReveals();
     if (_usesSidePane(context)) {
       setState(() {
         _sidePaneNavigatorKey = GlobalKey();
         _sidePane = _HomeSidePane.addCard;
+        _editingCard = null;
+        _editingCardId = null;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
       });
       return;
     }
 
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.transparent,
@@ -118,13 +138,25 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
+    if (mounted) {
+      setState(() {
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
+    }
   }
 
   Future<void> _openSettings() async {
+    cancelAllReveals();
     if (_usesSidePane(context)) {
       setState(() {
         _sidePaneNavigatorKey = GlobalKey();
         _sidePane = _HomeSidePane.settings;
+        _editingCard = null;
+        _editingCardId = null;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
       });
       return;
     }
@@ -148,6 +180,10 @@ class HomeScreenState extends State<HomeScreen> {
     setState(() {
       _cards.add(card);
       _sidePane = null;
+      _editingCard = null;
+      _editingCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
     });
   }
 
@@ -161,6 +197,7 @@ class HomeScreenState extends State<HomeScreen> {
 
     switch (sidePane) {
       case _HomeSidePane.addCard:
+      case _HomeSidePane.editCard:
         if (_addCardFlowController.handleBack()) {
           return;
         }
@@ -266,7 +303,12 @@ class HomeScreenState extends State<HomeScreen> {
     return '${card.bankCid}|${card.customBankName ?? ''}|'
         '${card.customBankLogoPath ?? ''}|${card.cardNumber}|'
         '${card.customGradientStartColor ?? ''}|'
-        '${card.customGradientEndColor ?? ''}|${card.expiry}|'
+        '${card.customGradientEndColor ?? ''}|'
+        '${card.customCardImagePath ?? ''}|'
+        '${card.customCardPatternAssetPath ?? ''}|'
+        '${card.customCardVisualMode ?? ''}|'
+        '${card.customCardImageAlignmentX ?? ''}|'
+        '${card.customCardImageAlignmentY ?? ''}|${card.expiry}|'
         '${card.holderName}';
   }
 
@@ -274,9 +316,18 @@ class HomeScreenState extends State<HomeScreen> {
     final cardId = _cardId(card);
 
     if (_revealedCardId == cardId) {
-      setState(() => _revealedCardId = null);
+      setState(() {
+        _revealedCardId = null;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
       return;
     }
+
+    setState(() {
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
 
     final settingsBox = Hive.box(HiveBoxes.settings);
     final bool useBiometrics =
@@ -308,13 +359,21 @@ class HomeScreenState extends State<HomeScreen> {
     }
 
     if (authenticated) {
-      setState(() => _revealedCardId = cardId);
+      setState(() {
+        _revealedCardId = cardId;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
     }
   }
 
   void _autoLock(CardData card) {
     if (_revealedCardId == _cardId(card)) {
-      setState(() => _revealedCardId = null);
+      setState(() {
+        _revealedCardId = null;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
     }
   }
 
@@ -342,39 +401,133 @@ class HomeScreenState extends State<HomeScreen> {
     return DeletingListItemWrapper(
       key: ValueKey(cardId),
       isDeleting: isDeleting,
-      child: SecureRevealWrapper(
-        revealed: _revealedCardId == cardId,
-        onAutoLock: () => _autoLock(card),
-        child: BankCard(
-          bankLogo: card.bankCid,
-          networkLogo: card.cardNetwork.assetPath,
-          cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
-          cardNumber: card.cardNumber,
-          validThru: card.expiry,
-          holderName: card.holderName,
-          cvv: card.cvv,
-          customBankName: card.customBankName,
-          customBankLogoPath: card.customBankLogoPath,
-          customGradientStartColor: card.customGradientStartColor != null
-              ? Color(card.customGradientStartColor!)
-              : null,
-          customGradientEndColor: card.customGradientEndColor != null
-              ? Color(card.customGradientEndColor!)
-              : null,
-          onEyeTap: () => _toggleReveal(card),
-          onShareTap: () {
-            if (_revealedCardId != cardId) {
-              return;
-            }
-            CardShareHelper.shareCard(card);
-          },
-          onDeleteTap: () => _showDeleteSheet(card, cardId),
+      child: _SwipeableCardActions(
+        isDark: widget.isDark,
+        cardId: cardId,
+        activeSwipeCardId: _activeSwipeCardId,
+        resetToken: _swipeResetToken,
+        onSwipeStarted: () {
+          if (_activeSwipeCardId == cardId) return;
+          setState(() => _activeSwipeCardId = cardId);
+        },
+        onSwipeClosed: () {
+          if (_activeSwipeCardId != cardId) return;
+          setState(() => _activeSwipeCardId = null);
+        },
+        onEdit: () => _openEditCard(card, cardId),
+        onDelete: () => _showDeleteSheet(card, cardId),
+        child: SecureRevealWrapper(
+          revealed: _revealedCardId == cardId,
+          onAutoLock: () => _autoLock(card),
+          child: BankCard(
+            bankLogo: card.bankCid,
+            networkLogo: card.cardNetwork.assetPath,
+            cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
+            cardNumber: card.cardNumber,
+            validThru: card.expiry,
+            holderName: card.holderName,
+            cvv: card.cvv,
+            customBankName: card.customBankName,
+            customBankLogoPath: card.customBankLogoPath,
+            customGradientStartColor: card.customGradientStartColor != null
+                ? Color(card.customGradientStartColor!)
+                : null,
+            customGradientEndColor: card.customGradientEndColor != null
+                ? Color(card.customGradientEndColor!)
+                : null,
+            customCardImagePath: card.customCardVisualMode == 1
+                ? card.customCardImagePath
+                : null,
+            customCardPatternAssetPath: card.customCardVisualMode == 0
+                ? card.customCardPatternAssetPath
+                : null,
+            customCardImageAlignment: Alignment(
+              card.customCardImageAlignmentX ?? 0,
+              card.customCardImageAlignmentY ?? 0,
+            ),
+            onEyeTap: () => _toggleReveal(card),
+            onShareTap: () {
+              if (_revealedCardId != cardId) {
+                return;
+              }
+              CardShareHelper.shareCard(card);
+            },
+          ),
         ),
       ),
     );
   }
 
+  Future<void> _openEditCard(CardData card, String cardId) async {
+    cancelAllReveals();
+    if (_usesSidePane(context)) {
+      setState(() {
+        _sidePaneNavigatorKey = GlobalKey();
+        _sidePane = _HomeSidePane.editCard;
+        _editingCard = card;
+        _editingCardId = cardId;
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
+      return;
+    }
+
+    await Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.transparent,
+        pageBuilder: (_, __, ___) => AddCardFlowScreen(
+          isDark: widget.isDark,
+          initialCard: card,
+          onCardAdded: (_) {},
+          onCardUpdated: (updated) {
+            _handleEditedCardSaved(card, cardId, updated);
+          },
+        ),
+      ),
+    );
+
+    if (mounted) {
+      setState(() {
+        _swipeResetToken++;
+        _activeSwipeCardId = null;
+      });
+    }
+  }
+
+  Future<void> _handleEditedCardSaved(
+    CardData original,
+    String originalCardId,
+    CardData updated,
+  ) async {
+    await CardRepository.update(original, updated);
+    if (!mounted) return;
+
+    setState(() {
+      final index = _cards.indexWhere((card) => identical(card, original));
+      if (index != -1) {
+        _cards[index] = updated;
+      } else {
+        final fallbackIndex =
+            _cards.indexWhere((card) => _cardId(card) == originalCardId);
+        if (fallbackIndex != -1) {
+          _cards[fallbackIndex] = updated;
+        }
+      }
+      _revealedCardId = null;
+      _sidePane = null;
+      _editingCard = null;
+      _editingCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
+  }
+
   void _showDeleteSheet(CardData card, String cardId) {
+    setState(() {
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -395,6 +548,8 @@ class HomeScreenState extends State<HomeScreen> {
               _cards.removeWhere((c) => c.cardNumber == card.cardNumber);
               _deletingCardIds.remove(cardId);
               _revealedCardId = null;
+              _swipeResetToken++;
+              _activeSwipeCardId = null;
             });
           }
         },
@@ -480,6 +635,21 @@ class HomeScreenState extends State<HomeScreen> {
           controller: _addCardFlowController,
           onClose: _closeSidePane,
           onCardAdded: _addCard,
+        ),
+      _HomeSidePane.editCard => AddCardFlowScreen(
+          key: ValueKey('edit_card_side_pane_${_editingCardId ?? ''}'),
+          isDark: widget.isDark,
+          embedded: true,
+          controller: _addCardFlowController,
+          initialCard: _editingCard,
+          onClose: _closeSidePane,
+          onCardAdded: (_) {},
+          onCardUpdated: (updated) {
+            final original = _editingCard;
+            final originalId = _editingCardId;
+            if (original == null || originalId == null) return;
+            _handleEditedCardSaved(original, originalId, updated);
+          },
         ),
       _HomeSidePane.settings => SettingsScreen(
           key: const ValueKey('settings_side_pane'),
@@ -699,7 +869,157 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class _SwipeableCardActions extends StatefulWidget {
+  final Widget child;
+  final bool isDark;
+  final String cardId;
+  final String? activeSwipeCardId;
+  final int resetToken;
+  final VoidCallback onSwipeStarted;
+  final VoidCallback onSwipeClosed;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _SwipeableCardActions({
+    required this.child,
+    required this.isDark,
+    required this.cardId,
+    required this.activeSwipeCardId,
+    required this.resetToken,
+    required this.onSwipeStarted,
+    required this.onSwipeClosed,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  State<_SwipeableCardActions> createState() => _SwipeableCardActionsState();
+}
+
+class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
+  static const double _buttonSize = 52;
+  static const double _buttonGap = 8;
+  static const double _buttonInset = 12;
+  static const double _cardActionGap = 12;
+  static const double _actionWidth =
+      _buttonInset + (_buttonSize * 2) + _buttonGap;
+  static const double _openOffset = _actionWidth + _cardActionGap;
+  static const Duration _snapDuration = Duration(milliseconds: 220);
+
+  double _dragOffset = 0;
+  bool _isDragging = false;
+
+  bool get _isOpen => _dragOffset <= -_openOffset * 0.45;
+
+  @override
+  void didUpdateWidget(covariant _SwipeableCardActions oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.resetToken != oldWidget.resetToken && _dragOffset != 0) {
+      _dragOffset = 0;
+      _isDragging = false;
+    }
+    if (widget.activeSwipeCardId != oldWidget.activeSwipeCardId &&
+        widget.activeSwipeCardId != widget.cardId &&
+        _dragOffset != 0) {
+      _dragOffset = 0;
+      _isDragging = false;
+    }
+  }
+
+  void _handleDragStart(DragStartDetails details) {
+    widget.onSwipeStarted();
+    setState(() => _isDragging = true);
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _dragOffset = (_dragOffset + details.delta.dx).clamp(-_openOffset, 0.0);
+    });
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final shouldOpen = velocity < -220 || (velocity <= 220 && _isOpen);
+
+    setState(() {
+      _isDragging = false;
+      _dragOffset = shouldOpen ? -_openOffset : 0;
+    });
+    if (!shouldOpen) {
+      widget.onSwipeClosed();
+    }
+  }
+
+  void _handleDragCancel() {
+    setState(() {
+      _isDragging = false;
+      _dragOffset = 0;
+    });
+    widget.onSwipeClosed();
+  }
+
+  void _closeAndRun(VoidCallback action) {
+    setState(() => _dragOffset = 0);
+    widget.onSwipeClosed();
+    action();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (-_dragOffset / _openOffset).clamp(0.0, 1.0);
+    final scale = 1.0 - (0.035 * progress);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: _handleDragStart,
+      onHorizontalDragUpdate: _handleDragUpdate,
+      onHorizontalDragEnd: _handleDragEnd,
+      onHorizontalDragCancel: _handleDragCancel,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.centerRight,
+        children: [
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.centerRight,
+              widthFactor: 1,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CardActionButton(
+                    icon: Icons.edit_rounded,
+                    isDark: widget.isDark,
+                    onTap: () => _closeAndRun(widget.onEdit),
+                  ),
+                  const SizedBox(width: _buttonGap),
+                  CardActionButton(
+                    icon: Icons.delete_rounded,
+                    isDark: widget.isDark,
+                    destructive: true,
+                    onTap: () => _closeAndRun(widget.onDelete),
+                  ),
+                  const SizedBox(width: _buttonInset),
+                ],
+              ),
+            ),
+          ),
+          AnimatedContainer(
+            duration: _isDragging ? Duration.zero : _snapDuration,
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.identity()
+              ..translateByDouble(_dragOffset, 0, 0, 1)
+              ..scaleByDouble(scale, scale, 1, 1),
+            transformAlignment: Alignment.center,
+            child: widget.child,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum _HomeSidePane {
   addCard,
+  editCard,
   settings,
 }

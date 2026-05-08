@@ -3,22 +3,35 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+import 'package:swallet/constants/card_visuals.dart';
 import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'package:swallet/widgets/add_card/widgets/add_card_cta_button.dart';
 import 'package:swallet/widgets/add_card/widgets/form_text.dart';
+import 'package:swallet/widgets/card/card_visual_asset_layer.dart';
+
+enum CustomCardVisualMode { gradient, image }
 
 class OtherBankSetupSection extends StatefulWidget {
   final bool isDark;
   final String customBankName;
   final String? customBankLogoPath;
+  final String? customCardImagePath;
+  final String? customCardPatternAssetPath;
   final Color gradientStartColor;
   final Color gradientEndColor;
+  final CustomCardVisualMode visualMode;
+  final Alignment imageAlignment;
   final ValueChanged<String> onCustomBankNameChanged;
   final ValueChanged<Color> onGradientStartColorChanged;
   final ValueChanged<Color> onGradientEndColorChanged;
+  final ValueChanged<CustomCardVisualMode> onVisualModeChanged;
+  final ValueChanged<String?> onPatternChanged;
+  final ValueChanged<Alignment> onImageAlignmentChanged;
   final VoidCallback onPickCustomBankLogo;
   final VoidCallback onRemoveCustomBankLogo;
+  final VoidCallback onPickCustomCardImage;
+  final VoidCallback onRemoveCustomCardImage;
   final VoidCallback onNext;
 
   const OtherBankSetupSection({
@@ -26,13 +39,22 @@ class OtherBankSetupSection extends StatefulWidget {
     required this.isDark,
     required this.customBankName,
     required this.customBankLogoPath,
+    required this.customCardImagePath,
+    required this.customCardPatternAssetPath,
     required this.gradientStartColor,
     required this.gradientEndColor,
+    required this.visualMode,
+    required this.imageAlignment,
     required this.onCustomBankNameChanged,
     required this.onGradientStartColorChanged,
     required this.onGradientEndColorChanged,
+    required this.onVisualModeChanged,
+    required this.onPatternChanged,
+    required this.onImageAlignmentChanged,
     required this.onPickCustomBankLogo,
     required this.onRemoveCustomBankLogo,
+    required this.onPickCustomCardImage,
+    required this.onRemoveCustomCardImage,
     required this.onNext,
   });
 
@@ -96,12 +118,21 @@ class _OtherBankSetupSectionState extends State<OtherBankSetupSection> {
           onRemove: widget.onRemoveCustomBankLogo,
         ),
         const SizedBox(height: 16),
-        _GradientColorSelector(
+        CardVisualCustomizationSection(
           isDark: widget.isDark,
           startColor: widget.gradientStartColor,
           endColor: widget.gradientEndColor,
+          imagePath: widget.customCardImagePath,
+          patternAssetPath: widget.customCardPatternAssetPath,
+          visualMode: widget.visualMode,
+          imageAlignment: widget.imageAlignment,
           onStartChanged: widget.onGradientStartColorChanged,
           onEndChanged: widget.onGradientEndColorChanged,
+          onVisualModeChanged: widget.onVisualModeChanged,
+          onPatternChanged: widget.onPatternChanged,
+          onImageAlignmentChanged: widget.onImageAlignmentChanged,
+          onPickImage: widget.onPickCustomCardImage,
+          onRemoveImage: widget.onRemoveCustomCardImage,
         ),
         const SizedBox(height: 24),
         AddCardCTAButton(
@@ -135,6 +166,7 @@ class _CustomBankLogoPicker extends StatelessWidget {
         File(selectedPath).existsSync();
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -213,27 +245,49 @@ class _CustomBankLogoPicker extends StatelessWidget {
   }
 }
 
-class _GradientColorSelector extends StatefulWidget {
+class CardVisualCustomizationSection extends StatefulWidget {
   final bool isDark;
   final Color startColor;
   final Color endColor;
+  final String? imagePath;
+  final String? patternAssetPath;
+  final CustomCardVisualMode visualMode;
+  final Alignment imageAlignment;
   final ValueChanged<Color> onStartChanged;
   final ValueChanged<Color> onEndChanged;
+  final ValueChanged<CustomCardVisualMode> onVisualModeChanged;
+  final ValueChanged<String?> onPatternChanged;
+  final ValueChanged<Alignment> onImageAlignmentChanged;
+  final VoidCallback onPickImage;
+  final VoidCallback onRemoveImage;
 
-  const _GradientColorSelector({
+  const CardVisualCustomizationSection({
+    super.key,
     required this.isDark,
     required this.startColor,
     required this.endColor,
+    required this.imagePath,
+    required this.patternAssetPath,
+    required this.visualMode,
+    required this.imageAlignment,
     required this.onStartChanged,
     required this.onEndChanged,
+    required this.onVisualModeChanged,
+    required this.onPatternChanged,
+    required this.onImageAlignmentChanged,
+    required this.onPickImage,
+    required this.onRemoveImage,
   });
 
   @override
-  State<_GradientColorSelector> createState() => _GradientColorSelectorState();
+  State<CardVisualCustomizationSection> createState() =>
+      _CardVisualCustomizationSectionState();
 }
 
-class _GradientColorSelectorState extends State<_GradientColorSelector> {
+class _CardVisualCustomizationSectionState
+    extends State<CardVisualCustomizationSection> {
   int _activeColorIndex = 0;
+  bool _choosingGradientPattern = false;
 
   Color get _activeColor =>
       _activeColorIndex == 0 ? widget.startColor : widget.endColor;
@@ -247,55 +301,335 @@ class _GradientColorSelectorState extends State<_GradientColorSelector> {
   }
 
   @override
+  void didUpdateWidget(covariant CardVisualCustomizationSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visualMode != oldWidget.visualMode &&
+        widget.visualMode != CustomCardVisualMode.gradient) {
+      _choosingGradientPattern = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(widget.isDark);
     final activeHsv = HSVColor.fromColor(_activeColor);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Card gradient',
+          'Card visual',
           style: SwalletText.section.copyWith(
             fontSize: 13,
             color: tokens.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 12),
-        _GradientColorTabs(
+        _CustomVisualModeSelector(
           isDark: widget.isDark,
-          activeIndex: _activeColorIndex,
-          startColor: widget.startColor,
-          endColor: widget.endColor,
-          onChanged: (index) => setState(() => _activeColorIndex = index),
+          selected: widget.visualMode,
+          onChanged: widget.onVisualModeChanged,
         ),
         const SizedBox(height: 12),
-        _ColorField(
-          hsvColor: activeHsv,
-          onChanged: (hsvColor) => _setActiveColor(hsvColor.toColor()),
+        if (widget.visualMode == CustomCardVisualMode.gradient) ...[
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeOutCubic,
+            child: _choosingGradientPattern
+                ? _GradientPatternCarousel(
+                    key: const ValueKey('pattern_phase'),
+                    isDark: widget.isDark,
+                    startColor: widget.startColor,
+                    endColor: widget.endColor,
+                    selectedAssetPath: widget.patternAssetPath,
+                    onChanged: widget.onPatternChanged,
+                    onBack: () =>
+                        setState(() => _choosingGradientPattern = false),
+                  )
+                : Column(
+                    key: const ValueKey('color_phase'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _ColorField(
+                              hsvColor: activeHsv,
+                              onChanged: (hsvColor) =>
+                                  _setActiveColor(hsvColor.toColor()),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          _GradientColorRoundSelector(
+                            activeIndex: _activeColorIndex,
+                            startColor: widget.startColor,
+                            endColor: widget.endColor,
+                            isDark: widget.isDark,
+                            onChanged: (index) =>
+                                setState(() => _activeColorIndex = index),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      _HueSlider(
+                        hsvColor: activeHsv,
+                        onChanged: (hsvColor) =>
+                            _setActiveColor(hsvColor.toColor()),
+                      ),
+                      const SizedBox(height: 12),
+                      _PatternPhaseButton(
+                        isDark: widget.isDark,
+                        onTap: () =>
+                            setState(() => _choosingGradientPattern = true),
+                      ),
+                    ],
+                  ),
+          ),
+        ] else
+          _CardImageVisualPicker(
+            isDark: widget.isDark,
+            imagePath: widget.imagePath,
+            imageAlignment: widget.imageAlignment,
+            onPick: widget.onPickImage,
+            onRemove: widget.onRemoveImage,
+            onAlignmentChanged: widget.onImageAlignmentChanged,
+          ),
+      ],
+    );
+  }
+}
+
+class _PatternPhaseButton extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _PatternPhaseButton({
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AddCardMaterialTokens(isDark);
+
+    return Material(
+      color: tokens.surfaceContainer,
+      borderRadius: tokens.controlRadius,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: tokens.controlRadius,
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            children: [
+              Icon(
+                CupertinoIcons.rectangle_grid_2x2,
+                size: 20,
+                color: tokens.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Choose pattern',
+                  style: SwalletText.bodyMedium.copyWith(
+                    fontSize: 14,
+                    color: tokens.onSurface,
+                  ),
+                ),
+              ),
+              Icon(
+                CupertinoIcons.chevron_right,
+                size: 18,
+                color: tokens.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientPatternCarousel extends StatelessWidget {
+  final bool isDark;
+  final Color startColor;
+  final Color endColor;
+  final String? selectedAssetPath;
+  final ValueChanged<String?> onChanged;
+  final VoidCallback onBack;
+
+  const _GradientPatternCarousel({
+    super.key,
+    required this.isDark,
+    required this.startColor,
+    required this.endColor,
+    required this.selectedAssetPath,
+    required this.onChanged,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AddCardMaterialTokens(isDark);
+    final assets = CardVisuals.customVisualAssetPaths;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onBack,
+              child: Icon(
+                CupertinoIcons.chevron_left,
+                size: 22,
+                color: tokens.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Pattern',
+              style: SwalletText.section.copyWith(
+                fontSize: 13,
+                color: tokens.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
-        _HueSlider(
-          hsvColor: activeHsv,
-          onChanged: (hsvColor) => _setActiveColor(hsvColor.toColor()),
+        SizedBox(
+          height: 112,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: assets.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final assetPath = index == 0 ? null : assets[index - 1];
+              return _PatternPreviewTile(
+                isDark: isDark,
+                startColor: startColor,
+                endColor: endColor,
+                assetPath: assetPath,
+                selected: selectedAssetPath == assetPath,
+                onTap: () => onChanged(assetPath),
+              );
+            },
+          ),
         ),
       ],
     );
   }
 }
 
-class _GradientColorTabs extends StatelessWidget {
+class _PatternPreviewTile extends StatelessWidget {
   final bool isDark;
-  final int activeIndex;
   final Color startColor;
   final Color endColor;
-  final ValueChanged<int> onChanged;
+  final String? assetPath;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _GradientColorTabs({
+  const _PatternPreviewTile({
     required this.isDark,
-    required this.activeIndex,
     required this.startColor,
     required this.endColor,
+    required this.assetPath,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AddCardMaterialTokens(isDark);
+    final visual = CardVisuals.customGradient(
+      startColor,
+      endColor,
+      visualAssetPath: assetPath,
+      previewBoost: true,
+    );
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 124,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 78,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected
+                      ? tokens.primary
+                      : tokens.outlineVariant.withValues(alpha: 0.54),
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(3),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(gradient: visual.gradient),
+                    ),
+                    if (assetPath != null)
+                      CardVisualAssetLayer(
+                        visual: visual,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    if (assetPath == null)
+                      Center(
+                        child: Text(
+                          'None',
+                          style: SwalletText.bodyMedium.copyWith(
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              assetPath == null
+                  ? 'None'
+                  : CardVisuals.customVisualAssetName(assetPath!),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SwalletText.caption.copyWith(
+                color: selected ? tokens.primary : tokens.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomVisualModeSelector extends StatelessWidget {
+  final bool isDark;
+  final CustomCardVisualMode selected;
+  final ValueChanged<CustomCardVisualMode> onChanged;
+
+  const _CustomVisualModeSelector({
+    required this.isDark,
+    required this.selected,
     required this.onChanged,
   });
 
@@ -316,24 +650,24 @@ class _GradientColorTabs extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _GradientColorTab(
-              label: 'Color 1',
-              color: startColor,
-              isSelected: activeIndex == 0,
-              isDark: isDark,
+            child: _CustomVisualModeChip(
+              label: 'Gradient',
+              icon: CupertinoIcons.color_filter,
+              selected: selected == CustomCardVisualMode.gradient,
+              tokens: tokens,
               radius: innerRadius,
-              onTap: () => onChanged(0),
+              onTap: () => onChanged(CustomCardVisualMode.gradient),
             ),
           ),
           const SizedBox(width: 6),
           Expanded(
-            child: _GradientColorTab(
-              label: 'Color 2',
-              color: endColor,
-              isSelected: activeIndex == 1,
-              isDark: isDark,
+            child: _CustomVisualModeChip(
+              label: 'Image',
+              icon: CupertinoIcons.photo,
+              selected: selected == CustomCardVisualMode.image,
+              tokens: tokens,
               radius: innerRadius,
-              onTap: () => onChanged(1),
+              onTap: () => onChanged(CustomCardVisualMode.image),
             ),
           ),
         ],
@@ -342,68 +676,292 @@ class _GradientColorTabs extends StatelessWidget {
   }
 }
 
-class _GradientColorTab extends StatelessWidget {
+class _CustomVisualModeChip extends StatelessWidget {
   final String label;
-  final Color color;
-  final bool isSelected;
-  final bool isDark;
+  final IconData icon;
+  final bool selected;
+  final AddCardMaterialTokens tokens;
   final double radius;
   final VoidCallback onTap;
 
-  const _GradientColorTab({
+  const _CustomVisualModeChip({
     required this.label,
-    required this.color,
-    required this.isSelected,
-    required this.isDark,
+    required this.icon,
+    required this.selected,
+    required this.tokens,
     required this.radius,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AddCardMaterialTokens(isDark);
-    final textColor = tokens.onSurface;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(radius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: selected ? tokens.primaryContainer : Colors.transparent,
+            borderRadius: BorderRadius.circular(radius),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: selected ? 1.0 : 0.92,
+                duration: const Duration(milliseconds: 180),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: selected
+                      ? tokens.onPrimaryContainer
+                      : tokens.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: SwalletText.bodyMedium.copyWith(
+                  fontSize: 14,
+                  color: selected
+                      ? tokens.onPrimaryContainer
+                      : tokens.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
+class _GradientColorRoundSelector extends StatelessWidget {
+  final int activeIndex;
+  final Color startColor;
+  final Color endColor;
+  final bool isDark;
+  final ValueChanged<int> onChanged;
+
+  const _GradientColorRoundSelector({
+    required this.activeIndex,
+    required this.startColor,
+    required this.endColor,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AddCardMaterialTokens(isDark);
+
+    return SizedBox(
+      width: 44,
+      child: Column(
+        children: [
+          _GradientColorDot(
+            label: '1',
+            color: startColor,
+            selected: activeIndex == 0,
+            tokens: tokens,
+            onTap: () => onChanged(0),
+          ),
+          const SizedBox(height: 10),
+          _GradientColorDot(
+            label: '2',
+            color: endColor,
+            selected: activeIndex == 1,
+            tokens: tokens,
+            onTap: () => onChanged(1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientColorDot extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool selected;
+  final AddCardMaterialTokens tokens;
+  final VoidCallback onTap;
+
+  const _GradientColorDot({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.tokens,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        height: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(radius),
-          border: isSelected
-              ? Border.all(
-                  color: tokens.primary,
-                  width: 1.4,
-                )
-              : null,
-        ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: isSelected ? 28 : 20,
-              height: 10,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SwalletText.bodyMedium.copyWith(
-                  color: textColor,
-                  fontSize: 14,
-                ),
-              ),
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(
+            color: selected
+                ? tokens.primary
+                : Colors.white.withValues(alpha: 0.62),
+            width: selected ? 2.4 : 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: selected ? 0.22 : 0.12),
+              blurRadius: selected ? 10 : 6,
+              offset: const Offset(0, 3),
             ),
           ],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: SwalletText.bodyMedium.copyWith(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardImageVisualPicker extends StatelessWidget {
+  final bool isDark;
+  final String? imagePath;
+  final Alignment imageAlignment;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+  final ValueChanged<Alignment> onAlignmentChanged;
+
+  const _CardImageVisualPicker({
+    required this.isDark,
+    required this.imagePath,
+    required this.imageAlignment,
+    required this.onPick,
+    required this.onRemove,
+    required this.onAlignmentChanged,
+  });
+
+  void _moveImage(DragUpdateDetails details) {
+    final next = Alignment(
+      (imageAlignment.x + details.delta.dx / 70).clamp(-1.0, 1.0),
+      (imageAlignment.y + details.delta.dy / 45).clamp(-1.0, 1.0),
+    );
+    onAlignmentChanged(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AddCardMaterialTokens(isDark);
+    final selectedPath = imagePath?.trim();
+    final hasImage = selectedPath != null &&
+        selectedPath.isNotEmpty &&
+        File(selectedPath).existsSync();
+
+    return Material(
+      color: tokens.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: tokens.controlRadius,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPick,
+        borderRadius: tokens.controlRadius,
+        child: Container(
+          height: 132,
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              AspectRatio(
+                aspectRatio: 1.58,
+                child: GestureDetector(
+                  onTap: onPick,
+                  onPanUpdate: hasImage ? _moveImage : null,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasImage)
+                          Image.file(
+                            File(selectedPath),
+                            fit: BoxFit.cover,
+                            alignment: imageAlignment,
+                          )
+                        else
+                          ColoredBox(
+                            color: tokens.surfaceContainerHigh,
+                            child: Icon(
+                              CupertinoIcons.photo,
+                              size: 28,
+                              color: tokens.onSurfaceVariant,
+                            ),
+                          ),
+                        if (hasImage)
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withValues(alpha: 0.38),
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.move,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  hasImage ? 'Image selected' : 'Choose image',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SwalletText.bodyMedium.copyWith(
+                    fontSize: 15,
+                    color:
+                        hasImage ? tokens.onSurface : tokens.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (hasImage)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(CupertinoIcons.xmark, size: 18),
+                  color: tokens.onSurfaceVariant,
+                  onPressed: onRemove,
+                ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(CupertinoIcons.photo_on_rectangle, size: 20),
+                color: tokens.primary,
+                onPressed: onPick,
+              ),
+            ],
+          ),
         ),
       ),
     );

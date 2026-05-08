@@ -21,4 +21,12 @@ void main() {
     expect(AdaptiveLayout.cardPaneCountForWidth(840), 2);
     expect(AdaptiveLayout.cardPaneCountForWidth(1180), 3);
   });
+
+  test('allows landscape only for true tablet-sized canvases', () {
+    expect(AdaptiveLayout.allowsLandscapeForSize(393, 852), isFalse);
+    expect(AdaptiveLayout.allowsLandscapeForSize(852, 393), isFalse);
+    expect(AdaptiveLayout.allowsLandscapeForSize(841, 673), isFalse);
+    expect(AdaptiveLayout.allowsLandscapeForSize(800, 1280), isTrue);
+    expect(AdaptiveLayout.allowsLandscapeForSize(1280, 800), isTrue);
+  });
 }

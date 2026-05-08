@@ -22,6 +22,13 @@ class CardFormSection extends StatefulWidget {
   final ValueChanged<String> onCvvChanged;
   final ValueChanged<String> onNameChanged;
   final VoidCallback onSubmit;
+  final String initialCardNumber;
+  final String initialExpiry;
+  final String initialCvv;
+  final String initialHolderName;
+  final CardType initialCardType;
+  final String title;
+  final String submitLabel;
 
   const CardFormSection({
     super.key,
@@ -33,6 +40,13 @@ class CardFormSection extends StatefulWidget {
     required this.onCvvChanged,
     required this.onNameChanged,
     required this.onSubmit,
+    this.initialCardNumber = '',
+    this.initialExpiry = '',
+    this.initialCvv = '',
+    this.initialHolderName = '',
+    this.initialCardType = CardType.credit,
+    this.title = 'Add payment card',
+    this.submitLabel = 'Add Card',
   });
 
   @override
@@ -40,16 +54,26 @@ class CardFormSection extends StatefulWidget {
 }
 
 class _CardFormSectionState extends State<CardFormSection> {
-  final _expiryCtrl = TextEditingController();
-  final _cvvCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
+  late final TextEditingController _expiryCtrl;
+  late final TextEditingController _cvvCtrl;
+  late final TextEditingController _nameCtrl;
 
   final _expiryFocus = FocusNode();
   final _cvvFocus = FocusNode();
   final _nameFocus = FocusNode();
 
-  CardType _selectedCardType = CardType.credit;
+  late CardType _selectedCardType;
   CardNetwork? _detectedNetwork;
+
+  @override
+  void initState() {
+    super.initState();
+    _expiryCtrl = TextEditingController(text: widget.initialExpiry);
+    _cvvCtrl = TextEditingController(text: widget.initialCvv);
+    _nameCtrl = TextEditingController(text: widget.initialHolderName);
+    _selectedCardType = widget.initialCardType;
+    _detectedNetwork = CardNetworkDetector.detect(widget.initialCardNumber);
+  }
 
   @override
   void dispose() {
@@ -92,7 +116,7 @@ class _CardFormSectionState extends State<CardFormSection> {
       children: [
         Center(
           child: Text(
-            'Add payment card',
+            widget.title,
             style: SwalletText.bodyMedium.copyWith(
               color: tokens.onSurface,
             ),
@@ -110,6 +134,7 @@ class _CardFormSectionState extends State<CardFormSection> {
         const SizedBox(height: 24),
         CardNumberSlotField(
           isDark: widget.isDark,
+          initialValue: widget.initialCardNumber,
           onChanged: _handleCardNumberChanged,
           onCompleted: () => _expiryFocus.requestFocus(),
         ),
@@ -176,6 +201,7 @@ class _CardFormSectionState extends State<CardFormSection> {
         ),
         const SizedBox(height: 24),
         AddCardCTAButton(
+          label: widget.submitLabel,
           onPressed: widget.onSubmit,
         ),
       ],

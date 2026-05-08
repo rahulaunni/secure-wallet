@@ -11,12 +11,14 @@ class CardNumberSlotField extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final VoidCallback? onCompleted;
   final bool isDark;
+  final String initialValue;
 
   const CardNumberSlotField({
     super.key,
     required this.onChanged,
     required this.isDark,
     this.onCompleted,
+    this.initialValue = '',
   });
 
   @override
@@ -24,7 +26,33 @@ class CardNumberSlotField extends StatefulWidget {
 }
 
 class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
+  late final TextEditingController _controller;
   bool _isAmex = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: CardNumberFormat.format(widget.initialValue),
+    );
+    _isAmex = CardNumberFormat.isAmexNumber(widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(covariant CardNumberSlotField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        CardNumberFormat.digitsOnly(_controller.text) != widget.initialValue) {
+      _controller.text = CardNumberFormat.format(widget.initialValue);
+      _isAmex = CardNumberFormat.isAmexNumber(widget.initialValue);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +61,7 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
     return SizedBox(
       height: 64,
       child: TextField(
+        controller: _controller,
         keyboardType: TextInputType.number,
         cursorColor: tokens.primary,
         inputFormatters: [

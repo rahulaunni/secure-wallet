@@ -2,29 +2,74 @@ import 'package:flutter/material.dart';
 import 'imported_card_gradients.dart';
 import '../utils/bank_asset_resolver.dart';
 import '../widgets/card/creative_bank_pattern_painter.dart';
-import '../widgets/card/bank_pattern_painter.dart';
+
+class _CardVisualAsset {
+  final String path;
+  final String name;
+
+  const _CardVisualAsset({
+    required this.path,
+    required this.name,
+  });
+}
 
 class CardVisual {
   final Gradient gradient;
   final String? bankLogo;
-  final CustomPainter? patternPainter;
+  final String? visualAssetPath;
+  final List<Color> visualColors;
+  final double visualOpacityBoost;
+  final double visualMinOverlayOpacity;
 
   const CardVisual({
     required this.gradient,
     this.bankLogo,
-    this.patternPainter,
+    this.visualAssetPath,
+    this.visualColors = const [],
+    this.visualOpacityBoost = 1,
+    this.visualMinOverlayOpacity = 0.18,
   });
 }
 
 class CardVisuals {
-  static CardVisual customGradient(Color start, Color end) {
+  static CardVisual customGradient(
+    Color start,
+    Color end, {
+    String? visualAssetPath,
+    bool previewBoost = false,
+  }) {
     return CardVisual(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [start, end],
       ),
+      visualAssetPath: visualAssetPath,
+      visualColors: _visualColorsForBank([start, end], end),
+      visualOpacityBoost:
+          visualAssetPath == null ? 1 : (previewBoost ? 1.25 : 1.1),
+      visualMinOverlayOpacity:
+          visualAssetPath == null ? 0.18 : (previewBoost ? 0.22 : 0.18),
     );
+  }
+
+  static List<String> get customVisualAssetPaths => [
+        for (final asset in _visualAssets) asset.path,
+      ];
+
+  static String customVisualAssetName(String assetPath) {
+    final resolved = resolveVisualAssetPath(assetPath);
+    for (final asset in _visualAssets) {
+      if (asset.path == resolved) {
+        return asset.name;
+      }
+    }
+
+    return 'Pattern';
+  }
+
+  static String resolveVisualAssetPath(String assetPath) {
+    return _legacyVisualAssetPaths[assetPath] ?? assetPath;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -178,68 +223,6 @@ class CardVisuals {
     return _bankHighlightOverrides[cid] ??
         Color.lerp(g.first, Colors.white, 0.26)!;
   }
-
-  /* -------------------------------------------------------------------------- */
-  /*                           PATTERN CONFIGS                                   */
-  /* -------------------------------------------------------------------------- */
-
-  static DualCircleConfig _dual(Color h) => DualCircleConfig(
-        bigCenter: const Offset(1.0, -0.3),
-        bigRadius: 0.65,
-        bigColor: h,
-        bigOpacity: 0.55,
-        smallCenter: const Offset(0.0, 1.25),
-        smallRadius: 0.45,
-        smallColor: h,
-        smallOpacity: 0.25,
-      );
-
-  static QuadCircleConfig _quad(Color h) => QuadCircleConfig(
-        center: const Offset(-0.1, -0.1),
-        radii: const [0.45, 0.60, 0.75, 0.90],
-        opacities: const [0.16, 0.16, 0.10, 0.06],
-        color: h,
-      );
-
-  static IntersectRectConfig _rect(Color h) => IntersectRectConfig(
-        leftOffset: const Offset(-0.25, 0.0),
-        rightOffset: const Offset(0.50, 0.50),
-        rectWidth: 0.75,
-        rectHeight: 0.50,
-        color: h,
-        leftOpacity: 0.18,
-        rightOpacity: 0.14,
-      );
-
-  static ConcentricArcConfig _arcs(Color h) => ConcentricArcConfig(
-        center: const Offset(-0.10, -0.05),
-        ringCount: 40,
-        startRadius: 0.15,
-        gap: 0.025,
-        strokeWidth: 1.5,
-        color: h,
-        startOpacity: 0.50,
-        opacityStep: 0.012,
-      );
-
-  static RightDualCircleConfig _rightDual(Color h) => RightDualCircleConfig(
-        primaryCenter: const Offset(0.95, 0.50),
-        primaryRadius: 0.40,
-        primaryOpacity: 0.25,
-        secondaryCenter: const Offset(0.925, 0.70),
-        secondaryRadius: 0.30,
-        secondaryOpacity: 0.20,
-        color: h,
-      );
-
-  static AngledTileRectConfig _angledTiles(Color h) => AngledTileRectConfig(
-        center: const Offset(0.5, 0.5),
-        height: 2,
-        widths: const [0.30, 0.30, 0.30, 0.30],
-        opacities: const [0.35, 0.25, 0.15, 0.10],
-        angle: -0.28,
-        color: h,
-      );
 
   /* -------------------------------------------------------------------------- */
   /*                         CREATIVE OVERLAY RECIPES                            */
@@ -920,27 +903,6 @@ class CardVisuals {
     'yes': CreativeBankPatternMotif.memoryConicBloom,
   };
 
-  static CustomPainter? _creativePainterForBank(
-    String cid,
-    String resolved,
-    List<Color> colors,
-    Color highlight,
-  ) {
-    final recipeId = _bankPatternIds[resolved] ?? _bankPatternIds[cid];
-    if (recipeId == null) return null;
-    final recipe = _patternRecipes[recipeId];
-    if (recipe == null) return null;
-
-    final accentTarget = recipe.alternate ? colors.last : colors.first;
-    final accent = Color.lerp(highlight, accentTarget, 0.42)!;
-    return CreativeBankPatternPainter(
-      recipe: recipe,
-      primary: highlight,
-      secondary: accent,
-      motifOverride: _fixedFigmaMotifs[cid] ?? _memoryMotifs[cid],
-    );
-  }
-
   static CreativeBankPatternMotif? debugCreativeMotifForBank(String cid) {
     final resolved = BankAssetResolver.resolveCid(cid);
     final shortId = _shortIdForBank(cid, resolved);
@@ -963,52 +925,6 @@ class CardVisuals {
     if (colors == null) return placeholder(false);
 
     final h = _highlight(shortId, colors);
-    CustomPainter? painter =
-        _creativePainterForBank(shortId, resolved, colors, h);
-
-    if (painter == null) {
-      if (['axis', 'rbl', 'bandhan', 'idbi'].contains(resolved)) {
-        painter = BankPatternPainter.dual(dualConfig: _dual(h));
-      } else if ([
-        'icici',
-        'kotak',
-        'union',
-        'au_small_finance',
-      ].contains(resolved)) {
-        painter = BankPatternPainter.quad(quadConfig: _quad(h));
-      } else if ([
-        'sbi',
-        'bank_of_baroda',
-        'south_indian',
-      ].contains(resolved)) {
-        painter = BankPatternPainter.rects(rectConfig: _rect(h));
-      } else if ([
-        'yes',
-        'dhanlaxmi',
-        'indusind',
-        'karnataka',
-      ].contains(resolved)) {
-        painter = BankPatternPainter.arcs(arcConfig: _arcs(h));
-      } else if ([
-        'dcb',
-        'canara',
-        'tmb',
-        'jammu_kashmir',
-      ].contains(resolved)) {
-        painter = BankPatternPainter.rightDual(
-          rightDualConfig: _rightDual(h),
-        );
-      } else if ([
-        'federal',
-        'citibank',
-        'uco',
-        'hdfc',
-      ].contains(resolved)) {
-        painter = BankPatternPainter.angledTiles(
-          angledTileConfig: _angledTiles(h),
-        );
-      }
-    }
 
     return CardVisual(
       gradient: LinearGradient(
@@ -1017,8 +933,180 @@ class CardVisuals {
         colors: colors,
       ),
       bankLogo: BankAssetResolver.logoPath(cid),
-      patternPainter: painter,
+      visualAssetPath: _visualAssetForBank(shortId),
+      visualColors: _visualColorsForBank(colors, h),
+      visualOpacityBoost: shortId == 'bank_of_baroda' ? 2.35 : 1,
+      visualMinOverlayOpacity: shortId == 'bank_of_baroda' ? 0.62 : 0.22,
     );
+  }
+
+  static String _visualAssetForBank(String shortId) {
+    final knownIndex = _bankPatternIds.keys.toList().indexOf(shortId);
+    final styleIndex = knownIndex >= 0
+        ? knownIndex % _visualAssets.length
+        : _stableStyleHash(shortId) % _visualAssets.length;
+    return _visualAssets[styleIndex].path;
+  }
+
+  static const List<_CardVisualAsset> _visualAssets = [
+    _CardVisualAsset(
+      path: 'assets/card visuals/shadow-stripes.svg',
+      name: 'Shadow Stripes',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/glass-panels.svg',
+      name: 'Glass Panels',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/prism-cross.svg',
+      name: 'Prism Cross',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/corner-cascade.svg',
+      name: 'Corner Cascade',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/rounded-blocks.svg',
+      name: 'Rounded Blocks',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/diagonal-plates.svg',
+      name: 'Diagonal Plates',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/liquid-orbs.svg',
+      name: 'Liquid Orbs',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/corner-bubbles.svg',
+      name: 'Corner Bubbles',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/glass-ribbons.svg',
+      name: 'Glass Ribbons',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/neon-blocks.svg',
+      name: 'Neon Blocks',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/capsule-slashes.svg',
+      name: 'Capsule Slashes',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/angular-bloom.svg',
+      name: 'Angular Bloom',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/radial-sweep.svg',
+      name: 'Radial Sweep',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/soft-columns.svg',
+      name: 'Soft Columns',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/liquid-glow.svg',
+      name: 'Liquid Glow',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/orbit-rings.svg',
+      name: 'Orbit Rings',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/nested-rings.svg',
+      name: 'Nested Rings',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/prism-tiles.svg',
+      name: 'Prism Tiles',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/inset-waves.svg',
+      name: 'Inset Waves',
+    ),
+  ];
+
+  static const Map<String, String> _legacyVisualAssetPaths = {
+    'assets/card visuals/Credit Card.svg':
+        'assets/card visuals/shadow-stripes.svg',
+    'assets/card visuals/Frame.svg': 'assets/card visuals/glass-panels.svg',
+    'assets/card visuals/Frame-1.svg': 'assets/card visuals/prism-cross.svg',
+    'assets/card visuals/Frame-2.svg': 'assets/card visuals/corner-cascade.svg',
+    'assets/card visuals/red.svg': 'assets/card visuals/rounded-blocks.svg',
+    'assets/card visuals/style1.svg': 'assets/card visuals/shadow-stripes.svg',
+    'assets/card visuals/style1-02.svg':
+        'assets/card visuals/diagonal-plates.svg',
+    'assets/card visuals/style1-02-1.svg':
+        'assets/card visuals/liquid-orbs.svg',
+    'assets/card visuals/style1-02-2.svg':
+        'assets/card visuals/corner-bubbles.svg',
+    'assets/card visuals/style1-02-3.svg':
+        'assets/card visuals/glass-ribbons.svg',
+    'assets/card visuals/style1-02-4.svg':
+        'assets/card visuals/neon-blocks.svg',
+    'assets/card visuals/style1-03.svg':
+        'assets/card visuals/capsule-slashes.svg',
+    'assets/card visuals/style1-06.svg':
+        'assets/card visuals/angular-bloom.svg',
+    'assets/card visuals/style1-06-1.svg':
+        'assets/card visuals/radial-sweep.svg',
+    'assets/card visuals/style1-07.svg': 'assets/card visuals/soft-columns.svg',
+    'assets/card visuals/style1-08.svg': 'assets/card visuals/liquid-glow.svg',
+    'assets/card visuals/style1-09.svg': 'assets/card visuals/orbit-rings.svg',
+    'assets/card visuals/style1-09-1.svg':
+        'assets/card visuals/nested-rings.svg',
+    'assets/card visuals/style1-10.svg': 'assets/card visuals/prism-tiles.svg',
+    'assets/card visuals/style1-11.svg': 'assets/card visuals/inset-waves.svg',
+    'assets/card visuals/style2.svg': 'assets/card visuals/glass-panels.svg',
+    'assets/card visuals/style4.svg': 'assets/card visuals/prism-cross.svg',
+    'assets/card visuals/style5.svg': 'assets/card visuals/diagonal-plates.svg',
+    'assets/card visuals/style6.svg': 'assets/card visuals/corner-cascade.svg',
+    'assets/card visuals/style7.svg': 'assets/card visuals/capsule-slashes.svg',
+    'assets/card visuals/style8.svg': 'assets/card visuals/liquid-orbs.svg',
+    'assets/card visuals/style9.svg': 'assets/card visuals/corner-bubbles.svg',
+    'assets/card visuals/style10.svg': 'assets/card visuals/glass-ribbons.svg',
+    'assets/card visuals/style11.svg': 'assets/card visuals/neon-blocks.svg',
+    'assets/card visuals/style12.svg': 'assets/card visuals/angular-bloom.svg',
+    'assets/card visuals/style13.svg': 'assets/card visuals/radial-sweep.svg',
+    'assets/card visuals/style14.svg': 'assets/card visuals/orbit-rings.svg',
+    'assets/card visuals/style15.svg': 'assets/card visuals/nested-rings.svg',
+    'assets/card visuals/style16.svg': 'assets/card visuals/prism-tiles.svg',
+  };
+
+  static int _stableStyleHash(String value) {
+    var hash = 0;
+    for (final codeUnit in value.codeUnits) {
+      hash = ((hash * 31) + codeUnit) & 0x7fffffff;
+    }
+    return hash;
+  }
+
+  static List<Color> _visualColorsForBank(List<Color> colors, Color highlight) {
+    final base = colors.first;
+    final mid =
+        colors.length > 1 ? colors[1] : Color.lerp(base, highlight, 0.4)!;
+    final end = colors.last;
+    final complement = _complementFor(highlight);
+
+    return [
+      Color.lerp(base, Colors.black, 0.18)!,
+      base,
+      mid,
+      highlight,
+      Color.lerp(end, Colors.white, 0.18)!,
+      Color.lerp(highlight, Colors.white, 0.35)!,
+      complement,
+    ];
+  }
+
+  static Color _complementFor(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl
+        .withHue((hsl.hue + 180) % 360)
+        .withSaturation(hsl.saturation.clamp(0.34, 0.74))
+        .withLightness(hsl.lightness.clamp(0.34, 0.68))
+        .toColor();
   }
 
   static List<Color>? _colorsForBank(
@@ -1105,6 +1193,9 @@ class CardVisuals {
             ? const [Color(0xFF2C2C2E), Color(0xFF1C1C1E)]
             : const [Color(0xFF555555), Color(0xFF333333)],
       ),
+      visualColors: isDark
+          ? const [Color(0xFF2C2C2E), Color(0xFF1C1C1E)]
+          : const [Color(0xFF555555), Color(0xFF333333)],
     );
   }
 }

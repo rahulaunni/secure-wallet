@@ -394,7 +394,10 @@ class _PinLockScreenState extends State<PinLockScreen>
             keypadBottomOffset;
         final widthScale = (maxWidth - 48) / sourceWidth;
         final heightScale = safeHeight / designContentHeight;
-        final scale = math.max(0.52, math.min(widthScale, heightScale));
+        final scale = math.max(
+          0.52,
+          math.min(1.0, math.min(widthScale, heightScale)),
+        );
         final walletScale = scale * walletHeroScale;
         final walletWidth = sourceWidth * walletScale;
         final walletHeight = 280 * walletScale;
@@ -833,9 +836,11 @@ class _PinLockScreenState extends State<PinLockScreen>
                 customGradientEndColor: card.customGradientEndColor != null
                     ? Color(card.customGradientEndColor!)
                     : null,
+                customCardPatternAssetPath: card.customCardVisualMode == 0
+                    ? card.customCardPatternAssetPath
+                    : null,
                 onEyeTap: () {},
                 onShareTap: () {},
-                onDeleteTap: () {},
               ),
             ),
           ),
