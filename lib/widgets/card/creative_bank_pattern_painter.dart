@@ -1574,47 +1574,17 @@ class CreativeBankPatternPainter extends CustomPainter {
     paint.style = PaintingStyle.fill;
     final high = Color.lerp(primary, Colors.white, 0.22)!;
     final low = Color.lerp(secondary, Colors.black, 0.26)!;
-    final splitY = size.height * 0.415;
-    final ledgeHeight = size.height * 0.055;
-    final ledgeWidth = size.width * 0.78;
 
-    paint.color = high.withValues(alpha: 0.92);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, splitY), paint);
-    paint.color = low.withValues(alpha: 0.96);
-    canvas.drawRect(
-      Rect.fromLTWH(0, splitY, size.width, size.height - splitY),
-      paint,
-    );
-
-    paint.shader = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
+    paint.shader = SweepGradient(
+      center: const Alignment(0.52, -0.15),
+      startAngle: math.pi / 2,
+      endAngle: math.pi * 2.5,
       colors: [
-        Colors.black.withValues(alpha: 0.00),
-        Colors.black.withValues(alpha: 0.18),
-        Colors.black.withValues(alpha: 0.00),
+        high.withValues(alpha: 0.96),
+        low.withValues(alpha: 0.96),
       ],
-      stops: const [0, 0.28, 1],
-    ).createShader(
-      Rect.fromLTWH(0, splitY - ledgeHeight * 0.28, ledgeWidth, ledgeHeight),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, splitY - ledgeHeight * 0.28, ledgeWidth, ledgeHeight),
-      paint,
-    );
-    paint.shader = null;
-
-    paint.shader = LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-      colors: [
-        Colors.white.withValues(alpha: 0.00),
-        Colors.white.withValues(alpha: 0.10),
-        Colors.white.withValues(alpha: 0.00),
-      ],
-      stops: const [0, 0.72, 1],
-    ).createShader(Rect.fromLTWH(0, splitY - 1, ledgeWidth, 2));
-    canvas.drawRect(Rect.fromLTWH(0, splitY - 1, ledgeWidth, 2), paint);
+    ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, paint);
     paint.shader = null;
   }
 
