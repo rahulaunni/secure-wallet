@@ -1460,49 +1460,65 @@ class CreativeBankPatternPainter extends CustomPainter {
 
   void _paintFigmaVioletArcs(Canvas canvas, Size size, Paint paint) {
     paint.style = PaintingStyle.fill;
-    final topCenter = _pt(size, 336, 200, 70.5, 20.5);
-    final topRadius = size.width * 126.5 / 336;
+    final veil = Color.lerp(primary, Colors.white, 0.42)!;
+    final glow = Color.lerp(secondary, Colors.white, 0.26)!;
+
+    final topCenter = _pt(size, 336, 200, 66, -2);
+    final topRadius = size.width * 126 / 336;
     paint.shader = LinearGradient(
       begin: Alignment.centerRight,
       end: Alignment.topLeft,
       colors: [
-        Colors.white.withValues(alpha: 0.10),
-        Colors.white.withValues(alpha: 0),
+        veil.withValues(alpha: 0.34),
+        veil.withValues(alpha: 0.08),
+        veil.withValues(alpha: 0),
       ],
+      stops: const [0, 0.58, 1],
     ).createShader(Rect.fromCircle(center: topCenter, radius: topRadius));
     canvas.drawCircle(topCenter, topRadius, paint);
     paint.shader = null;
 
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * size.width / 336
-      ..color = Colors.white.withValues(alpha: 0.34);
-    canvas.drawCircle(topCenter, topRadius, paint);
-
-    final bottomCenter = _pt(size, 336, 200, 227.5, 189.5);
-    final bottomRadius = size.width * 137.5 / 336;
-    paint
-      ..style = PaintingStyle.fill
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.white.withValues(alpha: 0.40),
-          Colors.white.withValues(alpha: 0),
-        ],
-        stops: const [0, 0.52],
-      ).createShader(Rect.fromCircle(
-        center: bottomCenter,
-        radius: bottomRadius,
-      ));
+    final bottomCenter = _pt(size, 336, 200, 232, 206);
+    final bottomRadius = size.width * 148 / 336;
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        glow.withValues(alpha: 0.46),
+        glow.withValues(alpha: 0.16),
+        glow.withValues(alpha: 0),
+      ],
+      stops: const [0, 0.54, 1],
+    ).createShader(Rect.fromCircle(
+      center: bottomCenter,
+      radius: bottomRadius,
+    ));
     canvas.drawCircle(bottomCenter, bottomRadius, paint);
     paint.shader = null;
 
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2 * size.width / 336
-      ..color = Colors.white.withValues(alpha: 0.32);
-    canvas.drawCircle(bottomCenter, size.width * 136.5 / 336, paint);
+    final panel = Path()
+      ..moveTo(0, size.height * 0.70)
+      ..cubicTo(
+        size.width * 0.26,
+        size.height * 0.54,
+        size.width * 0.58,
+        size.height * 0.70,
+        size.width,
+        size.height * 0.52,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [
+        veil.withValues(alpha: 0.20),
+        Colors.white.withValues(alpha: 0.05),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(panel, paint);
+    paint.shader = null;
   }
 
   void _paintFigmaLimeSlashes(Canvas canvas, Size size, Paint paint) {
@@ -1636,22 +1652,51 @@ class CreativeBankPatternPainter extends CustomPainter {
 
   void _paintFigmaNoirRings(Canvas canvas, Size size, Paint paint) {
     paint.style = PaintingStyle.fill;
-    final rings = [
-      (363.727, 185.239, 90.5),
-      (347.492, 173.559, 110.5),
-      (331.257, 161.879, 130.5),
-      (314.21, 149.615, 151.5),
-      (296.465, 137.465, 173.0),
-    ];
-    for (final ring in rings) {
-      final (x, y, r) = ring;
-      paint.color = const Color(0xFFD9D9D9).withValues(alpha: 0.04);
-      canvas.drawCircle(
-        _pt(size, 336, 200, x, y),
-        size.width * r / 336,
-        paint,
-      );
-    }
+    final glow = Color.lerp(primary, Colors.white, 0.18)!;
+    final shadow = Color.lerp(secondary, Colors.black, 0.28)!;
+
+    final sweepCenter = _pt(size, 336, 200, 318, 182);
+    final sweepRadius = size.width * 190 / 336;
+    paint.shader = RadialGradient(
+      center: Alignment.center,
+      radius: 1,
+      colors: [
+        glow.withValues(alpha: 0.28),
+        glow.withValues(alpha: 0.10),
+        glow.withValues(alpha: 0),
+      ],
+      stops: const [0, 0.46, 1],
+    ).createShader(Rect.fromCircle(
+      center: sweepCenter,
+      radius: sweepRadius,
+    ));
+    canvas.drawCircle(sweepCenter, sweepRadius, paint);
+    paint.shader = null;
+
+    final shadePanel = Path()
+      ..moveTo(size.width * 0.46, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width * 0.72, size.height)
+      ..cubicTo(
+        size.width * 0.60,
+        size.height * 0.64,
+        size.width * 0.56,
+        size.height * 0.32,
+        size.width * 0.46,
+        0,
+      )
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [
+        shadow.withValues(alpha: 0.24),
+        shadow.withValues(alpha: 0),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(shadePanel, paint);
+    paint.shader = null;
   }
 
   void _paintFigmaBronzeArcs(Canvas canvas, Size size, Paint paint) {
