@@ -874,8 +874,9 @@ class CardVisuals {
   static int get creativePatternCount => _patternRecipes.length;
 
   static bool hasCreativePatternForBank(String cid) {
-    return _bankPatternIds.containsKey(cid) ||
-        _bankPatternIds.containsKey(BankAssetResolver.resolveCid(cid));
+    final resolved = BankAssetResolver.resolveCid(cid);
+    final shortId = _shortIdForBank(cid, resolved);
+    return _bankPatternIds.containsKey(shortId);
   }
 
   static CustomPainter? _creativePainterForBank(
@@ -895,23 +896,149 @@ class CardVisuals {
       recipe: recipe,
       primary: highlight,
       secondary: accent,
-      motifOverride: _figmaMotifForBank(resolved, recipeId),
+      motifOverride: _figmaMotifForBank(cid, resolved, recipeId),
     );
   }
 
   static CreativeBankPatternMotif _figmaMotifForBank(
     String cid,
+    String resolved,
     String recipeId,
   ) {
     switch (cid) {
+      case 'au_small_finance':
       case 'axis':
+      case 'axis_bank':
+      case 'dhanlaxmi':
+      case 'dhanlaxmi_bank':
         return CreativeBankPatternMotif.figmaPurpleOrbs;
       case 'bandhan':
+      case 'bandhan_bank':
+      case 'canara':
+      case 'canara_bank':
+      case 'sbi':
+      case 'state_bank_of_india':
+      case 'yes':
+      case 'yes_bank':
         return CreativeBankPatternMotif.figmaBlueBubbles;
+      case 'hdfc':
+      case 'hdfc_bank':
+      case 'icici':
+      case 'icici_bank':
+        return CreativeBankPatternMotif.figmaCoralDiagonals;
+      case 'bank_of_baroda':
+      case 'standard_chartered':
+      case 'standard_chartered_bank':
+        return CreativeBankPatternMotif.figmaMintChevrons;
+      case 'bank_of_india':
+      case 'federal':
+      case 'federal_bank':
+      case 'tmb':
+      case 'tamilnad_mercantile_bank':
+        return CreativeBankPatternMotif.figmaVioletArcs;
       case 'bank_of_maharashtra':
         return CreativeBankPatternMotif.figmaLimeSlashes;
+      case 'idbi':
+      case 'idbi_bank':
+      case 'jammu_kashmir':
+      case 'jammu_and_kashmir_bank':
+      case 'karur_vysya':
+      case 'karur_vysya_bank':
+        return CreativeBankPatternMotif.figmaEmeraldBlocks;
+      case 'dcb':
+      case 'dcb_bank':
+      case 'rbl':
+      case 'rbl_bank':
+        return CreativeBankPatternMotif.figmaNoirRings;
+      case 'indusind':
+      case 'indusind_bank':
+        return CreativeBankPatternMotif.figmaBronzeArcs;
+      case 'csb':
+      case 'csb_bank':
+      case 'punjab_sind':
+      case 'punjab_and_sind_bank':
+      case 'punjab_national_bank':
+        return CreativeBankPatternMotif.figmaGoldSplit;
+      case 'idfc':
+      case 'idfc_first':
+      case 'idfc_first_bank':
+        return CreativeBankPatternMotif.figmaSoftVerticalStripes;
+      case 'kotak':
+      case 'kotak_mahindra_bank':
+      case 'south_indian':
+      case 'south_indian_bank':
+      case 'union':
+      case 'union_bank':
+        return CreativeBankPatternMotif.figmaRedLiquid;
       default:
-        return _figmaMotifForRecipeId(recipeId);
+        switch (resolved) {
+          case 'au_small_finance':
+          case 'axis':
+          case 'axis_bank':
+          case 'dhanlaxmi':
+          case 'dhanlaxmi_bank':
+            return CreativeBankPatternMotif.figmaPurpleOrbs;
+          case 'bandhan':
+          case 'bandhan_bank':
+          case 'canara':
+          case 'canara_bank':
+          case 'sbi':
+          case 'state_bank_of_india':
+          case 'yes':
+          case 'yes_bank':
+            return CreativeBankPatternMotif.figmaBlueBubbles;
+          case 'hdfc':
+          case 'hdfc_bank':
+          case 'icici':
+          case 'icici_bank':
+            return CreativeBankPatternMotif.figmaCoralDiagonals;
+          case 'bank_of_baroda':
+          case 'standard_chartered':
+          case 'standard_chartered_bank':
+            return CreativeBankPatternMotif.figmaMintChevrons;
+          case 'bank_of_india':
+          case 'federal':
+          case 'federal_bank':
+          case 'tmb':
+          case 'tamilnad_mercantile_bank':
+            return CreativeBankPatternMotif.figmaVioletArcs;
+          case 'bank_of_maharashtra':
+            return CreativeBankPatternMotif.figmaLimeSlashes;
+          case 'idbi':
+          case 'idbi_bank':
+          case 'jammu_kashmir':
+          case 'jammu_and_kashmir_bank':
+          case 'karur_vysya':
+          case 'karur_vysya_bank':
+            return CreativeBankPatternMotif.figmaEmeraldBlocks;
+          case 'dcb':
+          case 'dcb_bank':
+          case 'rbl':
+          case 'rbl_bank':
+            return CreativeBankPatternMotif.figmaNoirRings;
+          case 'indusind':
+          case 'indusind_bank':
+            return CreativeBankPatternMotif.figmaBronzeArcs;
+          case 'csb':
+          case 'csb_bank':
+          case 'punjab_sind':
+          case 'punjab_and_sind_bank':
+          case 'punjab_national_bank':
+            return CreativeBankPatternMotif.figmaGoldSplit;
+          case 'idfc':
+          case 'idfc_first':
+          case 'idfc_first_bank':
+            return CreativeBankPatternMotif.figmaSoftVerticalStripes;
+          case 'kotak':
+          case 'kotak_mahindra_bank':
+          case 'south_indian':
+          case 'south_indian_bank':
+          case 'union':
+          case 'union_bank':
+            return CreativeBankPatternMotif.figmaRedLiquid;
+          default:
+            return _figmaMotifForRecipeId(recipeId);
+        }
     }
   }
 
@@ -940,11 +1067,13 @@ class CardVisuals {
 
   static CardVisual forBank(String cid) {
     final resolved = BankAssetResolver.resolveCid(cid);
-    final colors = _colorsForBank(cid, resolved);
+    final shortId = _shortIdForBank(cid, resolved);
+    final colors = _colorsForBank(cid, resolved, shortId);
     if (colors == null) return placeholder(false);
 
-    final h = _highlight(resolved, colors);
-    CustomPainter? painter = _creativePainterForBank(cid, resolved, colors, h);
+    final h = _highlight(shortId, colors);
+    CustomPainter? painter =
+        _creativePainterForBank(shortId, resolved, colors, h);
 
     if (painter == null) {
       if (['axis', 'rbl', 'bandhan', 'idbi'].contains(resolved)) {
@@ -992,8 +1121,8 @@ class CardVisuals {
 
     return CardVisual(
       gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+        begin: _gradientBeginForBank(shortId),
+        end: _gradientEndForBank(shortId),
         colors: colors,
       ),
       bankLogo: BankAssetResolver.logoPath(cid),
@@ -1001,8 +1130,14 @@ class CardVisuals {
     );
   }
 
-  static List<Color>? _colorsForBank(String cid, String resolved) {
-    final directColors = _bankGradients[cid] ?? _bankGradients[resolved];
+  static List<Color>? _colorsForBank(
+    String cid,
+    String resolved,
+    String shortId,
+  ) {
+    final directColors = _bankGradients[cid] ??
+        _bankGradients[resolved] ??
+        _bankGradients[shortId];
     if (directColors != null) {
       return directColors;
     }
@@ -1019,6 +1154,46 @@ class CardVisuals {
     }
 
     return null;
+  }
+
+  static String _shortIdForBank(String cid, String resolved) {
+    if (_bankGradients.containsKey(cid) || _bankPatternIds.containsKey(cid)) {
+      return cid;
+    }
+    if (_bankGradients.containsKey(resolved) ||
+        _bankPatternIds.containsKey(resolved)) {
+      return resolved;
+    }
+
+    for (final bankId in _bankPatternIds.keys) {
+      if (BankAssetResolver.resolveCid(bankId) == resolved) {
+        return bankId;
+      }
+    }
+
+    return cid;
+  }
+
+  static Alignment _gradientBeginForBank(String cid) {
+    switch (cid) {
+      case 'axis':
+      case 'citibank':
+      case 'city_union':
+        return Alignment.centerLeft;
+      default:
+        return Alignment.topLeft;
+    }
+  }
+
+  static Alignment _gradientEndForBank(String cid) {
+    switch (cid) {
+      case 'axis':
+      case 'citibank':
+      case 'city_union':
+        return Alignment.centerRight;
+      default:
+        return Alignment.bottomRight;
+    }
   }
 
   static String? _countryIdFromBankId(String cid) {

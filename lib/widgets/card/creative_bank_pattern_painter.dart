@@ -1260,10 +1260,10 @@ class CreativeBankPatternPainter extends CustomPainter {
   void _paintFigmaBlueBubbles(Canvas canvas, Size size, Paint paint) {
     paint.style = PaintingStyle.fill;
     final circles = [
-      (181.5, 146.5, 75.5, 231.833, 85.6318, 156.333, 147.085),
-      (108.478, 114.478, 51.5, 85.4779, 62.9779, 108.978, 121.478),
-      (125.239, 137.239, 43.3494, 125.239, 93.8896, 122.797, 145.787),
-      (75.0, 146.0, 74.0, 75.0, 72.0, 68.2147, 146.457),
+      (80.0, 151.0, 77.0, 45.0, 88.0, 97.0, 172.0),
+      (145.0, 94.0, 55.0, 113.0, 52.0, 153.0, 112.0),
+      (150.0, 132.0, 43.0, 122.0, 96.0, 153.0, 150.0),
+      (223.0, 140.0, 80.0, 258.0, 70.0, 199.0, 164.0),
     ];
     for (final circle in circles) {
       final (x, y, r, x1, y1, x2, y2) = circle;
@@ -1574,31 +1574,47 @@ class CreativeBankPatternPainter extends CustomPainter {
     paint.style = PaintingStyle.fill;
     final high = Color.lerp(primary, Colors.white, 0.22)!;
     final low = Color.lerp(secondary, Colors.black, 0.26)!;
+    final splitY = size.height * 0.415;
+    final ledgeHeight = size.height * 0.055;
+    final ledgeWidth = size.width * 0.78;
+
     paint.color = high.withValues(alpha: 0.92);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height * 0.43), paint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, splitY), paint);
     paint.color = low.withValues(alpha: 0.96);
     canvas.drawRect(
-      Rect.fromLTWH(0, size.height * 0.43, size.width, size.height * 0.57),
+      Rect.fromLTWH(0, splitY, size.width, size.height - splitY),
       paint,
     );
+
+    paint.shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.black.withValues(alpha: 0.00),
+        Colors.black.withValues(alpha: 0.18),
+        Colors.black.withValues(alpha: 0.00),
+      ],
+      stops: const [0, 0.28, 1],
+    ).createShader(
+      Rect.fromLTWH(0, splitY - ledgeHeight * 0.28, ledgeWidth, ledgeHeight),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(0, splitY - ledgeHeight * 0.28, ledgeWidth, ledgeHeight),
+      paint,
+    );
+    paint.shader = null;
+
     paint.shader = LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
       colors: [
-        Colors.black.withValues(alpha: 0.00),
-        Colors.black.withValues(alpha: 0.16),
-        Colors.black.withValues(alpha: 0.00),
+        Colors.white.withValues(alpha: 0.00),
+        Colors.white.withValues(alpha: 0.10),
+        Colors.white.withValues(alpha: 0.00),
       ],
-      stops: const [0, 0.60, 1],
-    ).createShader(
-      Rect.fromLTWH(
-          0, size.height * 0.40, size.width * 0.78, size.height * 0.08),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(
-          0, size.height * 0.40, size.width * 0.78, size.height * 0.08),
-      paint,
-    );
+      stops: const [0, 0.72, 1],
+    ).createShader(Rect.fromLTWH(0, splitY - 1, ledgeWidth, 2));
+    canvas.drawRect(Rect.fromLTWH(0, splitY - 1, ledgeWidth, 2), paint);
     paint.shader = null;
   }
 
