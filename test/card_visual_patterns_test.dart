@@ -2,10 +2,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:swallet/constants/card_visuals.dart';
 import 'package:swallet/data/bank_assets.dart';
+import 'package:swallet/widgets/card/creative_bank_pattern_painter.dart';
+
+const fixedReferenceMotifs = {
+  'axis': CreativeBankPatternMotif.figmaPurpleOrbs,
+  'hdfc': CreativeBankPatternMotif.figmaCoralDiagonals,
+  'bandhan': CreativeBankPatternMotif.figmaBlueBubbles,
+  'bank_of_baroda': CreativeBankPatternMotif.figmaMintChevrons,
+  'bank_of_india': CreativeBankPatternMotif.figmaVioletArcs,
+  'bank_of_maharashtra': CreativeBankPatternMotif.figmaLimeSlashes,
+  'idbi': CreativeBankPatternMotif.figmaEmeraldBlocks,
+  'dcb': CreativeBankPatternMotif.figmaNoirRings,
+  'indusind': CreativeBankPatternMotif.figmaBronzeArcs,
+  'csb': CreativeBankPatternMotif.figmaGoldSplit,
+  'idfc': CreativeBankPatternMotif.figmaSoftVerticalStripes,
+  'kotak': CreativeBankPatternMotif.figmaRedLiquid,
+};
 
 void main() {
-  test('at least fifty creative card overlay patterns are available', () {
-    expect(CardVisuals.creativePatternCount, greaterThanOrEqualTo(50));
+  test('one creative card overlay pattern is assigned to each Indian bank', () {
+    expect(CardVisuals.creativePatternCount, BankAssets.supportedBanks.length);
   });
 
   test('every supported Indian bank has a creative overlay pattern', () {
@@ -14,6 +30,33 @@ void main() {
         .toList();
 
     expect(missing, isEmpty);
+  });
+
+  test('the twelve reference SVG card motifs stay fixed', () {
+    for (final entry in fixedReferenceMotifs.entries) {
+      expect(
+        CardVisuals.debugCreativeMotifForBank(entry.key),
+        entry.value,
+        reason: '${entry.key} should keep its imported reference motif',
+      );
+    }
+  });
+
+  test('the remaining bank overlay motifs are unique to each other', () {
+    final remainingBanks = BankAssets.supportedBanks
+        .where((bankId) => !fixedReferenceMotifs.containsKey(bankId))
+        .toList();
+    final motifs = {
+      for (final bankId in remainingBanks)
+        bankId: CardVisuals.debugCreativeMotifForBank(bankId)
+    };
+    final uniqueMotifs = motifs.values.toSet();
+
+    expect(
+      uniqueMotifs.length,
+      remainingBanks.length,
+      reason: 'Non-reference banks should not share overlay motifs: $motifs',
+    );
   });
 
   test('key Indian bank cards use brand-led visual palettes', () {

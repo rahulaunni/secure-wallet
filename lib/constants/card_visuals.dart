@@ -286,7 +286,7 @@ class CardVisuals {
   static const Map<String, CreativeBankPatternRecipe> _patternRecipes = {
     'p01': CreativeBankPatternRecipe(
       name: 'violet-orange faceted flame',
-      motif: CreativeBankPatternMotif.facetedShard,
+      motif: CreativeBankPatternMotif.guilloche,
       anchor: Offset(0.80, 0.22),
       scale: 1.06,
       density: 0.62,
@@ -358,7 +358,7 @@ class CardVisuals {
     ),
     'p07': CreativeBankPatternRecipe(
       name: 'canara soft wave planes',
-      motif: CreativeBankPatternMotif.softWavePlanes,
+      motif: CreativeBankPatternMotif.contour,
       anchor: Offset(0.50, 0.50),
       scale: 0.94,
       density: 0.76,
@@ -370,7 +370,7 @@ class CardVisuals {
     ),
     'p08': CreativeBankPatternRecipe(
       name: 'central stacked ledger panels',
-      motif: CreativeBankPatternMotif.stackedPanels,
+      motif: CreativeBankPatternMotif.waveRibbon,
       anchor: Offset(0.50, 0.50),
       scale: 0.88,
       density: 0.60,
@@ -382,7 +382,7 @@ class CardVisuals {
     ),
     'p09': CreativeBankPatternRecipe(
       name: 'citi blue portal arcs',
-      motif: CreativeBankPatternMotif.portalArcs,
+      motif: CreativeBankPatternMotif.diagonalPrism,
       anchor: Offset(0.82, 0.05),
       scale: 1.04,
       density: 0.66,
@@ -394,7 +394,7 @@ class CardVisuals {
     ),
     'p10': CreativeBankPatternRecipe(
       name: 'city union split oval crest',
-      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      motif: CreativeBankPatternMotif.radialSun,
       anchor: Offset(0.50, 0.50),
       scale: 0.90,
       density: 0.70,
@@ -430,7 +430,7 @@ class CardVisuals {
     ),
     'p13': CreativeBankPatternRecipe(
       name: 'dhanlaxmi orchid crescent',
-      motif: CreativeBankPatternMotif.crescentSweep,
+      motif: CreativeBankPatternMotif.dotConstellation,
       anchor: Offset(0.14, 0.22),
       scale: 0.92,
       density: 0.72,
@@ -442,7 +442,7 @@ class CardVisuals {
     ),
     'p14': CreativeBankPatternRecipe(
       name: 'federal electric ribbon sweep',
-      motif: CreativeBankPatternMotif.ribbonSweep,
+      motif: CreativeBankPatternMotif.diamondMesh,
       anchor: Offset(0.50, 0.50),
       scale: 1.08,
       density: 0.66,
@@ -466,7 +466,7 @@ class CardVisuals {
     ),
     'p16': CreativeBankPatternRecipe(
       name: 'icici copper split ovals',
-      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      motif: CreativeBankPatternMotif.circuitTrace,
       anchor: Offset(0.10, 0.92),
       scale: 1.10,
       density: 0.84,
@@ -502,7 +502,7 @@ class CardVisuals {
     ),
     'p19': CreativeBankPatternRecipe(
       name: 'indian bank blue-gold corner arcs',
-      motif: CreativeBankPatternMotif.cornerArcBands,
+      motif: CreativeBankPatternMotif.chevronVault,
       anchor: Offset(0.50, 0.50),
       scale: 1.00,
       density: 0.72,
@@ -514,7 +514,7 @@ class CardVisuals {
     ),
     'p20': CreativeBankPatternRecipe(
       name: 'iob sea ribbon sweep',
-      motif: CreativeBankPatternMotif.ribbonSweep,
+      motif: CreativeBankPatternMotif.templeSteps,
       anchor: Offset(0.50, 0.50),
       scale: 1.04,
       density: 0.72,
@@ -538,7 +538,7 @@ class CardVisuals {
     ),
     'p22': CreativeBankPatternRecipe(
       name: 'jk emerald soft waves',
-      motif: CreativeBankPatternMotif.softWavePlanes,
+      motif: CreativeBankPatternMotif.orbit,
       anchor: Offset(0.18, 0.92),
       scale: 1.20,
       density: 0.64,
@@ -550,7 +550,7 @@ class CardVisuals {
     ),
     'p23': CreativeBankPatternRecipe(
       name: 'karnataka red faceted planes',
-      motif: CreativeBankPatternMotif.facetedShard,
+      motif: CreativeBankPatternMotif.coinStack,
       anchor: Offset(0.50, 0.50),
       scale: 0.88,
       density: 0.76,
@@ -562,7 +562,7 @@ class CardVisuals {
     ),
     'p24': CreativeBankPatternRecipe(
       name: 'karur vysya folded blue-red',
-      motif: CreativeBankPatternMotif.foldedPlanes,
+      motif: CreativeBankPatternMotif.lotusMandala,
       anchor: Offset(0.50, 0.50),
       scale: 0.94,
       density: 0.60,
@@ -586,7 +586,7 @@ class CardVisuals {
     ),
     'p26': CreativeBankPatternRecipe(
       name: 'punjab sind gold stepped field',
-      motif: CreativeBankPatternMotif.steppedDiagonal,
+      motif: CreativeBankPatternMotif.infinityLoop,
       anchor: Offset(0.72, 0.10),
       scale: 1.10,
       density: 0.72,
@@ -598,7 +598,7 @@ class CardVisuals {
     ),
     'p27': CreativeBankPatternRecipe(
       name: 'pnb garnet corner sweep',
-      motif: CreativeBankPatternMotif.cornerArcBands,
+      motif: CreativeBankPatternMotif.peacockEye,
       anchor: Offset(0.88, 0.72),
       scale: 1.04,
       density: 0.86,
@@ -610,7 +610,7 @@ class CardVisuals {
     ),
     'p28': CreativeBankPatternRecipe(
       name: 'rbl midnight skyline',
-      motif: CreativeBankPatternMotif.skylineBars,
+      motif: CreativeBankPatternMotif.facetedShard,
       anchor: Offset(0.50, 0.50),
       scale: 0.88,
       density: 0.82,
@@ -622,7 +622,7 @@ class CardVisuals {
     ),
     'p29': CreativeBankPatternRecipe(
       name: 'south indian warm ribbon',
-      motif: CreativeBankPatternMotif.ribbonSweep,
+      motif: CreativeBankPatternMotif.wovenBraid,
       anchor: Offset(0.94, 0.88),
       scale: 0.94,
       density: 0.74,
@@ -634,7 +634,7 @@ class CardVisuals {
     ),
     'p30': CreativeBankPatternRecipe(
       name: 'standard chartered green waves',
-      motif: CreativeBankPatternMotif.softWavePlanes,
+      motif: CreativeBankPatternMotif.skylineBars,
       anchor: Offset(0.86, 0.52),
       scale: 1.18,
       density: 0.66,
@@ -658,7 +658,7 @@ class CardVisuals {
     ),
     'p32': CreativeBankPatternRecipe(
       name: 'tmb violet crescent arcs',
-      motif: CreativeBankPatternMotif.crescentSweep,
+      motif: CreativeBankPatternMotif.hexBloom,
       anchor: Offset(0.50, 0.50),
       scale: 0.88,
       density: 0.88,
@@ -670,7 +670,7 @@ class CardVisuals {
     ),
     'p33': CreativeBankPatternRecipe(
       name: 'uco deep blue stacked panels',
-      motif: CreativeBankPatternMotif.stackedPanels,
+      motif: CreativeBankPatternMotif.magneticField,
       anchor: Offset(0.50, 0.50),
       scale: 1.00,
       density: 0.64,
@@ -682,7 +682,7 @@ class CardVisuals {
     ),
     'p34': CreativeBankPatternRecipe(
       name: 'union dual-color split planes',
-      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      motif: CreativeBankPatternMotif.monsoonTopo,
       anchor: Offset(0.74, 0.05),
       scale: 1.04,
       density: 0.84,
@@ -694,7 +694,7 @@ class CardVisuals {
     ),
     'p35': CreativeBankPatternRecipe(
       name: 'yes cyan faceted glass',
-      motif: CreativeBankPatternMotif.facetedShard,
+      motif: CreativeBankPatternMotif.boldDiagonalBands,
       anchor: Offset(0.50, 0.50),
       scale: 1.12,
       density: 0.58,
@@ -871,13 +871,28 @@ class CardVisuals {
         seed: 150),
   };
 
-  static int get creativePatternCount => _patternRecipes.length;
+  static int get creativePatternCount => _bankPatternIds.length;
 
   static bool hasCreativePatternForBank(String cid) {
     final resolved = BankAssetResolver.resolveCid(cid);
     final shortId = _shortIdForBank(cid, resolved);
     return _bankPatternIds.containsKey(shortId);
   }
+
+  static const Map<String, CreativeBankPatternMotif> _fixedFigmaMotifs = {
+    'axis': CreativeBankPatternMotif.figmaPurpleOrbs,
+    'hdfc': CreativeBankPatternMotif.figmaCoralDiagonals,
+    'bandhan': CreativeBankPatternMotif.figmaBlueBubbles,
+    'bank_of_baroda': CreativeBankPatternMotif.figmaMintChevrons,
+    'bank_of_india': CreativeBankPatternMotif.figmaVioletArcs,
+    'bank_of_maharashtra': CreativeBankPatternMotif.figmaLimeSlashes,
+    'idbi': CreativeBankPatternMotif.figmaEmeraldBlocks,
+    'dcb': CreativeBankPatternMotif.figmaNoirRings,
+    'indusind': CreativeBankPatternMotif.figmaBronzeArcs,
+    'csb': CreativeBankPatternMotif.figmaGoldSplit,
+    'idfc': CreativeBankPatternMotif.figmaSoftVerticalStripes,
+    'kotak': CreativeBankPatternMotif.figmaRedLiquid,
+  };
 
   static CustomPainter? _creativePainterForBank(
     String cid,
@@ -896,169 +911,17 @@ class CardVisuals {
       recipe: recipe,
       primary: highlight,
       secondary: accent,
-      motifOverride: _figmaMotifForBank(cid, resolved, recipeId),
+      motifOverride: _fixedFigmaMotifs[cid],
     );
   }
 
-  static CreativeBankPatternMotif _figmaMotifForBank(
-    String cid,
-    String resolved,
-    String recipeId,
-  ) {
-    switch (cid) {
-      case 'au_small_finance':
-      case 'axis':
-      case 'axis_bank':
-      case 'dhanlaxmi':
-      case 'dhanlaxmi_bank':
-        return CreativeBankPatternMotif.figmaPurpleOrbs;
-      case 'bandhan':
-      case 'bandhan_bank':
-      case 'canara':
-      case 'canara_bank':
-      case 'sbi':
-      case 'state_bank_of_india':
-      case 'yes':
-      case 'yes_bank':
-        return CreativeBankPatternMotif.figmaBlueBubbles;
-      case 'hdfc':
-      case 'hdfc_bank':
-      case 'icici':
-      case 'icici_bank':
-        return CreativeBankPatternMotif.figmaCoralDiagonals;
-      case 'bank_of_baroda':
-      case 'standard_chartered':
-      case 'standard_chartered_bank':
-        return CreativeBankPatternMotif.figmaMintChevrons;
-      case 'bank_of_india':
-      case 'federal':
-      case 'federal_bank':
-      case 'tmb':
-      case 'tamilnad_mercantile_bank':
-        return CreativeBankPatternMotif.figmaVioletArcs;
-      case 'bank_of_maharashtra':
-        return CreativeBankPatternMotif.figmaLimeSlashes;
-      case 'idbi':
-      case 'idbi_bank':
-      case 'jammu_kashmir':
-      case 'jammu_and_kashmir_bank':
-      case 'karur_vysya':
-      case 'karur_vysya_bank':
-        return CreativeBankPatternMotif.figmaEmeraldBlocks;
-      case 'dcb':
-      case 'dcb_bank':
-      case 'rbl':
-      case 'rbl_bank':
-        return CreativeBankPatternMotif.figmaNoirRings;
-      case 'indusind':
-      case 'indusind_bank':
-        return CreativeBankPatternMotif.figmaBronzeArcs;
-      case 'csb':
-      case 'csb_bank':
-      case 'punjab_sind':
-      case 'punjab_and_sind_bank':
-      case 'punjab_national_bank':
-        return CreativeBankPatternMotif.figmaGoldSplit;
-      case 'idfc':
-      case 'idfc_first':
-      case 'idfc_first_bank':
-        return CreativeBankPatternMotif.figmaSoftVerticalStripes;
-      case 'kotak':
-      case 'kotak_mahindra_bank':
-      case 'south_indian':
-      case 'south_indian_bank':
-      case 'union':
-      case 'union_bank':
-        return CreativeBankPatternMotif.figmaRedLiquid;
-      default:
-        switch (resolved) {
-          case 'au_small_finance':
-          case 'axis':
-          case 'axis_bank':
-          case 'dhanlaxmi':
-          case 'dhanlaxmi_bank':
-            return CreativeBankPatternMotif.figmaPurpleOrbs;
-          case 'bandhan':
-          case 'bandhan_bank':
-          case 'canara':
-          case 'canara_bank':
-          case 'sbi':
-          case 'state_bank_of_india':
-          case 'yes':
-          case 'yes_bank':
-            return CreativeBankPatternMotif.figmaBlueBubbles;
-          case 'hdfc':
-          case 'hdfc_bank':
-          case 'icici':
-          case 'icici_bank':
-            return CreativeBankPatternMotif.figmaCoralDiagonals;
-          case 'bank_of_baroda':
-          case 'standard_chartered':
-          case 'standard_chartered_bank':
-            return CreativeBankPatternMotif.figmaMintChevrons;
-          case 'bank_of_india':
-          case 'federal':
-          case 'federal_bank':
-          case 'tmb':
-          case 'tamilnad_mercantile_bank':
-            return CreativeBankPatternMotif.figmaVioletArcs;
-          case 'bank_of_maharashtra':
-            return CreativeBankPatternMotif.figmaLimeSlashes;
-          case 'idbi':
-          case 'idbi_bank':
-          case 'jammu_kashmir':
-          case 'jammu_and_kashmir_bank':
-          case 'karur_vysya':
-          case 'karur_vysya_bank':
-            return CreativeBankPatternMotif.figmaEmeraldBlocks;
-          case 'dcb':
-          case 'dcb_bank':
-          case 'rbl':
-          case 'rbl_bank':
-            return CreativeBankPatternMotif.figmaNoirRings;
-          case 'indusind':
-          case 'indusind_bank':
-            return CreativeBankPatternMotif.figmaBronzeArcs;
-          case 'csb':
-          case 'csb_bank':
-          case 'punjab_sind':
-          case 'punjab_and_sind_bank':
-          case 'punjab_national_bank':
-            return CreativeBankPatternMotif.figmaGoldSplit;
-          case 'idfc':
-          case 'idfc_first':
-          case 'idfc_first_bank':
-            return CreativeBankPatternMotif.figmaSoftVerticalStripes;
-          case 'kotak':
-          case 'kotak_mahindra_bank':
-          case 'south_indian':
-          case 'south_indian_bank':
-          case 'union':
-          case 'union_bank':
-            return CreativeBankPatternMotif.figmaRedLiquid;
-          default:
-            return _figmaMotifForRecipeId(recipeId);
-        }
-    }
-  }
+  static CreativeBankPatternMotif? debugCreativeMotifForBank(String cid) {
+    final resolved = BankAssetResolver.resolveCid(cid);
+    final shortId = _shortIdForBank(cid, resolved);
+    final recipeId = _bankPatternIds[shortId];
+    if (recipeId == null) return null;
 
-  static CreativeBankPatternMotif _figmaMotifForRecipeId(String recipeId) {
-    final number = int.tryParse(recipeId.replaceFirst('p', '')) ?? 1;
-    const motifs = [
-      CreativeBankPatternMotif.figmaPurpleOrbs,
-      CreativeBankPatternMotif.figmaCoralDiagonals,
-      CreativeBankPatternMotif.figmaBlueBubbles,
-      CreativeBankPatternMotif.figmaMintChevrons,
-      CreativeBankPatternMotif.figmaVioletArcs,
-      CreativeBankPatternMotif.figmaLimeSlashes,
-      CreativeBankPatternMotif.figmaEmeraldBlocks,
-      CreativeBankPatternMotif.figmaNoirRings,
-      CreativeBankPatternMotif.figmaBronzeArcs,
-      CreativeBankPatternMotif.figmaGoldSplit,
-      CreativeBankPatternMotif.figmaSoftVerticalStripes,
-      CreativeBankPatternMotif.figmaRedLiquid,
-    ];
-    return motifs[(number - 1) % motifs.length];
+    return _fixedFigmaMotifs[shortId] ?? _patternRecipes[recipeId]?.motif;
   }
 
   /* -------------------------------------------------------------------------- */
