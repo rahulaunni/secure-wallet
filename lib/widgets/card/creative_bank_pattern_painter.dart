@@ -1757,355 +1757,654 @@ class CreativeBankPatternPainter extends CustomPainter {
   }
 
   void _paintMemoryAuroraLens(Canvas canvas, Size size, Paint paint) {
-    _memoryCircle(canvas, size, paint, const Offset(0.08, 0.98), 0.68, primary,
-        0.34, Alignment.topRight, Alignment.bottomLeft);
-    _memoryCircle(canvas, size, paint, const Offset(0.84, 0.02), 0.42,
-        secondary, 0.24, Alignment.bottomLeft, Alignment.topRight);
-    _memoryBand(canvas, size, paint, const Offset(0.58, -0.18),
-        const Size(0.22, 1.35), 34, Colors.white, 0.08, 0.03);
+    _paintMemorySimple(canvas, size, paint, 0);
   }
 
   void _paintMemoryGlassDiagonal(Canvas canvas, Size size, Paint paint) {
-    for (var i = 0; i < 4; i++) {
-      _memoryBand(
-        canvas,
-        size,
-        paint,
-        Offset(-0.18 + i * 0.24, -0.34),
-        Size(0.18 + i * 0.02, 1.72),
-        -31,
-        i.isEven ? Colors.white : primary,
-        0.09 + i * 0.045,
-        0,
-      );
-    }
+    _paintMemorySimple(canvas, size, paint, 1);
   }
 
   void _paintMemoryOrbitBubble(Canvas canvas, Size size, Paint paint) {
-    _memoryCircle(canvas, size, paint, const Offset(0.72, 0.58), 0.44, primary,
-        0.34, Alignment.topLeft, Alignment.bottomRight);
-    _memoryCircle(canvas, size, paint, const Offset(0.48, 0.30), 0.29,
-        Colors.white, 0.20, Alignment.topCenter, Alignment.bottomCenter);
-    _memoryCircle(canvas, size, paint, const Offset(0.30, 0.84), 0.38,
-        secondary, 0.22, Alignment.topRight, Alignment.bottomLeft);
+    _paintMemorySimple(canvas, size, paint, 2);
   }
 
   void _paintMemoryFoldedCorner(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final high = Color.lerp(primary, Colors.white, 0.35)!;
-    final path = Path()
-      ..moveTo(size.width * 0.08, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, size.height * 0.72)
-      ..lineTo(size.width * 0.58, size.height)
-      ..lineTo(size.width * 0.35, size.height * 0.58)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
-      colors: [high.withValues(alpha: 0.30), secondary.withValues(alpha: 0)],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(path, paint);
-    paint.shader = null;
+    _paintMemorySimple(canvas, size, paint, 3);
   }
 
   void _paintMemoryRibbonBend(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    _memoryRibbon(canvas, size, paint, 0.06, 0.44, primary, 0.26);
-    _memoryRibbon(canvas, size, paint, 0.42, 0.78, secondary, 0.20);
+    _paintMemorySimple(canvas, size, paint, 4);
   }
 
   void _paintMemorySlantStack(Canvas canvas, Size size, Paint paint) {
-    for (var i = 0; i < 5; i++) {
-      _memoryBand(
-        canvas,
-        size,
-        paint,
-        Offset(-0.02 + i * 0.17, 0.14 + i * 0.03),
-        const Size(0.26, 0.92),
-        -52,
-        i.isEven ? primary : Colors.white,
-        0.14 + i * 0.03,
-        0.08,
-      );
-    }
+    _paintMemorySimple(canvas, size, paint, 5);
   }
 
   void _paintMemorySoftCapsules(Canvas canvas, Size size, Paint paint) {
-    _memoryCapsule(canvas, size, paint, const Offset(-0.08, 0.18),
-        const Size(0.76, 0.25), -28, primary, 0.26);
-    _memoryCapsule(canvas, size, paint, const Offset(0.42, 0.55),
-        const Size(0.72, 0.24), -28, Colors.white, 0.13);
-    _memoryCapsule(canvas, size, paint, const Offset(0.28, 0.82),
-        const Size(0.56, 0.22), -28, secondary, 0.18);
+    _paintMemorySimple(canvas, size, paint, 6);
   }
 
   void _paintMemoryCornerHalo(Canvas canvas, Size size, Paint paint) {
-    for (var i = 0; i < 4; i++) {
-      _memoryCircle(
-        canvas,
-        size,
-        paint,
-        const Offset(1.02, -0.02),
-        0.26 + i * 0.16,
-        i.isEven ? primary : secondary,
-        0.24 - i * 0.035,
-        Alignment.topLeft,
-        Alignment.bottomRight,
-      );
-    }
+    _paintMemorySimple(canvas, size, paint, 7);
   }
 
   void _paintMemoryNestedPortal(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final panelOne = Path()
-      ..moveTo(-size.width * 0.06, size.height * 0.18)
-      ..lineTo(size.width * 0.58, -size.height * 0.06)
-      ..cubicTo(size.width * 0.76, -size.height * 0.12, size.width * 0.88,
-          size.height * 0.02, size.width * 0.75, size.height * 0.18)
-      ..lineTo(size.width * 0.08, size.height * 0.56)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color.lerp(primary, Colors.white, 0.45)!.withValues(alpha: 0.24),
-        primary.withValues(alpha: 0.02),
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(panelOne, paint);
-    paint.shader = null;
-
-    _memoryBand(canvas, size, paint, const Offset(0.22, 0.52),
-        const Size(0.86, 0.32), -24, secondary, 0.22, 0.08);
-    _memoryCircle(canvas, size, paint, const Offset(0.86, 0.88), 0.36,
-        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
+    _paintMemorySimple(canvas, size, paint, 8);
   }
 
   void _paintMemoryLiquidWave(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final path = Path()
-      ..moveTo(0, size.height * 0.28)
-      ..cubicTo(size.width * 0.28, size.height * 0.02, size.width * 0.54,
-          size.height * 0.44, size.width, size.height * 0.12)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color.lerp(primary, Colors.white, 0.28)!.withValues(alpha: 0.30),
-        secondary.withValues(alpha: 0.08),
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(path, paint);
-    paint.shader = null;
+    _paintMemorySimple(canvas, size, paint, 9);
   }
 
   void _paintMemoryArcCascade(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final hillOne = Path()
-      ..moveTo(-size.width * 0.10, size.height * 0.72)
-      ..cubicTo(size.width * 0.20, size.height * 0.22, size.width * 0.54,
-          size.height * 0.44, size.width * 0.72, -size.height * 0.10)
-      ..lineTo(size.width * 1.10, -size.height * 0.10)
-      ..lineTo(size.width * 1.10, size.height * 1.10)
-      ..lineTo(-size.width * 0.10, size.height * 1.10)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        primary.withValues(alpha: 0.26),
-        Color.lerp(secondary, Colors.white, 0.34)!.withValues(alpha: 0.08),
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(hillOne, paint);
-    paint.shader = null;
-
-    _memoryCircle(canvas, size, paint, const Offset(0.10, 0.24), 0.42,
-        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
-    _memoryBand(canvas, size, paint, const Offset(0.18, 0.58),
-        const Size(0.90, 0.30), -17, secondary, 0.18, 0.10);
+    _paintMemorySimple(canvas, size, paint, 10);
   }
 
   void _paintMemoryPrismWindow(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final path = Path()
-      ..moveTo(size.width * 0.22, 0)
-      ..lineTo(size.width * 0.78, 0)
-      ..lineTo(size.width * 0.96, size.height)
-      ..lineTo(size.width * 0.48, size.height)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.white.withValues(alpha: 0.24),
-        primary.withValues(alpha: 0.06)
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(path, paint);
-    paint.shader = null;
-    _memoryBand(canvas, size, paint, const Offset(-0.14, 0.00),
-        const Size(0.22, 1.12), -18, secondary, 0.16, 0);
+    _paintMemorySimple(canvas, size, paint, 11);
   }
 
   void _paintMemoryOffsetRings(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    final fold = Path()
-      ..moveTo(-size.width * 0.08, size.height * 0.88)
-      ..lineTo(size.width * 0.28, size.height * 0.22)
-      ..cubicTo(size.width * 0.36, size.height * 0.08, size.width * 0.52,
-          size.height * 0.06, size.width * 0.62, size.height * 0.18)
-      ..lineTo(size.width * 1.08, size.height * 0.70)
-      ..lineTo(size.width * 1.08, size.height * 1.10)
-      ..lineTo(-size.width * 0.08, size.height * 1.10)
-      ..close();
-    paint.shader = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color.lerp(primary, Colors.white, 0.36)!.withValues(alpha: 0.24),
-        secondary.withValues(alpha: 0.08),
-      ],
-    ).createShader(Offset.zero & size);
-    canvas.drawPath(fold, paint);
-    paint.shader = null;
-
-    _memoryBand(canvas, size, paint, const Offset(0.44, -0.10),
-        const Size(0.34, 1.24), -34, Colors.white, 0.10, 0.05);
-    _memoryCircle(canvas, size, paint, const Offset(0.08, 0.05), 0.36, primary,
-        0.12, Alignment.topLeft, Alignment.bottomRight);
+    _paintMemorySimple(canvas, size, paint, 12);
   }
 
   void _paintMemoryVaultChevron(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    for (var i = 0; i < 3; i++) {
-      final path = Path()
-        ..moveTo(size.width * (-0.10 + i * 0.20), size.height)
-        ..lineTo(size.width * (0.32 + i * 0.20), size.height * 0.50)
-        ..lineTo(size.width * (-0.10 + i * 0.20), 0)
-        ..lineTo(size.width * (0.18 + i * 0.20), 0)
-        ..lineTo(size.width * (0.62 + i * 0.20), size.height * 0.50)
-        ..lineTo(size.width * (0.18 + i * 0.20), size.height)
-        ..close();
-      paint.color = _mixColor(i).withValues(alpha: 0.18 - i * 0.035);
-      canvas.drawPath(path, paint);
-    }
+    _paintMemorySimple(canvas, size, paint, 13);
   }
 
   void _paintMemoryFloatingTabs(Canvas canvas, Size size, Paint paint) {
-    _memoryCapsule(canvas, size, paint, const Offset(0.05, 0.12),
-        const Size(0.52, 0.22), 0, primary, 0.20);
-    _memoryCapsule(canvas, size, paint, const Offset(0.42, 0.36),
-        const Size(0.56, 0.22), 0, Colors.white, 0.12);
-    _memoryCapsule(canvas, size, paint, const Offset(0.18, 0.66),
-        const Size(0.78, 0.26), 0, secondary, 0.18);
+    _paintMemorySimple(canvas, size, paint, 14);
   }
 
   void _paintMemorySplitGlow(Canvas canvas, Size size, Paint paint) {
-    _memoryCircle(canvas, size, paint, const Offset(0.42, 0.50), 0.54, primary,
-        0.24, Alignment.centerLeft, Alignment.centerRight);
-    paint.color = Colors.black.withValues(alpha: 0.08);
-    canvas.drawRect(
-        Rect.fromLTWH(size.width * 0.52, 0, size.width, size.height), paint);
-    _memoryCircle(canvas, size, paint, const Offset(0.94, 0.78), 0.30,
-        secondary, 0.20, Alignment.topLeft, Alignment.bottomRight);
+    _paintMemorySimple(canvas, size, paint, 15);
   }
 
   void _paintMemoryInsetOrbs(Canvas canvas, Size size, Paint paint) {
-    _memoryCircle(canvas, size, paint, const Offset(0.04, 0.12), 0.46, primary,
-        0.24, Alignment.topLeft, Alignment.bottomRight);
-    _memoryCircle(canvas, size, paint, const Offset(0.30, 0.34), 0.30,
-        Colors.white, 0.12, Alignment.topCenter, Alignment.bottomCenter);
-    _memoryCircle(canvas, size, paint, const Offset(0.84, 0.94), 0.52,
-        secondary, 0.22, Alignment.topRight, Alignment.bottomLeft);
+    _paintMemorySimple(canvas, size, paint, 16);
   }
 
   void _paintMemoryStepRibbon(Canvas canvas, Size size, Paint paint) {
-    paint.style = PaintingStyle.fill;
-    for (var i = 0; i < 5; i++) {
-      final top = size.height * (0.10 + i * 0.13);
-      final path = Path()
-        ..moveTo(0, top)
-        ..lineTo(size.width * (0.40 + i * 0.08), top)
-        ..lineTo(size.width * (0.52 + i * 0.08), top + size.height * 0.12)
-        ..lineTo(0, top + size.height * 0.12)
-        ..close();
-      paint.color = _mixColor(i).withValues(alpha: 0.18 - i * 0.018);
-      canvas.drawPath(path, paint);
-    }
+    _paintMemorySimple(canvas, size, paint, 17);
   }
 
   void _paintMemoryTiltedTiles(Canvas canvas, Size size, Paint paint) {
-    for (var i = 0; i < 4; i++) {
-      _memoryBand(
-        canvas,
-        size,
-        paint,
-        Offset(0.12 + i * 0.18, -0.12 + i * 0.05),
-        const Size(0.28, 0.72),
-        18,
-        i.isEven ? primary : secondary,
-        0.18 - i * 0.02,
-        0.03,
-      );
-    }
+    _paintMemorySimple(canvas, size, paint, 18);
   }
 
   void _paintMemoryMoonCrop(Canvas canvas, Size size, Paint paint) {
-    _memoryCircle(canvas, size, paint, const Offset(0.86, 0.20), 0.56, primary,
-        0.26, Alignment.topLeft, Alignment.bottomRight);
-    paint.color = Colors.black.withValues(alpha: 0.09);
-    canvas.drawCircle(Offset(size.width * 0.70, size.height * 0.10),
-        size.width * 0.42, paint);
-    _memoryCircle(canvas, size, paint, const Offset(0.10, 0.92), 0.34,
-        secondary, 0.18, Alignment.topRight, Alignment.bottomLeft);
+    _paintMemorySimple(canvas, size, paint, 19);
   }
 
   void _paintMemorySoftStripes(Canvas canvas, Size size, Paint paint) {
-    for (var i = 0; i < 5; i++) {
-      _memoryBand(
-        canvas,
-        size,
-        paint,
-        Offset(i * 0.18 - 0.02, -0.05),
-        const Size(0.20, 1.12),
-        0,
-        i.isEven ? Colors.white : primary,
-        0.08 + i * 0.025,
-        0,
-      );
-    }
+    _paintMemorySimple(canvas, size, paint, 20);
   }
 
   void _paintMemoryCapsuleCross(Canvas canvas, Size size, Paint paint) {
-    _memoryCapsule(canvas, size, paint, const Offset(-0.12, 0.28),
-        const Size(1.20, 0.24), 27, primary, 0.22);
-    _memoryCapsule(canvas, size, paint, const Offset(0.18, 0.10),
-        const Size(1.00, 0.22), -29, secondary, 0.20);
-    _memoryCircle(canvas, size, paint, const Offset(0.74, 0.68), 0.25,
-        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
+    _paintMemorySimple(canvas, size, paint, 21);
   }
 
   void _paintMemoryConicBloom(Canvas canvas, Size size, Paint paint) {
-    final high = Color.lerp(primary, Colors.white, 0.34)!;
-    final low = Color.lerp(secondary, Colors.black, 0.10)!;
-    paint.shader = SweepGradient(
-      center: const Alignment(0.34, 0.14),
-      startAngle: math.pi * 0.28,
-      endAngle: math.pi * 2.28,
-      colors: [
-        high.withValues(alpha: 0.34),
-        low.withValues(alpha: 0.10),
-        high.withValues(alpha: 0.28),
-      ],
-      stops: const [0, 0.58, 1],
-    ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, paint);
-    paint.shader = null;
+    _paintMemorySimple(canvas, size, paint, 22);
+  }
+
+  void _paintMemorySimple(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    int variant,
+  ) {
+    final alpha = (recipe.opacity + 0.10).clamp(0.28, 0.48).toDouble();
+    final lightPrimary = Color.lerp(primary, Colors.white, 0.28)!;
+    final lightSecondary = Color.lerp(secondary, Colors.white, 0.32)!;
+    final deepSecondary = Color.lerp(secondary, Colors.black, 0.12)!;
+
+    Path polygon(List<Offset> points) {
+      final path = Path();
+      for (var i = 0; i < points.length; i++) {
+        final point =
+            Offset(size.width * points[i].dx, size.height * points[i].dy);
+        if (i == 0) {
+          path.moveTo(point.dx, point.dy);
+        } else {
+          path.lineTo(point.dx, point.dy);
+        }
+      }
+      return path..close();
+    }
+
+    void fillPath(
+      Path path,
+      Color color,
+      double opacity, {
+      Alignment begin = Alignment.topLeft,
+      Alignment end = Alignment.bottomRight,
+      double lightMix = 0.24,
+    }) {
+      paint
+        ..style = PaintingStyle.fill
+        ..shader = LinearGradient(
+          begin: begin,
+          end: end,
+          colors: [
+            Color.lerp(color, Colors.white, lightMix)!
+                .withValues(alpha: opacity),
+            color.withValues(alpha: opacity * 0.22),
+          ],
+        ).createShader(Offset.zero & size);
+      canvas.drawPath(path, paint);
+      paint.shader = null;
+    }
+
+    void fillRRect(
+      Offset topLeft,
+      Size rectSize,
+      double radius,
+      double angleDeg,
+      Color color,
+      double opacity, {
+      Alignment begin = Alignment.topLeft,
+      Alignment end = Alignment.bottomRight,
+    }) {
+      final rect = Rect.fromLTWH(
+        size.width * topLeft.dx,
+        size.height * topLeft.dy,
+        size.width * rectSize.width,
+        size.height * rectSize.height,
+      );
+      paint
+        ..style = PaintingStyle.fill
+        ..shader = LinearGradient(
+          begin: begin,
+          end: end,
+          colors: [
+            Color.lerp(color, Colors.white, 0.30)!.withValues(alpha: opacity),
+            color.withValues(alpha: opacity * 0.18),
+          ],
+        ).createShader(rect);
+      canvas.save();
+      canvas.translate(rect.center.dx, rect.center.dy);
+      canvas.rotate(angleDeg * math.pi / 180);
+      canvas.translate(-rect.center.dx, -rect.center.dy);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(size.width * radius)),
+        paint,
+      );
+      canvas.restore();
+      paint.shader = null;
+    }
+
+    void waveBand(
+      double startY,
+      double crestY,
+      double endY,
+      Color color,
+      double opacity,
+    ) {
+      final path = Path()
+        ..moveTo(-size.width * 0.08, size.height * startY)
+        ..cubicTo(
+          size.width * 0.22,
+          size.height * crestY,
+          size.width * 0.62,
+          size.height * (startY + 0.12),
+          size.width * 1.08,
+          size.height * (crestY + 0.04),
+        )
+        ..lineTo(size.width * 1.08, size.height * endY)
+        ..cubicTo(
+          size.width * 0.68,
+          size.height * (endY - 0.12),
+          size.width * 0.28,
+          size.height * (endY + 0.02),
+          -size.width * 0.08,
+          size.height * (endY - 0.08),
+        )
+        ..close();
+      fillPath(path, color, opacity, end: Alignment.bottomRight);
+    }
+
+    switch (variant) {
+      case 0:
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.18, 0.98),
+          0.46,
+          lightPrimary,
+          alpha * 0.95,
+          Alignment.bottomLeft,
+          Alignment.topRight,
+        );
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(0.60, -0.18),
+          const Size(0.30, 1.30),
+          -28,
+          secondary,
+          alpha * 0.42,
+          0.03,
+        );
+      case 1:
+        fillPath(
+          polygon(const [
+            Offset(-0.10, 0.00),
+            Offset(0.36, 0.00),
+            Offset(0.70, 1.00),
+            Offset(0.24, 1.00),
+          ]),
+          lightPrimary,
+          alpha * 0.70,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.40, 0.00),
+            Offset(0.76, 0.00),
+            Offset(1.10, 1.00),
+            Offset(0.74, 1.00),
+          ]),
+          lightSecondary,
+          alpha * 0.42,
+        );
+      case 2:
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.75, 0.48),
+          0.34,
+          lightSecondary,
+          alpha * 0.86,
+          Alignment.topLeft,
+          Alignment.bottomRight,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.36, 0.34),
+          0.20,
+          lightPrimary,
+          alpha * 0.66,
+          Alignment.topLeft,
+          Alignment.bottomRight,
+        );
+      case 3:
+        fillPath(
+          polygon(const [
+            Offset(0.62, 0.00),
+            Offset(1.00, 0.00),
+            Offset(1.00, 0.46),
+          ]),
+          lightSecondary,
+          alpha * 0.82,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.74, 0.00),
+            Offset(1.00, 0.00),
+            Offset(1.00, 0.30),
+          ]),
+          Colors.white,
+          alpha * 0.18,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+      case 4:
+        _memoryRibbon(
+            canvas, size, paint, 0.34, 0.66, lightPrimary, alpha * 0.92);
+      case 5:
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(-0.12, -0.18),
+          const Size(0.38, 1.38),
+          -34,
+          lightPrimary,
+          alpha * 0.70,
+          0.035,
+        );
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(0.58, -0.16),
+          const Size(0.32, 1.34),
+          -34,
+          lightSecondary,
+          alpha * 0.44,
+          0.035,
+        );
+      case 6:
+        fillRRect(
+          const Offset(0.10, 0.26),
+          const Size(0.62, 0.23),
+          0.08,
+          0,
+          lightPrimary,
+          alpha * 0.62,
+        );
+        fillRRect(
+          const Offset(0.28, 0.54),
+          const Size(0.64, 0.22),
+          0.08,
+          0,
+          lightSecondary,
+          alpha * 0.48,
+        );
+      case 7:
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.92, 0.04),
+          0.44,
+          lightSecondary,
+          alpha * 0.88,
+          Alignment.topRight,
+          Alignment.bottomLeft,
+        );
+      case 8:
+        fillRRect(
+          const Offset(0.34, 0.12),
+          const Size(0.62, 0.76),
+          0.08,
+          0,
+          lightPrimary,
+          alpha * 0.42,
+        );
+        _memoryBand(
+          canvas,
+          size,
+          paint,
+          const Offset(0.16, -0.10),
+          const Size(0.24, 1.20),
+          -36,
+          lightSecondary,
+          alpha * 0.54,
+          0.035,
+        );
+      case 9:
+        waveBand(0.58, 0.40, 1.08, lightPrimary, alpha * 0.82);
+      case 10:
+        fillPath(
+          polygon(const [
+            Offset(-0.08, 0.78),
+            Offset(0.22, 0.48),
+            Offset(0.62, 0.58),
+            Offset(1.08, 0.30),
+            Offset(1.08, 1.08),
+            Offset(-0.08, 1.08),
+          ]),
+          lightSecondary,
+          alpha * 0.64,
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+        );
+      case 11:
+        fillPath(
+          polygon(const [
+            Offset(0.12, 0.12),
+            Offset(0.74, 0.12),
+            Offset(0.94, 0.50),
+            Offset(0.58, 0.88),
+            Offset(0.12, 0.78),
+          ]),
+          lightPrimary,
+          alpha * 0.58,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.74, 0.12),
+            Offset(0.94, 0.50),
+            Offset(0.58, 0.88),
+          ]),
+          lightSecondary,
+          alpha * 0.36,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+      case 12:
+        fillRRect(
+          const Offset(0.08, 0.34),
+          const Size(0.78, 0.34),
+          0.05,
+          -18,
+          lightPrimary,
+          alpha * 0.52,
+        );
+        fillRRect(
+          const Offset(0.46, 0.22),
+          const Size(0.48, 0.30),
+          0.05,
+          -18,
+          lightSecondary,
+          alpha * 0.38,
+        );
+      case 13:
+        fillPath(
+          polygon(const [
+            Offset(0.00, 0.10),
+            Offset(0.46, 0.50),
+            Offset(0.00, 0.90),
+          ]),
+          lightPrimary,
+          alpha * 0.58,
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.54, 0.00),
+            Offset(1.04, 0.50),
+            Offset(0.54, 1.00),
+          ]),
+          lightSecondary,
+          alpha * 0.36,
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
+        );
+      case 14:
+        fillRRect(
+          const Offset(0.12, 0.20),
+          const Size(0.46, 0.28),
+          0.06,
+          0,
+          lightPrimary,
+          alpha * 0.56,
+        );
+        fillRRect(
+          const Offset(0.38, 0.52),
+          const Size(0.48, 0.27),
+          0.06,
+          0,
+          lightSecondary,
+          alpha * 0.46,
+        );
+      case 15:
+        fillPath(
+          polygon(const [
+            Offset(0.00, 0.00),
+            Offset(0.42, 0.00),
+            Offset(0.62, 1.00),
+            Offset(0.00, 1.00),
+          ]),
+          lightPrimary,
+          alpha * 0.46,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.94, 0.50),
+          0.30,
+          lightSecondary,
+          alpha * 0.72,
+          Alignment.centerRight,
+          Alignment.centerLeft,
+        );
+      case 16:
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.18, 0.82),
+          0.32,
+          lightPrimary,
+          alpha * 0.72,
+          Alignment.bottomLeft,
+          Alignment.topRight,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.88, 0.18),
+          0.30,
+          lightSecondary,
+          alpha * 0.48,
+          Alignment.topRight,
+          Alignment.bottomLeft,
+        );
+      case 17:
+        fillPath(
+          polygon(const [
+            Offset(0.00, 0.38),
+            Offset(0.34, 0.38),
+            Offset(0.34, 0.28),
+            Offset(0.68, 0.28),
+            Offset(0.68, 0.18),
+            Offset(1.08, 0.18),
+            Offset(1.08, 0.52),
+            Offset(0.00, 0.72),
+          ]),
+          lightPrimary,
+          alpha * 0.62,
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        );
+      case 18:
+        fillRRect(
+          const Offset(0.14, 0.18),
+          const Size(0.38, 0.56),
+          0.05,
+          -12,
+          lightPrimary,
+          alpha * 0.54,
+        );
+        fillRRect(
+          const Offset(0.52, 0.28),
+          const Size(0.34, 0.50),
+          0.05,
+          -12,
+          lightSecondary,
+          alpha * 0.42,
+        );
+      case 19:
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(0.86, 0.50),
+          0.48,
+          lightPrimary,
+          alpha * 0.62,
+          Alignment.centerRight,
+          Alignment.centerLeft,
+        );
+        _memoryCircle(
+          canvas,
+          size,
+          paint,
+          const Offset(1.05, 0.50),
+          0.42,
+          deepSecondary,
+          alpha * 0.38,
+          Alignment.centerRight,
+          Alignment.centerLeft,
+        );
+      case 20:
+        fillPath(
+          polygon(const [
+            Offset(0.00, 0.00),
+            Offset(0.28, 0.00),
+            Offset(0.28, 1.00),
+            Offset(0.00, 1.00),
+          ]),
+          lightPrimary,
+          alpha * 0.44,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.28, 0.00),
+            Offset(0.56, 0.00),
+            Offset(0.56, 1.00),
+            Offset(0.28, 1.00),
+          ]),
+          lightSecondary,
+          alpha * 0.34,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+        fillPath(
+          polygon(const [
+            Offset(0.56, 0.00),
+            Offset(0.84, 0.00),
+            Offset(0.84, 1.00),
+            Offset(0.56, 1.00),
+          ]),
+          Colors.white,
+          alpha * 0.18,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case 21:
+        _memoryCapsule(
+          canvas,
+          size,
+          paint,
+          const Offset(0.12, 0.38),
+          const Size(0.76, 0.24),
+          -24,
+          lightPrimary,
+          alpha * 0.56,
+        );
+        _memoryCapsule(
+          canvas,
+          size,
+          paint,
+          const Offset(0.52, 0.36),
+          const Size(0.38, 0.18),
+          -24,
+          lightSecondary,
+          alpha * 0.38,
+        );
+      case 22:
+        final center = Offset(size.width * 0.86, size.height * 0.24);
+        final radius = size.width * 0.52;
+        paint
+          ..style = PaintingStyle.fill
+          ..shader = SweepGradient(
+            startAngle: -math.pi * 0.70,
+            endAngle: math.pi * 1.12,
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              lightPrimary.withValues(alpha: alpha * 0.68),
+              lightSecondary.withValues(alpha: alpha * 0.36),
+              Colors.white.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: center, radius: radius));
+        canvas.drawCircle(center, radius, paint);
+        paint.shader = null;
+    }
   }
 
   void _memoryCircle(
