@@ -1857,20 +1857,29 @@ class CreativeBankPatternPainter extends CustomPainter {
   }
 
   void _paintMemoryNestedPortal(Canvas canvas, Size size, Paint paint) {
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.010;
-    for (var i = 0; i < 5; i++) {
-      final rect = Rect.fromLTWH(
-        size.width * (0.12 + i * 0.075),
-        size.height * (0.18 + i * 0.055),
-        size.width * (0.86 - i * 0.11),
-        size.height * (0.90 - i * 0.09),
-      );
-      paint.color = (i.isEven ? primary : Colors.white)
-          .withValues(alpha: 0.24 - i * 0.025);
-      canvas.drawArc(rect, math.pi, math.pi * 1.06, false, paint);
-    }
+    paint.style = PaintingStyle.fill;
+    final panelOne = Path()
+      ..moveTo(-size.width * 0.06, size.height * 0.18)
+      ..lineTo(size.width * 0.58, -size.height * 0.06)
+      ..cubicTo(size.width * 0.76, -size.height * 0.12, size.width * 0.88,
+          size.height * 0.02, size.width * 0.75, size.height * 0.18)
+      ..lineTo(size.width * 0.08, size.height * 0.56)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(primary, Colors.white, 0.45)!.withValues(alpha: 0.24),
+        primary.withValues(alpha: 0.02),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(panelOne, paint);
+    paint.shader = null;
+
+    _memoryBand(canvas, size, paint, const Offset(0.22, 0.52),
+        const Size(0.86, 0.32), -24, secondary, 0.22, 0.08);
+    _memoryCircle(canvas, size, paint, const Offset(0.86, 0.88), 0.36,
+        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
   }
 
   void _paintMemoryLiquidWave(Canvas canvas, Size size, Paint paint) {
@@ -1895,17 +1904,30 @@ class CreativeBankPatternPainter extends CustomPainter {
   }
 
   void _paintMemoryArcCascade(Canvas canvas, Size size, Paint paint) {
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.012;
-    for (var i = 0; i < 7; i++) {
-      final rect = Rect.fromCircle(
-        center: Offset(size.width * (0.06 + i * 0.12), size.height * 1.06),
-        radius: size.width * (0.34 + i * 0.035),
-      );
-      paint.color = _mixColor(i).withValues(alpha: 0.25 - i * 0.018);
-      canvas.drawArc(rect, math.pi * 1.08, math.pi * 0.64, false, paint);
-    }
+    paint.style = PaintingStyle.fill;
+    final hillOne = Path()
+      ..moveTo(-size.width * 0.10, size.height * 0.72)
+      ..cubicTo(size.width * 0.20, size.height * 0.22, size.width * 0.54,
+          size.height * 0.44, size.width * 0.72, -size.height * 0.10)
+      ..lineTo(size.width * 1.10, -size.height * 0.10)
+      ..lineTo(size.width * 1.10, size.height * 1.10)
+      ..lineTo(-size.width * 0.10, size.height * 1.10)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        primary.withValues(alpha: 0.26),
+        Color.lerp(secondary, Colors.white, 0.34)!.withValues(alpha: 0.08),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(hillOne, paint);
+    paint.shader = null;
+
+    _memoryCircle(canvas, size, paint, const Offset(0.10, 0.24), 0.42,
+        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
+    _memoryBand(canvas, size, paint, const Offset(0.18, 0.58),
+        const Size(0.90, 0.30), -17, secondary, 0.18, 0.10);
   }
 
   void _paintMemoryPrismWindow(Canvas canvas, Size size, Paint paint) {
@@ -1931,19 +1953,31 @@ class CreativeBankPatternPainter extends CustomPainter {
   }
 
   void _paintMemoryOffsetRings(Canvas canvas, Size size, Paint paint) {
-    paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.018;
-    for (var i = 0; i < 5; i++) {
-      final center = Offset(size.width * (0.22 + i * 0.12), size.height * 0.55);
-      final rect = Rect.fromCenter(
-        center: center,
-        width: size.width * (0.42 + i * 0.10),
-        height: size.height * (0.56 + i * 0.09),
-      );
-      paint.color = _mixColor(i).withValues(alpha: 0.23 - i * 0.025);
-      canvas.drawOval(rect, paint);
-    }
+    paint.style = PaintingStyle.fill;
+    final fold = Path()
+      ..moveTo(-size.width * 0.08, size.height * 0.88)
+      ..lineTo(size.width * 0.28, size.height * 0.22)
+      ..cubicTo(size.width * 0.36, size.height * 0.08, size.width * 0.52,
+          size.height * 0.06, size.width * 0.62, size.height * 0.18)
+      ..lineTo(size.width * 1.08, size.height * 0.70)
+      ..lineTo(size.width * 1.08, size.height * 1.10)
+      ..lineTo(-size.width * 0.08, size.height * 1.10)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(primary, Colors.white, 0.36)!.withValues(alpha: 0.24),
+        secondary.withValues(alpha: 0.08),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(fold, paint);
+    paint.shader = null;
+
+    _memoryBand(canvas, size, paint, const Offset(0.44, -0.10),
+        const Size(0.34, 1.24), -34, Colors.white, 0.10, 0.05);
+    _memoryCircle(canvas, size, paint, const Offset(0.08, 0.05), 0.36, primary,
+        0.12, Alignment.topLeft, Alignment.bottomRight);
   }
 
   void _paintMemoryVaultChevron(Canvas canvas, Size size, Paint paint) {
