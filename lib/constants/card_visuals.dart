@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'imported_card_gradients.dart';
 import '../utils/bank_asset_resolver.dart';
+import '../widgets/card/creative_bank_pattern_painter.dart';
 import '../widgets/card/bank_pattern_painter.dart';
 
 class CardVisual {
@@ -31,41 +32,57 @@ class CardVisuals {
   /* -------------------------------------------------------------------------- */
 
   static const Map<String, List<Color>> _bankGradients = {
-    'axis': [Color(0xFF861F41), Color(0xFF63152E)],
-    'bandhan': [Color(0xFF002A54), Color(0xFFC59F58)],
-    'csb': [Color(0xFFE94E1B), Color(0xFFB03209)],
-    'citibank': [Color(0xFF003B70), Color(0xFF005B9A)],
-    'city_union': [Color(0xFF7A1521), Color(0xFF520E16)],
-    'dcb': [Color(0xFF14243E), Color(0xFF2A4B7C)],
-    'dhanlaxmi': [Color(0xFF4B1858), Color(0xFF7A278F)],
-    'federal': [Color(0xFF555EFF), Color(0xFF030262)],
-    'hdfc': [Color(0xFF002D55), Color(0xFF004C8F)],
-    'icici': [Color(0xFFF37E20), Color(0xFFB02A30)],
-    'indusind': [Color(0xFF4A2C2A), Color(0xFF8B4513)],
-    'idfc': [Color(0xFF9D2235), Color(0xFF5A121E)],
-    'karnataka': [Color(0xFF231F20), Color(0xFFDA291C)],
-    'kotak': [Color(0xFFEE1C25), Color(0xFF9B0A11)],
-    'rbl': [Color(0xFF000000), Color(0xFF0058A3)],
-    'south_indian': [Color(0xFFDA251C), Color(0xFFFFA000)],
-    'yes': [Color(0xFF005A9C), Color(0xFF00A0E3)],
-    'idbi': [Color(0xFF00796B), Color(0xFF004D40)],
-    'indian_bank': [Color(0xFF005BAC), Color(0xFFF4B000)],
-    'karur_vysya': [Color(0xFF00529B), Color(0xFFD71920)],
-    'standard_chartered': [Color(0xFF005A32), Color(0xFF00331D)],
-    'bank_of_baroda': [Color(0xFFF26522), Color(0xFFF58220)],
-    'bank_of_india': [Color(0xFF0077CC), Color(0xFF005FA3)],
-    'canara': [Color(0xFF0091D2), Color(0xFF00609C)],
-    'central_bank': [Color(0xFF004A8F), Color(0xFF003366)],
-    'indian_overseas': [Color(0xFF0083CA), Color(0xFF005B9A)],
-    'punjab_national_bank': [Color(0xFFA20E37), Color(0xFF700824)],
-    'sbi': [Color(0xFF280071), Color(0xFF00A5E6)],
-    'uco': [Color(0xFF1565C0), Color(0xFF0D47A1)],
-    'union': [Color(0xFFE31E24), Color(0xFF1D4E9E)],
-    'au_small_finance': [Color(0xFF662D91), Color(0xFFF26522)],
-    'tmb': [Color(0xFF673AB7), Color(0xFF9C27B0)],
-    'jammu_kashmir': [Color(0xFF006837), Color(0xFF004525)],
-    'punjab_sind': [Color(0xFFFFD700), Color(0xFFC5A000)],
-    'bank_of_maharashtra': [Color(0xFFFFC107), Color(0xFFFF9800)],
+    'axis': [Color(0xFFAE275F), Color(0xFF7C123F), Color(0xFF3F071F)],
+    'bandhan': [Color(0xFF0A3152), Color(0xFFA71E1F), Color(0xFFEF3B23)],
+    'csb': [Color(0xFFD40000), Color(0xFF0000AA), Color(0xFFFFD400)],
+    'citibank': [Color(0xFF003B70), Color(0xFF005B9A), Color(0xFFD9261C)],
+    'city_union': [Color(0xFF2E3192), Color(0xFFEC0677), Color(0xFF181A61)],
+    'dcb': [Color(0xFF2C4190), Color(0xFF17235E), Color(0xFF4D65C4)],
+    'dhanlaxmi': [Color(0xFF4B1858), Color(0xFF7A278F), Color(0xFF2A0D32)],
+    'federal': [Color(0xFF004E96), Color(0xFF006DB8), Color(0xFFFAA61A)],
+    'hdfc': [Color(0xFF004C8F), Color(0xFF002D55), Color(0xFFED232A)],
+    'icici': [Color(0xFFAE282E), Color(0xFFF06321), Color(0xFF6E171C)],
+    'indusind': [Color(0xFF98272A), Color(0xFF4A2C2A), Color(0xFFC98A2E)],
+    'idfc': [Color(0xFFBC8CBF), Color(0xFFF16669), Color(0xFFF79448)],
+    'karnataka': [Color(0xFF853A93), Color(0xFF5D2868), Color(0xFFB66AC2)],
+    'kotak': [Color(0xFF003874), Color(0xFFED1C24), Color(0xFF001E3F)],
+    'rbl': [Color(0xFF1C2E66), Color(0xFFED1C24), Color(0xFF0A1638)],
+    'south_indian': [Color(0xFFDA251C), Color(0xFFFFA000), Color(0xFF84140F)],
+    'yes': [Color(0xFF005192), Color(0xFF0B87C9), Color(0xFFC4261B)],
+    'idbi': [Color(0xFF00836C), Color(0xFF004D40), Color(0xFFF58220)],
+    'indian_bank': [Color(0xFF005BAC), Color(0xFF003B75), Color(0xFFF4B035)],
+    'karur_vysya': [Color(0xFF00854A), Color(0xFF005A32), Color(0xFFE7E514)],
+    'standard_chartered': [
+      Color(0xFF0072CE),
+      Color(0xFF006F3B),
+      Color(0xFF003A70)
+    ],
+    'bank_of_baroda': [Color(0xFFF15A29), Color(0xFFF58220), Color(0xFF9B2D14)],
+    'bank_of_india': [Color(0xFF005AA2), Color(0xFF00AEEA), Color(0xFFEE7A00)],
+    'canara': [Color(0xFF0072BC), Color(0xFF004C8F), Color(0xFFFFB500)],
+    'central_bank': [Color(0xFF176FC1), Color(0xFF0E3E78), Color(0xFFCE0F3E)],
+    'indian_overseas': [
+      Color(0xFF0083CA),
+      Color(0xFF005B9A),
+      Color(0xFF003D6E)
+    ],
+    'punjab_national_bank': [
+      Color(0xFF9E173B),
+      Color(0xFF6C0E27),
+      Color(0xFFFAB90C)
+    ],
+    'sbi': [Color(0xFF292075), Color(0xFF00779E), Color(0xFF00A9E0)],
+    'uco': [Color(0xFF1565C0), Color(0xFF0D47A1), Color(0xFFFFC107)],
+    'union': [Color(0xFFE31E24), Color(0xFF1D4E9E), Color(0xFF0D2C66)],
+    'au_small_finance': [
+      Color(0xFF671773),
+      Color(0xFFF47920),
+      Color(0xFF360B3D)
+    ],
+    'tmb': [Color(0xFF673AB7), Color(0xFF3F1B7A), Color(0xFF9C27B0)],
+    'jammu_kashmir': [Color(0xFF0084C4), Color(0xFF68B92E), Color(0xFFDE4019)],
+    'punjab_sind': [Color(0xFF007C3D), Color(0xFFB31F31), Color(0xFFFBED21)],
+    'bank_of_maharashtra': [Color(0xFF0E88D3), Color(0xFF075E9B)],
   };
 
   static const Map<String, List<Color>> _countryGradients = {
@@ -126,45 +143,40 @@ class CardVisuals {
   /* -------------------------------------------------------------------------- */
 
   static const Map<String, Color> _bankHighlightOverrides = {
-    // Pattern 1 — Dual Circles (top-right / bottom-right)
-    'axis': Color(0xFF3C0414),
-    'rbl': Color(0xFF010F2A),
-    'bandhan': Color(0xFF9A96A0),
-    'idbi': Color(0xFFD6DBA3),
-
-    // Pattern 2 — Quad Circles (top-left)
-    'icici': Color(0xFFFFB37A),
-    'kotak': Color(0xFFFF9A9A),
-    'union': Color(0xFFFF9E9E),
-    'au_small_finance': Color(0xFFD6A3FF),
-
-    // Pattern 3 — Intersecting Rectangles
-    'sbi': Color(0xFFB08CFF),
-    'bank_of_baroda': Color(0xFFFFB28E),
-    'south_indian': Color(0xFFFFC76A),
-
-    // Pattern 4 — Concentric Arcs
-    'yes': Color(0xFF6097C7),
-    'dhanlaxmi': Color(0xFFAA45A3),
-    'indusind': Color(0xFF755433),
-    'karnataka': Color(0xFF943B3B),
-
-    // Pattern 5 — Right Dual Circles
-    'dcb': Color(0xFF5C7CA8),
-    'canara': Color(0xFF52C8FF),
-    'tmb': Color(0xFF2D0134),
-    'jammu_kashmir': Color(0xFF19DB81),
-
-    // Pattern 6 — Angled Tiles
-    'federal': Color(0xFF6E78FF),
-    'citibank': Color(0xFF78B4FF),
-    'uco': Color.fromARGB(255, 1, 16, 64),
-    'hdfc': Color.fromARGB(255, 106, 181, 255),
+    'axis': Color(0xFFEB1165),
+    'bandhan': Color(0xFFEF3B23),
+    'au_small_finance': Color(0xFFF47920),
+    'bank_of_baroda': Color(0xFFF58220),
+    'bank_of_india': Color(0xFF00AEEA),
+    'bank_of_maharashtra': Color(0xFF8EDCFF),
+    'canara': Color(0xFFFFB500),
+    'central_bank': Color(0xFFCE0F3E),
+    'citibank': Color(0xFFD9261C),
+    'city_union': Color(0xFFEC0677),
+    'csb': Color(0xFFFFD400),
+    'federal': Color(0xFFFAA61A),
+    'hdfc': Color(0xFFED232A),
+    'icici': Color(0xFFF06321),
+    'idbi': Color(0xFFF58220),
+    'indian_bank': Color(0xFFF4B035),
+    'indusind': Color(0xFFC98A2E),
+    'jammu_kashmir': Color(0xFF68B92E),
+    'karur_vysya': Color(0xFFE7E514),
+    'kotak': Color(0xFFED1C24),
+    'punjab_sind': Color(0xFFFBED21),
+    'punjab_national_bank': Color(0xFFFAB90C),
+    'rbl': Color(0xFFED1C24),
+    'sbi': Color(0xFF00A9E0),
+    'south_indian': Color(0xFFFFA000),
+    'standard_chartered': Color(0xFF0072CE),
+    'uco': Color(0xFFFFC107),
+    'union': Color(0xFFE31E24),
+    'yes': Color(0xFFC4261B),
   };
 
   static Color _highlight(String cid, List<Color> g) {
     return _bankHighlightOverrides[cid] ??
-        Color.lerp(g.first, const Color(0xFF1E1E1E), 0.6)!;
+        Color.lerp(g.first, Colors.white, 0.26)!;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -230,6 +242,699 @@ class CardVisuals {
       );
 
   /* -------------------------------------------------------------------------- */
+  /*                         CREATIVE OVERLAY RECIPES                            */
+  /* -------------------------------------------------------------------------- */
+
+  static const Map<String, String> _bankPatternIds = {
+    'au_small_finance': 'p01',
+    'axis': 'p02',
+    'bandhan': 'p03',
+    'bank_of_baroda': 'p04',
+    'bank_of_india': 'p05',
+    'bank_of_maharashtra': 'p06',
+    'canara': 'p07',
+    'central_bank': 'p08',
+    'citibank': 'p09',
+    'city_union': 'p10',
+    'csb': 'p11',
+    'dcb': 'p12',
+    'dhanlaxmi': 'p13',
+    'federal': 'p14',
+    'hdfc': 'p15',
+    'icici': 'p16',
+    'idbi': 'p17',
+    'idfc': 'p18',
+    'indian_bank': 'p19',
+    'indian_overseas': 'p20',
+    'indusind': 'p21',
+    'jammu_kashmir': 'p22',
+    'karnataka': 'p23',
+    'karur_vysya': 'p24',
+    'kotak': 'p25',
+    'punjab_sind': 'p26',
+    'punjab_national_bank': 'p27',
+    'rbl': 'p28',
+    'south_indian': 'p29',
+    'standard_chartered': 'p30',
+    'sbi': 'p31',
+    'tmb': 'p32',
+    'uco': 'p33',
+    'union': 'p34',
+    'yes': 'p35',
+  };
+
+  static const Map<String, CreativeBankPatternRecipe> _patternRecipes = {
+    'p01': CreativeBankPatternRecipe(
+      name: 'violet-orange faceted flame',
+      motif: CreativeBankPatternMotif.facetedShard,
+      anchor: Offset(0.80, 0.22),
+      scale: 1.06,
+      density: 0.62,
+      opacity: 0.34,
+      strokeWidth: 1.6,
+      angle: -0.22,
+      alternate: true,
+      seed: 101,
+    ),
+    'p02': CreativeBankPatternRecipe(
+      name: 'maroon diagonal reserve bands',
+      motif: CreativeBankPatternMotif.boldDiagonalBands,
+      anchor: Offset(0.92, 0.24),
+      scale: 1.02,
+      density: 0.80,
+      opacity: 0.36,
+      strokeWidth: 1.2,
+      angle: 0.10,
+      alternate: false,
+      seed: 102,
+    ),
+    'p03': CreativeBankPatternRecipe(
+      name: 'navy-gold crescent sweep',
+      motif: CreativeBankPatternMotif.crescentSweep,
+      anchor: Offset(0.12, 0.06),
+      scale: 1.18,
+      density: 0.64,
+      opacity: 0.28,
+      strokeWidth: 1.5,
+      angle: -0.05,
+      alternate: true,
+      seed: 103,
+    ),
+    'p04': CreativeBankPatternRecipe(
+      name: 'baroda orange corner arcs',
+      motif: CreativeBankPatternMotif.cornerArcBands,
+      anchor: Offset(1.02, 0.48),
+      scale: 0.98,
+      density: 0.72,
+      opacity: 0.30,
+      strokeWidth: 1.5,
+      angle: 0,
+      alternate: false,
+      seed: 104,
+    ),
+    'p05': CreativeBankPatternRecipe(
+      name: 'boi blue folded planes',
+      motif: CreativeBankPatternMotif.foldedPlanes,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.96,
+      density: 0.58,
+      opacity: 0.24,
+      strokeWidth: 1.0,
+      angle: 0.10,
+      alternate: false,
+      seed: 105,
+    ),
+    'p06': CreativeBankPatternRecipe(
+      name: 'maharashtra stepped diagonal',
+      motif: CreativeBankPatternMotif.steppedDiagonal,
+      anchor: Offset(0.83, 0.06),
+      scale: 0.92,
+      density: 0.72,
+      opacity: 0.32,
+      strokeWidth: 1.2,
+      angle: -0.12,
+      alternate: true,
+      seed: 106,
+    ),
+    'p07': CreativeBankPatternRecipe(
+      name: 'canara soft wave planes',
+      motif: CreativeBankPatternMotif.softWavePlanes,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.94,
+      density: 0.76,
+      opacity: 0.27,
+      strokeWidth: 1.4,
+      angle: -0.10,
+      alternate: true,
+      seed: 107,
+    ),
+    'p08': CreativeBankPatternRecipe(
+      name: 'central stacked ledger panels',
+      motif: CreativeBankPatternMotif.stackedPanels,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.88,
+      density: 0.60,
+      opacity: 0.30,
+      strokeWidth: 1.5,
+      angle: 0.02,
+      alternate: false,
+      seed: 108,
+    ),
+    'p09': CreativeBankPatternRecipe(
+      name: 'citi blue portal arcs',
+      motif: CreativeBankPatternMotif.portalArcs,
+      anchor: Offset(0.82, 0.05),
+      scale: 1.04,
+      density: 0.66,
+      opacity: 0.31,
+      strokeWidth: 1.3,
+      angle: -0.18,
+      alternate: true,
+      seed: 109,
+    ),
+    'p10': CreativeBankPatternRecipe(
+      name: 'city union split oval crest',
+      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.90,
+      density: 0.70,
+      opacity: 0.34,
+      strokeWidth: 2.0,
+      angle: 0.04,
+      alternate: false,
+      seed: 110,
+    ),
+    'p11': CreativeBankPatternRecipe(
+      name: 'csb ember folded planes',
+      motif: CreativeBankPatternMotif.foldedPlanes,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.08,
+      density: 0.54,
+      opacity: 0.34,
+      strokeWidth: 1.0,
+      angle: -0.32,
+      alternate: true,
+      seed: 111,
+    ),
+    'p12': CreativeBankPatternRecipe(
+      name: 'dcb midnight lens glow',
+      motif: CreativeBankPatternMotif.lensGlow,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.92,
+      density: 0.76,
+      opacity: 0.32,
+      strokeWidth: 1.0,
+      angle: 0,
+      alternate: false,
+      seed: 112,
+    ),
+    'p13': CreativeBankPatternRecipe(
+      name: 'dhanlaxmi orchid crescent',
+      motif: CreativeBankPatternMotif.crescentSweep,
+      anchor: Offset(0.14, 0.22),
+      scale: 0.92,
+      density: 0.72,
+      opacity: 0.34,
+      strokeWidth: 1.1,
+      angle: -0.08,
+      alternate: true,
+      seed: 113,
+    ),
+    'p14': CreativeBankPatternRecipe(
+      name: 'federal electric ribbon sweep',
+      motif: CreativeBankPatternMotif.ribbonSweep,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.08,
+      density: 0.66,
+      opacity: 0.31,
+      strokeWidth: 1.6,
+      angle: 0.22,
+      alternate: false,
+      seed: 114,
+    ),
+    'p15': CreativeBankPatternRecipe(
+      name: 'hdfc blue portal shield',
+      motif: CreativeBankPatternMotif.portalArcs,
+      anchor: Offset(0.90, 0.16),
+      scale: 1.00,
+      density: 0.72,
+      opacity: 0.30,
+      strokeWidth: 1.6,
+      angle: 0.10,
+      alternate: false,
+      seed: 115,
+    ),
+    'p16': CreativeBankPatternRecipe(
+      name: 'icici copper split ovals',
+      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      anchor: Offset(0.10, 0.92),
+      scale: 1.10,
+      density: 0.84,
+      opacity: 0.30,
+      strokeWidth: 1.4,
+      angle: 0,
+      alternate: true,
+      seed: 116,
+    ),
+    'p17': CreativeBankPatternRecipe(
+      name: 'idbi teal lens flow',
+      motif: CreativeBankPatternMotif.lensGlow,
+      anchor: Offset(0.06, 0.16),
+      scale: 1.00,
+      density: 0.62,
+      opacity: 0.28,
+      strokeWidth: 1.4,
+      angle: 0.18,
+      alternate: false,
+      seed: 117,
+    ),
+    'p18': CreativeBankPatternRecipe(
+      name: 'idfc ruby diagonal glass',
+      motif: CreativeBankPatternMotif.boldDiagonalBands,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.98,
+      density: 0.64,
+      opacity: 0.30,
+      strokeWidth: 1.0,
+      angle: 0.26,
+      alternate: false,
+      seed: 118,
+    ),
+    'p19': CreativeBankPatternRecipe(
+      name: 'indian bank blue-gold corner arcs',
+      motif: CreativeBankPatternMotif.cornerArcBands,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.00,
+      density: 0.72,
+      opacity: 0.26,
+      strokeWidth: 1.1,
+      angle: -0.06,
+      alternate: true,
+      seed: 119,
+    ),
+    'p20': CreativeBankPatternRecipe(
+      name: 'iob sea ribbon sweep',
+      motif: CreativeBankPatternMotif.ribbonSweep,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.04,
+      density: 0.72,
+      opacity: 0.28,
+      strokeWidth: 1.3,
+      angle: -0.02,
+      alternate: true,
+      seed: 120,
+    ),
+    'p21': CreativeBankPatternRecipe(
+      name: 'indusind bronze stacked panels',
+      motif: CreativeBankPatternMotif.stackedPanels,
+      anchor: Offset(0.12, 0.18),
+      scale: 1.12,
+      density: 0.58,
+      opacity: 0.34,
+      strokeWidth: 1.4,
+      angle: 0.30,
+      alternate: false,
+      seed: 121,
+    ),
+    'p22': CreativeBankPatternRecipe(
+      name: 'jk emerald soft waves',
+      motif: CreativeBankPatternMotif.softWavePlanes,
+      anchor: Offset(0.18, 0.92),
+      scale: 1.20,
+      density: 0.64,
+      opacity: 0.31,
+      strokeWidth: 1.4,
+      angle: -0.18,
+      alternate: true,
+      seed: 122,
+    ),
+    'p23': CreativeBankPatternRecipe(
+      name: 'karnataka red faceted planes',
+      motif: CreativeBankPatternMotif.facetedShard,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.88,
+      density: 0.76,
+      opacity: 0.27,
+      strokeWidth: 1.0,
+      angle: -0.44,
+      alternate: true,
+      seed: 123,
+    ),
+    'p24': CreativeBankPatternRecipe(
+      name: 'karur vysya folded blue-red',
+      motif: CreativeBankPatternMotif.foldedPlanes,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.94,
+      density: 0.60,
+      opacity: 0.26,
+      strokeWidth: 1.0,
+      angle: 0.18,
+      alternate: false,
+      seed: 124,
+    ),
+    'p25': CreativeBankPatternRecipe(
+      name: 'kotak crimson lens arc',
+      motif: CreativeBankPatternMotif.lensGlow,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.92,
+      density: 0.84,
+      opacity: 0.33,
+      strokeWidth: 2.1,
+      angle: -0.05,
+      alternate: true,
+      seed: 125,
+    ),
+    'p26': CreativeBankPatternRecipe(
+      name: 'punjab sind gold stepped field',
+      motif: CreativeBankPatternMotif.steppedDiagonal,
+      anchor: Offset(0.72, 0.10),
+      scale: 1.10,
+      density: 0.72,
+      opacity: 0.30,
+      strokeWidth: 1.4,
+      angle: -0.08,
+      alternate: true,
+      seed: 126,
+    ),
+    'p27': CreativeBankPatternRecipe(
+      name: 'pnb garnet corner sweep',
+      motif: CreativeBankPatternMotif.cornerArcBands,
+      anchor: Offset(0.88, 0.72),
+      scale: 1.04,
+      density: 0.86,
+      opacity: 0.35,
+      strokeWidth: 1.2,
+      angle: 0.04,
+      alternate: false,
+      seed: 127,
+    ),
+    'p28': CreativeBankPatternRecipe(
+      name: 'rbl midnight skyline',
+      motif: CreativeBankPatternMotif.skylineBars,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.88,
+      density: 0.82,
+      opacity: 0.32,
+      strokeWidth: 1.4,
+      angle: 0.08,
+      alternate: false,
+      seed: 128,
+    ),
+    'p29': CreativeBankPatternRecipe(
+      name: 'south indian warm ribbon',
+      motif: CreativeBankPatternMotif.ribbonSweep,
+      anchor: Offset(0.94, 0.88),
+      scale: 0.94,
+      density: 0.74,
+      opacity: 0.32,
+      strokeWidth: 1.4,
+      angle: 0,
+      alternate: false,
+      seed: 129,
+    ),
+    'p30': CreativeBankPatternRecipe(
+      name: 'standard chartered green waves',
+      motif: CreativeBankPatternMotif.softWavePlanes,
+      anchor: Offset(0.86, 0.52),
+      scale: 1.18,
+      density: 0.66,
+      opacity: 0.30,
+      strokeWidth: 1.5,
+      angle: -0.28,
+      alternate: true,
+      seed: 130,
+    ),
+    'p31': CreativeBankPatternRecipe(
+      name: 'sbi blue keyhole portal',
+      motif: CreativeBankPatternMotif.portalArcs,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.10,
+      density: 0.88,
+      opacity: 0.31,
+      strokeWidth: 1.5,
+      angle: -0.20,
+      alternate: true,
+      seed: 131,
+    ),
+    'p32': CreativeBankPatternRecipe(
+      name: 'tmb violet crescent arcs',
+      motif: CreativeBankPatternMotif.crescentSweep,
+      anchor: Offset(0.50, 0.50),
+      scale: 0.88,
+      density: 0.88,
+      opacity: 0.34,
+      strokeWidth: 1.0,
+      angle: 0,
+      alternate: false,
+      seed: 132,
+    ),
+    'p33': CreativeBankPatternRecipe(
+      name: 'uco deep blue stacked panels',
+      motif: CreativeBankPatternMotif.stackedPanels,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.00,
+      density: 0.64,
+      opacity: 0.28,
+      strokeWidth: 2.0,
+      angle: 0.10,
+      alternate: false,
+      seed: 133,
+    ),
+    'p34': CreativeBankPatternRecipe(
+      name: 'union dual-color split planes',
+      motif: CreativeBankPatternMotif.splitOvalPlanes,
+      anchor: Offset(0.74, 0.05),
+      scale: 1.04,
+      density: 0.84,
+      opacity: 0.34,
+      strokeWidth: 1.1,
+      angle: 0.16,
+      alternate: true,
+      seed: 134,
+    ),
+    'p35': CreativeBankPatternRecipe(
+      name: 'yes cyan faceted glass',
+      motif: CreativeBankPatternMotif.facetedShard,
+      anchor: Offset(0.50, 0.50),
+      scale: 1.12,
+      density: 0.58,
+      opacity: 0.28,
+      strokeWidth: 1.0,
+      angle: 0.42,
+      alternate: false,
+      seed: 135,
+    ),
+    'p36': CreativeBankPatternRecipe(
+        name: 'reserve diagonal bands one',
+        motif: CreativeBankPatternMotif.boldDiagonalBands,
+        anchor: Offset(0.18, 0.78),
+        scale: 0.92,
+        density: 0.70,
+        opacity: 0.30,
+        strokeWidth: 1.1,
+        angle: -0.12,
+        alternate: false,
+        seed: 136),
+    'p37': CreativeBankPatternRecipe(
+        name: 'reserve corner arcs one',
+        motif: CreativeBankPatternMotif.cornerArcBands,
+        anchor: Offset(0.82, 0.82),
+        scale: 1.08,
+        density: 0.74,
+        opacity: 0.28,
+        strokeWidth: 1.4,
+        angle: 0.16,
+        alternate: true,
+        seed: 137),
+    'p38': CreativeBankPatternRecipe(
+        name: 'reserve soft waves one',
+        motif: CreativeBankPatternMotif.softWavePlanes,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.90,
+        density: 0.58,
+        opacity: 0.26,
+        strokeWidth: 1.5,
+        angle: 0.32,
+        alternate: false,
+        seed: 138),
+    'p39': CreativeBankPatternRecipe(
+        name: 'reserve crescent one',
+        motif: CreativeBankPatternMotif.crescentSweep,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.86,
+        density: 0.84,
+        opacity: 0.28,
+        strokeWidth: 1.0,
+        angle: -0.52,
+        alternate: true,
+        seed: 139),
+    'p40': CreativeBankPatternRecipe(
+        name: 'reserve folded planes one',
+        motif: CreativeBankPatternMotif.foldedPlanes,
+        anchor: Offset(0.04, 0.50),
+        scale: 1.00,
+        density: 0.70,
+        opacity: 0.28,
+        strokeWidth: 1.3,
+        angle: 0,
+        alternate: true,
+        seed: 140),
+    'p41': CreativeBankPatternRecipe(
+        name: 'reserve split ovals one',
+        motif: CreativeBankPatternMotif.splitOvalPlanes,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.94,
+        density: 0.62,
+        opacity: 0.30,
+        strokeWidth: 1.0,
+        angle: 0,
+        alternate: false,
+        seed: 141),
+    'p42': CreativeBankPatternRecipe(
+        name: 'reserve ribbon one',
+        motif: CreativeBankPatternMotif.ribbonSweep,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.92,
+        density: 0.86,
+        opacity: 0.24,
+        strokeWidth: 0.9,
+        angle: -0.22,
+        alternate: true,
+        seed: 142),
+    'p43': CreativeBankPatternRecipe(
+        name: 'reserve stacked panels one',
+        motif: CreativeBankPatternMotif.stackedPanels,
+        anchor: Offset(0.50, 0.50),
+        scale: 1.00,
+        density: 0.54,
+        opacity: 0.30,
+        strokeWidth: 1.5,
+        angle: 0.12,
+        alternate: true,
+        seed: 143),
+    'p44': CreativeBankPatternRecipe(
+        name: 'reserve lens one',
+        motif: CreativeBankPatternMotif.lensGlow,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.96,
+        density: 0.72,
+        opacity: 0.31,
+        strokeWidth: 1.8,
+        angle: -0.14,
+        alternate: false,
+        seed: 144),
+    'p45': CreativeBankPatternRecipe(
+        name: 'reserve stepped diagonal one',
+        motif: CreativeBankPatternMotif.steppedDiagonal,
+        anchor: Offset(0.18, 0.08),
+        scale: 0.88,
+        density: 0.76,
+        opacity: 0.31,
+        strokeWidth: 1.0,
+        angle: -0.20,
+        alternate: false,
+        seed: 145),
+    'p46': CreativeBankPatternRecipe(
+        name: 'reserve diagonal bands two',
+        motif: CreativeBankPatternMotif.boldDiagonalBands,
+        anchor: Offset(0.52, 0.10),
+        scale: 1.22,
+        density: 0.56,
+        opacity: 0.30,
+        strokeWidth: 1.3,
+        angle: 0.44,
+        alternate: true,
+        seed: 146),
+    'p47': CreativeBankPatternRecipe(
+        name: 'reserve corner arcs two',
+        motif: CreativeBankPatternMotif.cornerArcBands,
+        anchor: Offset(0.10, 0.80),
+        scale: 0.96,
+        density: 0.82,
+        opacity: 0.29,
+        strokeWidth: 1.4,
+        angle: 0.12,
+        alternate: false,
+        seed: 147),
+    'p48': CreativeBankPatternRecipe(
+        name: 'reserve soft waves two',
+        motif: CreativeBankPatternMotif.softWavePlanes,
+        anchor: Offset(0.50, 0.50),
+        scale: 1.20,
+        density: 0.78,
+        opacity: 0.28,
+        strokeWidth: 1.2,
+        angle: -0.38,
+        alternate: true,
+        seed: 148),
+    'p49': CreativeBankPatternRecipe(
+        name: 'reserve folded planes two',
+        motif: CreativeBankPatternMotif.foldedPlanes,
+        anchor: Offset(0.54, 0.54),
+        scale: 1.08,
+        density: 0.90,
+        opacity: 0.28,
+        strokeWidth: 1.0,
+        angle: 0.20,
+        alternate: true,
+        seed: 149),
+    'p50': CreativeBankPatternRecipe(
+        name: 'reserve ribbon two',
+        motif: CreativeBankPatternMotif.ribbonSweep,
+        anchor: Offset(0.50, 0.50),
+        scale: 0.86,
+        density: 0.90,
+        opacity: 0.27,
+        strokeWidth: 1.2,
+        angle: -0.24,
+        alternate: false,
+        seed: 150),
+  };
+
+  static int get creativePatternCount => _patternRecipes.length;
+
+  static bool hasCreativePatternForBank(String cid) {
+    return _bankPatternIds.containsKey(cid) ||
+        _bankPatternIds.containsKey(BankAssetResolver.resolveCid(cid));
+  }
+
+  static CustomPainter? _creativePainterForBank(
+    String cid,
+    String resolved,
+    List<Color> colors,
+    Color highlight,
+  ) {
+    final recipeId = _bankPatternIds[resolved] ?? _bankPatternIds[cid];
+    if (recipeId == null) return null;
+    final recipe = _patternRecipes[recipeId];
+    if (recipe == null) return null;
+
+    final accentTarget = recipe.alternate ? colors.last : colors.first;
+    final accent = Color.lerp(highlight, accentTarget, 0.42)!;
+    return CreativeBankPatternPainter(
+      recipe: recipe,
+      primary: highlight,
+      secondary: accent,
+      motifOverride: _figmaMotifForBank(resolved, recipeId),
+    );
+  }
+
+  static CreativeBankPatternMotif _figmaMotifForBank(
+    String cid,
+    String recipeId,
+  ) {
+    switch (cid) {
+      case 'axis':
+        return CreativeBankPatternMotif.figmaPurpleOrbs;
+      case 'bandhan':
+        return CreativeBankPatternMotif.figmaBlueBubbles;
+      case 'bank_of_maharashtra':
+        return CreativeBankPatternMotif.figmaLimeSlashes;
+      default:
+        return _figmaMotifForRecipeId(recipeId);
+    }
+  }
+
+  static CreativeBankPatternMotif _figmaMotifForRecipeId(String recipeId) {
+    final number = int.tryParse(recipeId.replaceFirst('p', '')) ?? 1;
+    const motifs = [
+      CreativeBankPatternMotif.figmaPurpleOrbs,
+      CreativeBankPatternMotif.figmaCoralDiagonals,
+      CreativeBankPatternMotif.figmaBlueBubbles,
+      CreativeBankPatternMotif.figmaMintChevrons,
+      CreativeBankPatternMotif.figmaVioletArcs,
+      CreativeBankPatternMotif.figmaLimeSlashes,
+      CreativeBankPatternMotif.figmaEmeraldBlocks,
+      CreativeBankPatternMotif.figmaNoirRings,
+      CreativeBankPatternMotif.figmaBronzeArcs,
+      CreativeBankPatternMotif.figmaGoldSplit,
+      CreativeBankPatternMotif.figmaSoftVerticalStripes,
+      CreativeBankPatternMotif.figmaRedLiquid,
+    ];
+    return motifs[(number - 1) % motifs.length];
+  }
+
+  /* -------------------------------------------------------------------------- */
   /*                               RESOLVER                                      */
   /* -------------------------------------------------------------------------- */
 
@@ -239,36 +944,50 @@ class CardVisuals {
     if (colors == null) return placeholder(false);
 
     final h = _highlight(resolved, colors);
-    CustomPainter? painter;
+    CustomPainter? painter = _creativePainterForBank(cid, resolved, colors, h);
 
-    if (['axis', 'rbl', 'bandhan', 'idbi'].contains(resolved)) {
-      painter = BankPatternPainter.dual(dualConfig: _dual(h));
-    } else if ([
-      'icici',
-      'kotak',
-      'union',
-      'au_small_finance',
-    ].contains(resolved)) {
-      painter = BankPatternPainter.quad(quadConfig: _quad(h));
-    } else if (['sbi', 'bank_of_baroda', 'south_indian'].contains(resolved)) {
-      painter = BankPatternPainter.rects(rectConfig: _rect(h));
-    } else if ([
-      'yes',
-      'dhanlaxmi',
-      'indusind',
-      'karnataka',
-    ].contains(resolved)) {
-      painter = BankPatternPainter.arcs(arcConfig: _arcs(h));
-    } else if (['dcb', 'canara', 'tmb', 'jammu_kashmir'].contains(resolved)) {
-      painter = BankPatternPainter.rightDual(
-        rightDualConfig: _rightDual(h),
-      );
-    } else if (['federal', 'citibank', 'uco', 'hdfc'].contains(resolved)) {
-      painter = BankPatternPainter.angledTiles(
-        angledTileConfig: _angledTiles(h),
-      );
-    } else {
-      painter = null; // Gradient only
+    if (painter == null) {
+      if (['axis', 'rbl', 'bandhan', 'idbi'].contains(resolved)) {
+        painter = BankPatternPainter.dual(dualConfig: _dual(h));
+      } else if ([
+        'icici',
+        'kotak',
+        'union',
+        'au_small_finance',
+      ].contains(resolved)) {
+        painter = BankPatternPainter.quad(quadConfig: _quad(h));
+      } else if ([
+        'sbi',
+        'bank_of_baroda',
+        'south_indian',
+      ].contains(resolved)) {
+        painter = BankPatternPainter.rects(rectConfig: _rect(h));
+      } else if ([
+        'yes',
+        'dhanlaxmi',
+        'indusind',
+        'karnataka',
+      ].contains(resolved)) {
+        painter = BankPatternPainter.arcs(arcConfig: _arcs(h));
+      } else if ([
+        'dcb',
+        'canara',
+        'tmb',
+        'jammu_kashmir',
+      ].contains(resolved)) {
+        painter = BankPatternPainter.rightDual(
+          rightDualConfig: _rightDual(h),
+        );
+      } else if ([
+        'federal',
+        'citibank',
+        'uco',
+        'hdfc',
+      ].contains(resolved)) {
+        painter = BankPatternPainter.angledTiles(
+          angledTileConfig: _angledTiles(h),
+        );
+      }
     }
 
     return CardVisual(

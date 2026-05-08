@@ -92,8 +92,6 @@ class _FilterChipItemState extends State<FilterChipItem>
 
   @override
   Widget build(BuildContext context) {
-    final palette = SwalletPalette(widget.isDark);
-
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
@@ -128,7 +126,7 @@ class _FilterChipItemState extends State<FilterChipItem>
                       width: chipIconSize,
                       height: chipIconSize,
                       colorFilter: ColorFilter.mode(
-                        _textColorAnimation.value ?? palette.text,
+                        widget.iconColor,
                         BlendMode.srcIn,
                       ),
                     ),

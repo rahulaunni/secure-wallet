@@ -381,27 +381,38 @@ class _PinLockScreenState extends State<PinLockScreen>
         final safeHeight = maxHeight - mediaPadding.top - mediaPadding.bottom;
         const sourceWidth = 357.0;
         const titleHeight = 52.0;
-        const titleToWalletGap = 24.0;
-        const walletToKeypadGap = 38.0;
-        const keypadHeight = 356.0;
-        const verticalBreathingRoom = 48.0;
-        const designContentHeight = titleHeight +
-            titleToWalletGap +
-            280 +
-            walletToKeypadGap +
-            keypadHeight;
+        const titleTopOffset = 24.0;
+        const minWalletGap = 24.0;
+        const keypadHeight = 380.0;
+        const keypadBottomOffset = 28.0;
+        const walletHeroScale = 0.92;
+        const designContentHeight = titleTopOffset +
+            titleHeight +
+            (minWalletGap * 2) +
+            (280 * walletHeroScale) +
+            keypadHeight +
+            keypadBottomOffset;
         final widthScale = (maxWidth - 48) / sourceWidth;
-        final heightScale =
-            (safeHeight - verticalBreathingRoom) / designContentHeight;
+        final heightScale = safeHeight / designContentHeight;
         final scale = math.max(0.52, math.min(widthScale, heightScale));
-        final contentWidth = sourceWidth * scale;
-        final titleTop = mediaPadding.top + (24 * scale);
-        final walletTop = titleTop + (titleHeight + titleToWalletGap) * scale;
-        final keypadTop = walletTop + ((280 + walletToKeypadGap) * scale);
+        final walletScale = scale * walletHeroScale;
+        final walletWidth = sourceWidth * walletScale;
+        final walletHeight = 280 * walletScale;
+        final titleTop = mediaPadding.top + (titleTopOffset * scale);
+        final titleBottom = titleTop + (titleHeight * scale);
+        final keypadTop = maxHeight -
+            mediaPadding.bottom -
+            (keypadBottomOffset * scale) -
+            (keypadHeight * scale);
+        final walletGap = math.max(
+          minWalletGap * scale,
+          (keypadTop - titleBottom - walletHeight) / 2,
+        );
+        final walletTop = titleBottom + walletGap;
         final keypadWidth = ((80 * scale) * 3) + ((28 * scale) * 2);
         final canvasWidth = maxWidth;
         final canvasHeight = maxHeight;
-        final walletLeft = (canvasWidth - contentWidth) / 2;
+        final walletLeft = (canvasWidth - walletWidth) / 2;
         final homeFirstCardTop =
             mediaPadding.top + 12 + 40 + 12 + topNavHeight + 12;
 
@@ -431,7 +442,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                     child: _buildWalletHero(
                       cards: _lockCards(savedCards),
                       hasSavedCards: true,
-                      scale: scale,
+                      scale: walletScale,
                       canvasWidth: canvasWidth,
                       walletLeftOnCanvas: walletLeft,
                       walletTopOnCanvas: walletTop,
