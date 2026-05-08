@@ -894,6 +894,32 @@ class CardVisuals {
     'kotak': CreativeBankPatternMotif.figmaRedLiquid,
   };
 
+  static const Map<String, CreativeBankPatternMotif> _memoryMotifs = {
+    'au_small_finance': CreativeBankPatternMotif.memoryAuroraLens,
+    'canara': CreativeBankPatternMotif.memoryGlassDiagonal,
+    'central_bank': CreativeBankPatternMotif.memoryOrbitBubble,
+    'citibank': CreativeBankPatternMotif.memoryFoldedCorner,
+    'city_union': CreativeBankPatternMotif.memoryRibbonBend,
+    'dhanlaxmi': CreativeBankPatternMotif.memorySlantStack,
+    'federal': CreativeBankPatternMotif.memorySoftCapsules,
+    'icici': CreativeBankPatternMotif.memoryCornerHalo,
+    'indian_bank': CreativeBankPatternMotif.memoryNestedPortal,
+    'indian_overseas': CreativeBankPatternMotif.memoryLiquidWave,
+    'jammu_kashmir': CreativeBankPatternMotif.memoryArcCascade,
+    'karnataka': CreativeBankPatternMotif.memoryPrismWindow,
+    'karur_vysya': CreativeBankPatternMotif.memoryOffsetRings,
+    'punjab_sind': CreativeBankPatternMotif.memoryVaultChevron,
+    'punjab_national_bank': CreativeBankPatternMotif.memoryFloatingTabs,
+    'rbl': CreativeBankPatternMotif.memorySplitGlow,
+    'south_indian': CreativeBankPatternMotif.memoryInsetOrbs,
+    'standard_chartered': CreativeBankPatternMotif.memoryStepRibbon,
+    'sbi': CreativeBankPatternMotif.memoryTiltedTiles,
+    'tmb': CreativeBankPatternMotif.memoryMoonCrop,
+    'uco': CreativeBankPatternMotif.memorySoftStripes,
+    'union': CreativeBankPatternMotif.memoryCapsuleCross,
+    'yes': CreativeBankPatternMotif.memoryConicBloom,
+  };
+
   static CustomPainter? _creativePainterForBank(
     String cid,
     String resolved,
@@ -911,7 +937,7 @@ class CardVisuals {
       recipe: recipe,
       primary: highlight,
       secondary: accent,
-      motifOverride: _fixedFigmaMotifs[cid],
+      motifOverride: _fixedFigmaMotifs[cid] ?? _memoryMotifs[cid],
     );
   }
 
@@ -921,7 +947,9 @@ class CardVisuals {
     final recipeId = _bankPatternIds[shortId];
     if (recipeId == null) return null;
 
-    return _fixedFigmaMotifs[shortId] ?? _patternRecipes[recipeId]?.motif;
+    return _fixedFigmaMotifs[shortId] ??
+        _memoryMotifs[shortId] ??
+        _patternRecipes[recipeId]?.motif;
   }
 
   /* -------------------------------------------------------------------------- */

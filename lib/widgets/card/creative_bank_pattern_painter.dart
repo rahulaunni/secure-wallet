@@ -48,6 +48,29 @@ enum CreativeBankPatternMotif {
   figmaGoldSplit,
   figmaSoftVerticalStripes,
   figmaRedLiquid,
+  memoryAuroraLens,
+  memoryGlassDiagonal,
+  memoryOrbitBubble,
+  memoryFoldedCorner,
+  memoryRibbonBend,
+  memorySlantStack,
+  memorySoftCapsules,
+  memoryCornerHalo,
+  memoryNestedPortal,
+  memoryLiquidWave,
+  memoryArcCascade,
+  memoryPrismWindow,
+  memoryOffsetRings,
+  memoryVaultChevron,
+  memoryFloatingTabs,
+  memorySplitGlow,
+  memoryInsetOrbs,
+  memoryStepRibbon,
+  memoryTiltedTiles,
+  memoryMoonCrop,
+  memorySoftStripes,
+  memoryCapsuleCross,
+  memoryConicBloom,
 }
 
 class CreativeBankPatternRecipe {
@@ -237,6 +260,75 @@ class CreativeBankPatternPainter extends CustomPainter {
       case CreativeBankPatternMotif.figmaRedLiquid:
         _paintFigmaRedLiquid(canvas, size, paint);
         break;
+      case CreativeBankPatternMotif.memoryAuroraLens:
+        _paintMemoryAuroraLens(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryGlassDiagonal:
+        _paintMemoryGlassDiagonal(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryOrbitBubble:
+        _paintMemoryOrbitBubble(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryFoldedCorner:
+        _paintMemoryFoldedCorner(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryRibbonBend:
+        _paintMemoryRibbonBend(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memorySlantStack:
+        _paintMemorySlantStack(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memorySoftCapsules:
+        _paintMemorySoftCapsules(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryCornerHalo:
+        _paintMemoryCornerHalo(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryNestedPortal:
+        _paintMemoryNestedPortal(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryLiquidWave:
+        _paintMemoryLiquidWave(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryArcCascade:
+        _paintMemoryArcCascade(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryPrismWindow:
+        _paintMemoryPrismWindow(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryOffsetRings:
+        _paintMemoryOffsetRings(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryVaultChevron:
+        _paintMemoryVaultChevron(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryFloatingTabs:
+        _paintMemoryFloatingTabs(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memorySplitGlow:
+        _paintMemorySplitGlow(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryInsetOrbs:
+        _paintMemoryInsetOrbs(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryStepRibbon:
+        _paintMemoryStepRibbon(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryTiltedTiles:
+        _paintMemoryTiltedTiles(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryMoonCrop:
+        _paintMemoryMoonCrop(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memorySoftStripes:
+        _paintMemorySoftStripes(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryCapsuleCross:
+        _paintMemoryCapsuleCross(canvas, size, paint);
+        break;
+      case CreativeBankPatternMotif.memoryConicBloom:
+        _paintMemoryConicBloom(canvas, size, paint);
+        break;
     }
 
     canvas.restore();
@@ -255,7 +347,30 @@ class CreativeBankPatternPainter extends CustomPainter {
       CreativeBankPatternMotif.figmaBronzeArcs ||
       CreativeBankPatternMotif.figmaGoldSplit ||
       CreativeBankPatternMotif.figmaSoftVerticalStripes ||
-      CreativeBankPatternMotif.figmaRedLiquid =>
+      CreativeBankPatternMotif.figmaRedLiquid ||
+      CreativeBankPatternMotif.memoryAuroraLens ||
+      CreativeBankPatternMotif.memoryGlassDiagonal ||
+      CreativeBankPatternMotif.memoryOrbitBubble ||
+      CreativeBankPatternMotif.memoryFoldedCorner ||
+      CreativeBankPatternMotif.memoryRibbonBend ||
+      CreativeBankPatternMotif.memorySlantStack ||
+      CreativeBankPatternMotif.memorySoftCapsules ||
+      CreativeBankPatternMotif.memoryCornerHalo ||
+      CreativeBankPatternMotif.memoryNestedPortal ||
+      CreativeBankPatternMotif.memoryLiquidWave ||
+      CreativeBankPatternMotif.memoryArcCascade ||
+      CreativeBankPatternMotif.memoryPrismWindow ||
+      CreativeBankPatternMotif.memoryOffsetRings ||
+      CreativeBankPatternMotif.memoryVaultChevron ||
+      CreativeBankPatternMotif.memoryFloatingTabs ||
+      CreativeBankPatternMotif.memorySplitGlow ||
+      CreativeBankPatternMotif.memoryInsetOrbs ||
+      CreativeBankPatternMotif.memoryStepRibbon ||
+      CreativeBankPatternMotif.memoryTiltedTiles ||
+      CreativeBankPatternMotif.memoryMoonCrop ||
+      CreativeBankPatternMotif.memorySoftStripes ||
+      CreativeBankPatternMotif.memoryCapsuleCross ||
+      CreativeBankPatternMotif.memoryConicBloom =>
         true,
       _ => false,
     };
@@ -1639,6 +1754,458 @@ class CreativeBankPatternPainter extends CustomPainter {
       radius: 36.7241,
       angleDeg: -10.0066,
     );
+  }
+
+  void _paintMemoryAuroraLens(Canvas canvas, Size size, Paint paint) {
+    _memoryCircle(canvas, size, paint, const Offset(0.08, 0.98), 0.68, primary,
+        0.34, Alignment.topRight, Alignment.bottomLeft);
+    _memoryCircle(canvas, size, paint, const Offset(0.84, 0.02), 0.42,
+        secondary, 0.24, Alignment.bottomLeft, Alignment.topRight);
+    _memoryBand(canvas, size, paint, const Offset(0.58, -0.18),
+        const Size(0.22, 1.35), 34, Colors.white, 0.08, 0.03);
+  }
+
+  void _paintMemoryGlassDiagonal(Canvas canvas, Size size, Paint paint) {
+    for (var i = 0; i < 4; i++) {
+      _memoryBand(
+        canvas,
+        size,
+        paint,
+        Offset(-0.18 + i * 0.24, -0.34),
+        Size(0.18 + i * 0.02, 1.72),
+        -31,
+        i.isEven ? Colors.white : primary,
+        0.09 + i * 0.045,
+        0,
+      );
+    }
+  }
+
+  void _paintMemoryOrbitBubble(Canvas canvas, Size size, Paint paint) {
+    _memoryCircle(canvas, size, paint, const Offset(0.72, 0.58), 0.44, primary,
+        0.34, Alignment.topLeft, Alignment.bottomRight);
+    _memoryCircle(canvas, size, paint, const Offset(0.48, 0.30), 0.29,
+        Colors.white, 0.20, Alignment.topCenter, Alignment.bottomCenter);
+    _memoryCircle(canvas, size, paint, const Offset(0.30, 0.84), 0.38,
+        secondary, 0.22, Alignment.topRight, Alignment.bottomLeft);
+  }
+
+  void _paintMemoryFoldedCorner(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    final high = Color.lerp(primary, Colors.white, 0.35)!;
+    final path = Path()
+      ..moveTo(size.width * 0.08, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height * 0.72)
+      ..lineTo(size.width * 0.58, size.height)
+      ..lineTo(size.width * 0.35, size.height * 0.58)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [high.withValues(alpha: 0.30), secondary.withValues(alpha: 0)],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+    paint.shader = null;
+  }
+
+  void _paintMemoryRibbonBend(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    _memoryRibbon(canvas, size, paint, 0.06, 0.44, primary, 0.26);
+    _memoryRibbon(canvas, size, paint, 0.42, 0.78, secondary, 0.20);
+  }
+
+  void _paintMemorySlantStack(Canvas canvas, Size size, Paint paint) {
+    for (var i = 0; i < 5; i++) {
+      _memoryBand(
+        canvas,
+        size,
+        paint,
+        Offset(-0.02 + i * 0.17, 0.14 + i * 0.03),
+        const Size(0.26, 0.92),
+        -52,
+        i.isEven ? primary : Colors.white,
+        0.14 + i * 0.03,
+        0.08,
+      );
+    }
+  }
+
+  void _paintMemorySoftCapsules(Canvas canvas, Size size, Paint paint) {
+    _memoryCapsule(canvas, size, paint, const Offset(-0.08, 0.18),
+        const Size(0.76, 0.25), -28, primary, 0.26);
+    _memoryCapsule(canvas, size, paint, const Offset(0.42, 0.55),
+        const Size(0.72, 0.24), -28, Colors.white, 0.13);
+    _memoryCapsule(canvas, size, paint, const Offset(0.28, 0.82),
+        const Size(0.56, 0.22), -28, secondary, 0.18);
+  }
+
+  void _paintMemoryCornerHalo(Canvas canvas, Size size, Paint paint) {
+    for (var i = 0; i < 4; i++) {
+      _memoryCircle(
+        canvas,
+        size,
+        paint,
+        const Offset(1.02, -0.02),
+        0.26 + i * 0.16,
+        i.isEven ? primary : secondary,
+        0.24 - i * 0.035,
+        Alignment.topLeft,
+        Alignment.bottomRight,
+      );
+    }
+  }
+
+  void _paintMemoryNestedPortal(Canvas canvas, Size size, Paint paint) {
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.010;
+    for (var i = 0; i < 5; i++) {
+      final rect = Rect.fromLTWH(
+        size.width * (0.12 + i * 0.075),
+        size.height * (0.18 + i * 0.055),
+        size.width * (0.86 - i * 0.11),
+        size.height * (0.90 - i * 0.09),
+      );
+      paint.color = (i.isEven ? primary : Colors.white)
+          .withValues(alpha: 0.24 - i * 0.025);
+      canvas.drawArc(rect, math.pi, math.pi * 1.06, false, paint);
+    }
+  }
+
+  void _paintMemoryLiquidWave(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, size.height * 0.28)
+      ..cubicTo(size.width * 0.28, size.height * 0.02, size.width * 0.54,
+          size.height * 0.44, size.width, size.height * 0.12)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(primary, Colors.white, 0.28)!.withValues(alpha: 0.30),
+        secondary.withValues(alpha: 0.08),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+    paint.shader = null;
+  }
+
+  void _paintMemoryArcCascade(Canvas canvas, Size size, Paint paint) {
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.012;
+    for (var i = 0; i < 7; i++) {
+      final rect = Rect.fromCircle(
+        center: Offset(size.width * (0.06 + i * 0.12), size.height * 1.06),
+        radius: size.width * (0.34 + i * 0.035),
+      );
+      paint.color = _mixColor(i).withValues(alpha: 0.25 - i * 0.018);
+      canvas.drawArc(rect, math.pi * 1.08, math.pi * 0.64, false, paint);
+    }
+  }
+
+  void _paintMemoryPrismWindow(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(size.width * 0.22, 0)
+      ..lineTo(size.width * 0.78, 0)
+      ..lineTo(size.width * 0.96, size.height)
+      ..lineTo(size.width * 0.48, size.height)
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.white.withValues(alpha: 0.24),
+        primary.withValues(alpha: 0.06)
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+    paint.shader = null;
+    _memoryBand(canvas, size, paint, const Offset(-0.14, 0.00),
+        const Size(0.22, 1.12), -18, secondary, 0.16, 0);
+  }
+
+  void _paintMemoryOffsetRings(Canvas canvas, Size size, Paint paint) {
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.018;
+    for (var i = 0; i < 5; i++) {
+      final center = Offset(size.width * (0.22 + i * 0.12), size.height * 0.55);
+      final rect = Rect.fromCenter(
+        center: center,
+        width: size.width * (0.42 + i * 0.10),
+        height: size.height * (0.56 + i * 0.09),
+      );
+      paint.color = _mixColor(i).withValues(alpha: 0.23 - i * 0.025);
+      canvas.drawOval(rect, paint);
+    }
+  }
+
+  void _paintMemoryVaultChevron(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    for (var i = 0; i < 3; i++) {
+      final path = Path()
+        ..moveTo(size.width * (-0.10 + i * 0.20), size.height)
+        ..lineTo(size.width * (0.32 + i * 0.20), size.height * 0.50)
+        ..lineTo(size.width * (-0.10 + i * 0.20), 0)
+        ..lineTo(size.width * (0.18 + i * 0.20), 0)
+        ..lineTo(size.width * (0.62 + i * 0.20), size.height * 0.50)
+        ..lineTo(size.width * (0.18 + i * 0.20), size.height)
+        ..close();
+      paint.color = _mixColor(i).withValues(alpha: 0.18 - i * 0.035);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  void _paintMemoryFloatingTabs(Canvas canvas, Size size, Paint paint) {
+    _memoryCapsule(canvas, size, paint, const Offset(0.05, 0.12),
+        const Size(0.52, 0.22), 0, primary, 0.20);
+    _memoryCapsule(canvas, size, paint, const Offset(0.42, 0.36),
+        const Size(0.56, 0.22), 0, Colors.white, 0.12);
+    _memoryCapsule(canvas, size, paint, const Offset(0.18, 0.66),
+        const Size(0.78, 0.26), 0, secondary, 0.18);
+  }
+
+  void _paintMemorySplitGlow(Canvas canvas, Size size, Paint paint) {
+    _memoryCircle(canvas, size, paint, const Offset(0.42, 0.50), 0.54, primary,
+        0.24, Alignment.centerLeft, Alignment.centerRight);
+    paint.color = Colors.black.withValues(alpha: 0.08);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width * 0.52, 0, size.width, size.height), paint);
+    _memoryCircle(canvas, size, paint, const Offset(0.94, 0.78), 0.30,
+        secondary, 0.20, Alignment.topLeft, Alignment.bottomRight);
+  }
+
+  void _paintMemoryInsetOrbs(Canvas canvas, Size size, Paint paint) {
+    _memoryCircle(canvas, size, paint, const Offset(0.04, 0.12), 0.46, primary,
+        0.24, Alignment.topLeft, Alignment.bottomRight);
+    _memoryCircle(canvas, size, paint, const Offset(0.30, 0.34), 0.30,
+        Colors.white, 0.12, Alignment.topCenter, Alignment.bottomCenter);
+    _memoryCircle(canvas, size, paint, const Offset(0.84, 0.94), 0.52,
+        secondary, 0.22, Alignment.topRight, Alignment.bottomLeft);
+  }
+
+  void _paintMemoryStepRibbon(Canvas canvas, Size size, Paint paint) {
+    paint.style = PaintingStyle.fill;
+    for (var i = 0; i < 5; i++) {
+      final top = size.height * (0.10 + i * 0.13);
+      final path = Path()
+        ..moveTo(0, top)
+        ..lineTo(size.width * (0.40 + i * 0.08), top)
+        ..lineTo(size.width * (0.52 + i * 0.08), top + size.height * 0.12)
+        ..lineTo(0, top + size.height * 0.12)
+        ..close();
+      paint.color = _mixColor(i).withValues(alpha: 0.18 - i * 0.018);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  void _paintMemoryTiltedTiles(Canvas canvas, Size size, Paint paint) {
+    for (var i = 0; i < 4; i++) {
+      _memoryBand(
+        canvas,
+        size,
+        paint,
+        Offset(0.12 + i * 0.18, -0.12 + i * 0.05),
+        const Size(0.28, 0.72),
+        18,
+        i.isEven ? primary : secondary,
+        0.18 - i * 0.02,
+        0.03,
+      );
+    }
+  }
+
+  void _paintMemoryMoonCrop(Canvas canvas, Size size, Paint paint) {
+    _memoryCircle(canvas, size, paint, const Offset(0.86, 0.20), 0.56, primary,
+        0.26, Alignment.topLeft, Alignment.bottomRight);
+    paint.color = Colors.black.withValues(alpha: 0.09);
+    canvas.drawCircle(Offset(size.width * 0.70, size.height * 0.10),
+        size.width * 0.42, paint);
+    _memoryCircle(canvas, size, paint, const Offset(0.10, 0.92), 0.34,
+        secondary, 0.18, Alignment.topRight, Alignment.bottomLeft);
+  }
+
+  void _paintMemorySoftStripes(Canvas canvas, Size size, Paint paint) {
+    for (var i = 0; i < 5; i++) {
+      _memoryBand(
+        canvas,
+        size,
+        paint,
+        Offset(i * 0.18 - 0.02, -0.05),
+        const Size(0.20, 1.12),
+        0,
+        i.isEven ? Colors.white : primary,
+        0.08 + i * 0.025,
+        0,
+      );
+    }
+  }
+
+  void _paintMemoryCapsuleCross(Canvas canvas, Size size, Paint paint) {
+    _memoryCapsule(canvas, size, paint, const Offset(-0.12, 0.28),
+        const Size(1.20, 0.24), 27, primary, 0.22);
+    _memoryCapsule(canvas, size, paint, const Offset(0.18, 0.10),
+        const Size(1.00, 0.22), -29, secondary, 0.20);
+    _memoryCircle(canvas, size, paint, const Offset(0.74, 0.68), 0.25,
+        Colors.white, 0.10, Alignment.topLeft, Alignment.bottomRight);
+  }
+
+  void _paintMemoryConicBloom(Canvas canvas, Size size, Paint paint) {
+    final high = Color.lerp(primary, Colors.white, 0.34)!;
+    final low = Color.lerp(secondary, Colors.black, 0.10)!;
+    paint.shader = SweepGradient(
+      center: const Alignment(0.34, 0.14),
+      startAngle: math.pi * 0.28,
+      endAngle: math.pi * 2.28,
+      colors: [
+        high.withValues(alpha: 0.34),
+        low.withValues(alpha: 0.10),
+        high.withValues(alpha: 0.28),
+      ],
+      stops: const [0, 0.58, 1],
+    ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, paint);
+    paint.shader = null;
+  }
+
+  void _memoryCircle(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    Offset fractionalCenter,
+    double radiusFraction,
+    Color color,
+    double alpha,
+    Alignment begin,
+    Alignment end,
+  ) {
+    paint.style = PaintingStyle.fill;
+    final center = Offset(
+      size.width * fractionalCenter.dx,
+      size.height * fractionalCenter.dy,
+    );
+    final radius = size.width * radiusFraction;
+    paint.shader = LinearGradient(
+      begin: begin,
+      end: end,
+      colors: [
+        Color.lerp(color, Colors.white, 0.42)!.withValues(alpha: alpha),
+        color.withValues(alpha: 0),
+      ],
+    ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, paint);
+    paint.shader = null;
+  }
+
+  void _memoryBand(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    Offset fractionalTopLeft,
+    Size fractionalSize,
+    double angleDeg,
+    Color color,
+    double alpha,
+    double radiusFraction,
+  ) {
+    paint.style = PaintingStyle.fill;
+    final rect = Rect.fromLTWH(
+      size.width * fractionalTopLeft.dx,
+      size.height * fractionalTopLeft.dy,
+      size.width * fractionalSize.width,
+      size.height * fractionalSize.height,
+    );
+    paint.shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color.lerp(color, Colors.white, 0.34)!.withValues(alpha: alpha),
+        color.withValues(alpha: alpha * 0.16),
+      ],
+    ).createShader(rect);
+    canvas.save();
+    canvas.translate(rect.center.dx, rect.center.dy);
+    canvas.rotate(angleDeg * math.pi / 180);
+    canvas.translate(-rect.center.dx, -rect.center.dy);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        rect,
+        Radius.circular(size.width * radiusFraction),
+      ),
+      paint,
+    );
+    canvas.restore();
+    paint.shader = null;
+  }
+
+  void _memoryCapsule(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    Offset fractionalTopLeft,
+    Size fractionalSize,
+    double angleDeg,
+    Color color,
+    double alpha,
+  ) {
+    _memoryBand(
+      canvas,
+      size,
+      paint,
+      fractionalTopLeft,
+      fractionalSize,
+      angleDeg,
+      color,
+      alpha,
+      math.min(fractionalSize.width, fractionalSize.height) * 0.50,
+    );
+  }
+
+  void _memoryRibbon(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    double yStart,
+    double yEnd,
+    Color color,
+    double alpha,
+  ) {
+    final path = Path()
+      ..moveTo(-size.width * 0.08, size.height * yStart)
+      ..cubicTo(
+        size.width * 0.20,
+        size.height * (yStart - 0.20),
+        size.width * 0.58,
+        size.height * (yEnd + 0.06),
+        size.width * 1.08,
+        size.height * (yStart + 0.06),
+      )
+      ..lineTo(size.width * 1.08, size.height * (yEnd + 0.16))
+      ..cubicTo(
+        size.width * 0.62,
+        size.height * (yEnd - 0.06),
+        size.width * 0.24,
+        size.height * (yStart + 0.28),
+        -size.width * 0.08,
+        size.height * yEnd,
+      )
+      ..close();
+    paint.shader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(color, Colors.white, 0.30)!.withValues(alpha: alpha),
+        color.withValues(alpha: alpha * 0.20),
+      ],
+    ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+    paint.shader = null;
   }
 
   @override
