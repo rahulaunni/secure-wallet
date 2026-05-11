@@ -66,19 +66,44 @@ flutter:
     - assets/icons/
     - assets/icons/flags/
     - assets/icons/banks/
+    - assets/icons/banks/argentina/
     - assets/icons/banks/australia/
+    - assets/icons/banks/austria/
+    - assets/icons/banks/belgium/
     - assets/icons/banks/brazil/
     - assets/icons/banks/canada/
+    - assets/icons/banks/chile/
     - assets/icons/banks/china/
+    - assets/icons/banks/colombia/
+    - assets/icons/banks/czech_republic/
+    - assets/icons/banks/denmark/
+    - assets/icons/banks/egypt/
+    - assets/icons/banks/finland/
     - assets/icons/banks/france/
     - assets/icons/banks/germany/
+    - assets/icons/banks/greece/
+    - assets/icons/banks/hungary/
     - assets/icons/banks/india/
+    - assets/icons/banks/indonesia/
+    - assets/icons/banks/ireland/
+    - assets/icons/banks/israel/
     - assets/icons/banks/italy/
     - assets/icons/banks/japan/
+    - assets/icons/banks/kenya/
+    - assets/icons/banks/malaysia/
     - assets/icons/banks/mexico/
+    - assets/icons/banks/morocco/
     - assets/icons/banks/netherlands/
+    - assets/icons/banks/new_zealand/
     - assets/icons/banks/nigeria/
+    - assets/icons/banks/norway/
     - assets/icons/banks/oman/
+    - assets/icons/banks/pakistan/
+    - assets/icons/banks/peru/
+    - assets/icons/banks/philippines/
+    - assets/icons/banks/poland/
+    - assets/icons/banks/portugal/
+    - assets/icons/banks/qatar/
     - assets/icons/banks/saudi_arabia/
     - assets/icons/banks/singapore/
     - assets/icons/banks/south_africa/
@@ -86,9 +111,12 @@ flutter:
     - assets/icons/banks/spain/
     - assets/icons/banks/sweden/
     - assets/icons/banks/switzerland/
+    - assets/icons/banks/thailand/
+    - assets/icons/banks/turkey/
     - assets/icons/banks/uae/
     - assets/icons/banks/united_kingdom/
     - assets/icons/banks/united_states/
+    - assets/icons/banks/vietnam/
 
 flutter_launcher_icons:
   android: true

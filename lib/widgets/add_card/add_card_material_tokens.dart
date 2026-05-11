@@ -10,18 +10,28 @@ class AddCardMaterialTokens {
 
   Color get primary => _palette.primary;
   Color get onPrimary => _palette.onPrimary;
-  Color get primaryContainer => _palette.primaryContainer;
-  Color get onPrimaryContainer => _palette.onPrimaryContainer;
+  Color get primaryContainer =>
+      isDark ? _palette.primaryContainer : const Color(0xFFE8EEFF);
+  Color get onPrimaryContainer =>
+      isDark ? _palette.onPrimaryContainer : const Color(0xFF1A3F99);
+  Color get segmentedSelected =>
+      isDark ? _palette.primaryContainer : const Color(0xFF2F6BFF);
+  Color get onSegmentedSelected =>
+      isDark ? _palette.onPrimaryContainer : Colors.white;
 
-  Color get surface => _palette.background;
-  Color get surfaceContainer => _palette.surfaceLow;
+  Color get surface => isDark ? _palette.background : const Color(0xFFF5F5F5);
+  Color get surfaceContainer =>
+      isDark ? _palette.surfaceLow : const Color(0xFFEDEDED);
   Color get surfaceContainerHigh =>
-      isDark ? const Color(0xFF141414) : const Color(0xFFEAEAEA);
-  Color get surfaceContainerHighest => _palette.surfaceHigh;
+      isDark ? const Color(0xFF141414) : const Color(0xFFE8E8E8);
+  Color get surfaceContainerHighest =>
+      isDark ? _palette.surfaceHigh : const Color(0xFFE5E5E5);
   Color get onSurface => _palette.text;
-  Color get onSurfaceVariant => _palette.textMuted;
-  Color get outline => _palette.textMuted;
-  Color get outlineVariant => _palette.outline;
+  Color get onSurfaceVariant =>
+      isDark ? _palette.textMuted : const Color(0xFF9A9DA5);
+  Color get outline => isDark ? _palette.textMuted : const Color(0xFF9A9DA5);
+  Color get outlineVariant =>
+      isDark ? _palette.outline : const Color(0xFFDADADA);
 
   Color get scrim => Colors.black.withValues(alpha: isDark ? 0.40 : 0.15);
 

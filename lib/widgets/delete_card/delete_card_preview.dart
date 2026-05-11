@@ -27,11 +27,13 @@ class DeleteCardPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final customStart = card.customGradientStartColor;
+    final customMiddle = card.customGradientMiddleColor;
     final customEnd = card.customGradientEndColor;
     final visual = customStart != null && customEnd != null
         ? CardVisuals.customGradient(
             Color(customStart),
             Color(customEnd),
+            middle: customMiddle != null ? Color(customMiddle) : null,
             visualAssetPath: card.customCardPatternAssetPath,
           )
         : CardVisuals.forBank(card.bankCid);

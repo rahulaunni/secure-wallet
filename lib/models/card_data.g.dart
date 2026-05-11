@@ -28,6 +28,7 @@ class CardDataAdapter extends TypeAdapter<CardData> {
       customBankLogoPath: fields[8] as String?,
       customGradientStartColor: fields[9] as int?,
       customGradientEndColor: fields[10] as int?,
+      customGradientMiddleColor: fields[16] as int?,
       customCardImagePath: fields[11] as String?,
       customCardVisualMode: fields[12] as int?,
       customCardImageAlignmentX: fields[13] as double?,
@@ -39,7 +40,7 @@ class CardDataAdapter extends TypeAdapter<CardData> {
   @override
   void write(BinaryWriter writer, CardData obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.bankCid)
       ..writeByte(1)
@@ -62,6 +63,8 @@ class CardDataAdapter extends TypeAdapter<CardData> {
       ..write(obj.customGradientStartColor)
       ..writeByte(10)
       ..write(obj.customGradientEndColor)
+      ..writeByte(16)
+      ..write(obj.customGradientMiddleColor)
       ..writeByte(11)
       ..write(obj.customCardImagePath)
       ..writeByte(12)

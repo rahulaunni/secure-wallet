@@ -75,7 +75,7 @@ class _CardVaultAppState extends State<CardVaultApp>
 
     _unlockController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 520),
+      duration: const Duration(milliseconds: 680),
     );
   }
 
@@ -124,7 +124,7 @@ class _CardVaultAppState extends State<CardVaultApp>
   }
 
   void _handleAppUnlocked() {
-    _unlockController.value = 1;
+    _unlockController.forward(from: 0);
     setState(() => _isUnlocked = true);
   }
 
@@ -205,24 +205,28 @@ class _CardVaultAppState extends State<CardVaultApp>
             AnimatedBuilder(
               animation: _unlockController,
               builder: (_, child) {
-                final scale = Tween<double>(
-                  begin: 0.98,
-                  end: 1,
-                ).animate(
-                  CurvedAnimation(
-                    parent: _unlockController,
-                    curve: Curves.easeOutCubic,
-                  ),
+                final progress = Curves.easeOutQuart.transform(
+                  _unlockController.value,
                 );
+                final scale = lerpDouble(0.985, 1, progress)!;
+                final yOffset = lerpDouble(10, 0, progress)!;
+                final opacity = lerpDouble(0.96, 1, progress)!;
 
-                return Transform.scale(
-                  scale: scale.value,
-                  child: child,
+                return Opacity(
+                  opacity: opacity,
+                  child: Transform.translate(
+                    offset: Offset(0, yOffset),
+                    child: Transform.scale(
+                      scale: scale,
+                      child: child,
+                    ),
+                  ),
                 );
               },
               child: HomeScreen(
                 key: _homeKey,
                 isDark: _isDark,
+                unlockSettleAnimation: _unlockController,
                 onThemeChanged: (value) {
                   setState(() => _isDark = value);
                   Hive.box(HiveBoxes.settings).put(_themeKey, value);

@@ -833,6 +833,10 @@ class _PinLockScreenState extends State<PinLockScreen>
                 customGradientStartColor: card.customGradientStartColor != null
                     ? Color(card.customGradientStartColor!)
                     : null,
+                customGradientMiddleColor:
+                    card.customGradientMiddleColor != null
+                        ? Color(card.customGradientMiddleColor!)
+                        : null,
                 customGradientEndColor: card.customGradientEndColor != null
                     ? Color(card.customGradientEndColor!)
                     : null,

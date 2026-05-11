@@ -87,7 +87,7 @@ class _CardTypeChip extends StatelessWidget {
             curve: Curves.easeOutCubic,
             height: double.infinity,
             decoration: BoxDecoration(
-              color: selected ? tokens.primaryContainer : Colors.transparent,
+              color: selected ? tokens.segmentedSelected : Colors.transparent,
               borderRadius: BorderRadius.circular(radius),
             ),
             child: Row(
@@ -100,7 +100,7 @@ class _CardTypeChip extends StatelessWidget {
                     icon,
                     size: 20,
                     color: selected
-                        ? tokens.onPrimaryContainer
+                        ? tokens.onSegmentedSelected
                         : tokens.onSurfaceVariant,
                   ),
                 ),
@@ -110,7 +110,7 @@ class _CardTypeChip extends StatelessWidget {
                   style: SwalletText.bodyMedium.copyWith(
                     fontSize: 14,
                     color: selected
-                        ? tokens.onPrimaryContainer
+                        ? tokens.onSegmentedSelected
                         : tokens.onSurfaceVariant,
                   ),
                 ),

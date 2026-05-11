@@ -23,6 +23,7 @@ class BankCard extends StatelessWidget {
   final String? customBankName;
   final String? customBankLogoPath;
   final Color? customGradientStartColor;
+  final Color? customGradientMiddleColor;
   final Color? customGradientEndColor;
   final String? customCardImagePath;
   final Alignment customCardImageAlignment;
@@ -43,6 +44,7 @@ class BankCard extends StatelessWidget {
     this.customBankName,
     this.customBankLogoPath,
     this.customGradientStartColor,
+    this.customGradientMiddleColor,
     this.customGradientEndColor,
     this.customCardImagePath,
     this.customCardImageAlignment = Alignment.center,
@@ -68,11 +70,13 @@ class BankCard extends StatelessWidget {
 
     // ✅ RESOLVE VISUALS (Gradient + Pattern)
     final customStart = customGradientStartColor;
+    final customMiddle = customGradientMiddleColor;
     final customEnd = customGradientEndColor;
     final visual = customStart != null && customEnd != null
         ? CardVisuals.customGradient(
             customStart,
             customEnd,
+            middle: customMiddle,
             visualAssetPath: customCardPatternAssetPath,
           )
         : CardVisuals.forBank(bankLogo);

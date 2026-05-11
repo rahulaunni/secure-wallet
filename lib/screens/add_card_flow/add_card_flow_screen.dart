@@ -89,6 +89,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   bool _otherBankDetailsReady = false;
   bool _showBuiltInVisualEditor = false;
   Color _customGradientStartColor = const Color(0xFF111827);
+  Color _customGradientMiddleColor = const Color(0xFF1F4F9A);
   Color _customGradientEndColor = const Color(0xFF2563EB);
   bool _hasCustomVisualOverride = false;
   CardNetwork? _cardNetwork;
@@ -106,6 +107,25 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   bool _keyboardHapticFired = false;
 
   bool get _isEditMode => widget.initialCard != null;
+
+  void _seedCustomGradientFromBank(
+    String cid, {
+    bool includePattern = false,
+  }) {
+    if (cid == BankAssets.otherBankId) return;
+
+    final bankVisual = CardVisuals.forBank(cid);
+    final colors = bankVisual.gradient.colors;
+    if (colors.isEmpty) return;
+    final editableColors = CardVisuals.editableGradientColorsForBank(cid);
+
+    _customGradientStartColor = editableColors.first;
+    _customGradientMiddleColor = editableColors[1];
+    _customGradientEndColor = editableColors.last;
+    if (includePattern) {
+      _customCardPatternAssetPath ??= bankVisual.visualAssetPath;
+    }
+  }
 
   @override
   void initState() {
@@ -249,6 +269,16 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   }
 
   EdgeInsets _surfaceInsets(Size size) {
+    if (widget.embedded) {
+      final paneWidth = math.min(size.width, AdaptiveLayout.formPaneMaxWidth);
+      final targetWidth = math.min(
+        paneWidth - 32,
+        AdaptiveLayout.phoneCardWidth,
+      );
+      final inset = math.max(16.0, (paneWidth - targetWidth) / 2);
+      return EdgeInsets.symmetric(horizontal: inset);
+    }
+
     final isTablet =
         math.min(size.width, size.height) >= AdaptiveLayout.compactWidthMax;
     if (!isTablet) {
@@ -274,8 +304,9 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
 
   void _loadInitialCard(CardData card) {
     final isOtherBank = card.bankCid == BankAssets.otherBankId;
-    final bankColors =
-        isOtherBank ? null : CardVisuals.forBank(card.bankCid).gradient.colors;
+    final bankColors = isOtherBank
+        ? null
+        : CardVisuals.editableGradientColorsForBank(card.bankCid);
     final hasCustomGradient = card.customGradientStartColor != null &&
         card.customGradientEndColor != null;
     final hasCustomImage =
@@ -306,6 +337,19 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
         : (isOtherBank
             ? const Color(0xFF111827)
             : bankColors?.first ?? const Color(0xFF111827));
+    _customGradientMiddleColor = hasCustomGradient
+        ? Color(
+            card.customGradientMiddleColor ??
+                Color.lerp(
+                  Color(card.customGradientStartColor!),
+                  Color(card.customGradientEndColor!),
+                  0.5,
+                )!
+                    .toARGB32(),
+          )
+        : (isOtherBank
+            ? const Color(0xFF1F4F9A)
+            : bankColors?[1] ?? const Color(0xFF1F4F9A));
     _customGradientEndColor = hasCustomGradient
         ? Color(card.customGradientEndColor!)
         : (isOtherBank
@@ -319,8 +363,8 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   void _onBankSelected(String cid) {
     SwalletHaptics.bankSelected();
     final isOtherBank = cid == BankAssets.otherBankId;
-    final bankVisual = isOtherBank ? null : CardVisuals.forBank(cid);
-    final bankColors = bankVisual?.gradient.colors;
+    final bankColors =
+        isOtherBank ? null : CardVisuals.editableGradientColorsForBank(cid);
 
     setState(() {
       _selectedBankCid = cid;
@@ -339,10 +383,13 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
       _showBuiltInVisualEditor = false;
       _customGradientStartColor = isOtherBank
           ? const Color(0xFF111827)
-          : (bankColors?.first ?? const Color(0xFF111827));
+          : bankColors?.first ?? const Color(0xFF111827);
+      _customGradientMiddleColor = isOtherBank
+          ? const Color(0xFF1F4F9A)
+          : bankColors?[1] ?? const Color(0xFF1F4F9A);
       _customGradientEndColor = isOtherBank
           ? const Color(0xFF2563EB)
-          : (bankColors?.last ?? const Color(0xFF2563EB));
+          : bankColors?.last ?? const Color(0xFF2563EB);
       _hasCustomVisualOverride = false;
       _cardNetwork = null;
       _cardType = CardType.credit;
@@ -369,6 +416,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
       _otherBankDetailsReady = false;
       _showBuiltInVisualEditor = false;
       _customGradientStartColor = const Color(0xFF111827);
+      _customGradientMiddleColor = const Color(0xFF1F4F9A);
       _customGradientEndColor = const Color(0xFF2563EB);
       _hasCustomVisualOverride = false;
       _cardNetwork = null;
@@ -498,7 +546,14 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     if (cid == null) return;
     if (cid == BankAssets.otherBankId && !_isEditMode) return;
 
-    setState(() => _showBuiltInVisualEditor = true);
+    setState(() {
+      if (cid != BankAssets.otherBankId &&
+          !_hasCustomVisualOverride &&
+          _customCardVisualMode == CustomCardVisualMode.gradient) {
+        _seedCustomGradientFromBank(cid, includePattern: true);
+      }
+      _showBuiltInVisualEditor = true;
+    });
   }
 
   void _onAddCardPressed() {
@@ -541,6 +596,8 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
       customBankLogoPath: isOtherBank ? _customBankLogoPath : null,
       customGradientStartColor:
           hasCustomGradient ? _customGradientStartColor.toARGB32() : null,
+      customGradientMiddleColor:
+          hasCustomGradient ? _customGradientMiddleColor.toARGB32() : null,
       customGradientEndColor:
           hasCustomGradient ? _customGradientEndColor.toARGB32() : null,
       customCardImagePath: usesImage ? _customCardImagePath : null,
@@ -598,33 +655,41 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     final bool showCardDetailsForm = _isBankSelected &&
         !showBuiltInVisualEditor &&
         (!isOtherBank || _otherBankDetailsReady);
+    final palette = SwalletPalette(widget.isDark);
 
     return PopScope(
       canPop: !widget.embedded && !_isBankSelected,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (widget.embedded) return;
         if (_isBankSelected) {
           _onBackFromSelectedBank();
           return;
         }
-        if (widget.embedded) {
-          _close();
-        }
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: Colors.transparent,
+        backgroundColor:
+            widget.embedded ? palette.background : Colors.transparent,
         body: Stack(
           children: [
             // ================= BLUR BACKGROUND =================
-            Positioned.fill(
-              child: BackdropFilter(
-                filter:
-                    ImageFilter.blur(sigmaX: currentBlur, sigmaY: currentBlur),
-                child: Container(
-                    color: Colors.black.withValues(alpha: currentDimOpacity)),
+            if (widget.embedded)
+              Positioned.fill(
+                child: ColoredBox(color: palette.background),
+              )
+            else
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: currentBlur,
+                    sigmaY: currentBlur,
+                  ),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: currentDimOpacity),
+                  ),
+                ),
               ),
-            ),
 
             // ================= PREVIEW CARD =================
             AddCardPreviewStack(
@@ -658,6 +723,11 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                   _customCardVisualMode == CustomCardVisualMode.gradient &&
                           (isOtherBank || _hasCustomVisualOverride)
                       ? _customGradientStartColor
+                      : null,
+              customGradientMiddleColor:
+                  _customCardVisualMode == CustomCardVisualMode.gradient &&
+                          (isOtherBank || _hasCustomVisualOverride)
+                      ? _customGradientMiddleColor
                       : null,
               customGradientEndColor:
                   _customCardVisualMode == CustomCardVisualMode.gradient &&
@@ -728,6 +798,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                         customCardImagePath: _customCardImagePath,
                         customCardPatternAssetPath: _customCardPatternAssetPath,
                         gradientStartColor: _customGradientStartColor,
+                        gradientMiddleColor: _customGradientMiddleColor,
                         gradientEndColor: _customGradientEndColor,
                         visualMode: _customCardVisualMode,
                         imageAlignment: _customCardImageAlignment,
@@ -735,6 +806,10 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                             setState(() => _customBankName = v),
                         onGradientStartColorChanged: (color) => setState(() {
                           _customGradientStartColor = color;
+                          _customCardVisualMode = CustomCardVisualMode.gradient;
+                        }),
+                        onGradientMiddleColorChanged: (color) => setState(() {
+                          _customGradientMiddleColor = color;
                           _customCardVisualMode = CustomCardVisualMode.gradient;
                         }),
                         onGradientEndColorChanged: (color) => setState(() {
@@ -795,6 +870,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                           CardVisualCustomizationSection(
                             isDark: widget.isDark,
                             startColor: _customGradientStartColor,
+                            middleColor: _customGradientMiddleColor,
                             endColor: _customGradientEndColor,
                             imagePath: _customCardImagePath,
                             patternAssetPath: _customCardPatternAssetPath,
@@ -802,6 +878,12 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                             imageAlignment: _customCardImageAlignment,
                             onStartChanged: (color) => setState(() {
                               _customGradientStartColor = color;
+                              _customCardVisualMode =
+                                  CustomCardVisualMode.gradient;
+                              _hasCustomVisualOverride = true;
+                            }),
+                            onMiddleChanged: (color) => setState(() {
+                              _customGradientMiddleColor = color;
                               _customCardVisualMode =
                                   CustomCardVisualMode.gradient;
                               _hasCustomVisualOverride = true;

@@ -25,14 +25,14 @@ class TopNavItem {
 class TopNavBar extends StatefulWidget {
   final bool isDark;
   final List<TopNavCategory> categories;
-
-  /// 🔔 Emits active category IDs
+  final Animation<double>? introAnimation;
   final ValueChanged<Set<String>> onSelectionChanged;
 
   const TopNavBar({
     super.key,
     required this.isDark,
     required this.categories,
+    this.introAnimation,
     required this.onSelectionChanged,
   });
 
@@ -48,15 +48,13 @@ class _TopNavBarState extends State<TopNavBar> {
   @override
   void initState() {
     super.initState();
-
-    // 🔒 BASE ORDER — PROVIDED BY HOMESCREEN (NOW FINAL)
     _items = widget.categories
         .map(
-          (c) => TopNavItem(
-            id: c.id,
-            label: c.label,
-            iconPath: c.iconPath,
-            iconColor: c.iconColor,
+          (category) => TopNavItem(
+            id: category.id,
+            label: category.label,
+            iconPath: category.iconPath,
+            iconColor: category.iconColor,
             key: GlobalKey(),
           ),
         )
@@ -70,15 +68,10 @@ class _TopNavBarState extends State<TopNavBar> {
       item.isActive = !item.isActive;
     });
 
-    // 🔔 Notify HomeScreen
     widget.onSelectionChanged(
-      _items
-          .where((i) => i.isActive)
-          .map((i) => i.id)
-          .toSet(),
+      _items.where((chip) => chip.isActive).map((chip) => chip.id).toSet(),
     );
 
-    // 🔒 Scroll ONLY on activation (UNCHANGED)
     if (wasInactive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = item.key.currentContext;
@@ -102,6 +95,8 @@ class _TopNavBarState extends State<TopNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final introAnimation = widget.introAnimation;
+
     return SizedBox(
       height: topNavHeight,
       child: SingleChildScrollView(
@@ -112,40 +107,96 @@ class _TopNavBarState extends State<TopNavBar> {
           horizontal: topNavHorizontalPadding,
         ),
         child: Row(
-          children: _items.map((item) {
-            return Padding(
-              key: item.key,
-              padding: const EdgeInsets.only(
-                right: topNavChipSpacing,
-              ),
-              child: AnimatedSwitcher(
-                duration: chipAnimDuration,
-                transitionBuilder: (child, animation) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.15, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
+          children: [
+            for (var index = 0; index < _items.length; index++)
+              _IntroChip(
+                key: _items[index].key,
+                index: index,
+                totalCount: _items.length,
+                animation: introAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    right: topNavChipSpacing,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: chipAnimDuration,
+                    transitionBuilder: (child, animation) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.15, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: FilterChipItem(
+                      key: ValueKey(_items[index].id),
+                      label: _items[index].label,
+                      iconPath: _items[index].iconPath,
+                      iconColor: _items[index].iconColor,
+                      isActive: _items[index].isActive,
+                      isDark: widget.isDark,
+                      onTap: () => _onChipTap(_items[index]),
                     ),
-                  );
-                },
-                child: FilterChipItem(
-                  key: ValueKey(item.id),
-                  label: item.label,
-                  iconPath: item.iconPath,
-                  iconColor: item.iconColor,
-                  isActive: item.isActive,
-                  isDark: widget.isDark,
-                  onTap: () => _onChipTap(item),
+                  ),
                 ),
               ),
-            );
-          }).toList(),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _IntroChip extends StatelessWidget {
+  final int index;
+  final int totalCount;
+  final Animation<double>? animation;
+  final Widget child;
+
+  const _IntroChip({
+    super.key,
+    required this.index,
+    required this.totalCount,
+    required this.animation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = this.animation;
+    if (animation == null || animation.value >= 1) {
+      return child;
+    }
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final visibleTotal = totalCount.clamp(1, 8);
+        final start = (index * 0.055).clamp(0.0, 0.42);
+        final end =
+            (start + 0.44 + (0.02 * (8 - visibleTotal))).clamp(start, 1.0);
+        final progress = ((animation.value - start) / (end - start))
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final eased = Curves.easeOutCubic.transform(progress);
+
+        return Opacity(
+          opacity: eased,
+          child: Transform.translate(
+            offset: Offset(22 * (1 - eased), 0),
+            child: Transform.scale(
+              scale: 0.96 + (0.04 * eased),
+              alignment: Alignment.centerLeft,
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -36,11 +36,13 @@ import '../utils/card_share_helper.dart';
 class HomeScreen extends StatefulWidget {
   final bool isDark;
   final ValueChanged<bool> onThemeChanged;
+  final Animation<double>? unlockSettleAnimation;
 
   const HomeScreen({
     super.key,
     required this.isDark,
     required this.onThemeChanged,
+    this.unlockSettleAnimation,
   });
 
   @override
@@ -303,6 +305,7 @@ class HomeScreenState extends State<HomeScreen> {
     return '${card.bankCid}|${card.customBankName ?? ''}|'
         '${card.customBankLogoPath ?? ''}|${card.cardNumber}|'
         '${card.customGradientStartColor ?? ''}|'
+        '${card.customGradientMiddleColor ?? ''}|'
         '${card.customGradientEndColor ?? ''}|'
         '${card.customCardImagePath ?? ''}|'
         '${card.customCardPatternAssetPath ?? ''}|'
@@ -431,6 +434,9 @@ class HomeScreenState extends State<HomeScreen> {
             customBankLogoPath: card.customBankLogoPath,
             customGradientStartColor: card.customGradientStartColor != null
                 ? Color(card.customGradientStartColor!)
+                : null,
+            customGradientMiddleColor: card.customGradientMiddleColor != null
+                ? Color(card.customGradientMiddleColor!)
                 : null,
             customGradientEndColor: card.customGradientEndColor != null
                 ? Color(card.customGradientEndColor!)
@@ -663,20 +669,19 @@ class HomeScreenState extends State<HomeScreen> {
     };
 
     final palette = SwalletPalette(widget.isDark);
+    final paneContent = ClipRect(
+      child: sidePane == _HomeSidePane.settings
+          ? _SidePaneNavigator(
+              navigatorKey: _sidePaneNavigatorKey,
+              child: child,
+            )
+          : child,
+    );
 
     return Material(
       color: palette.background,
       elevation: 0,
-      child: ClipRect(
-        child: Navigator(
-          key: _sidePaneNavigatorKey,
-          onGenerateRoute: (_) {
-            return MaterialPageRoute<void>(
-              builder: (_) => child,
-            );
-          },
-        ),
-      ),
+      child: paneContent,
     );
   }
 
@@ -770,6 +775,7 @@ class HomeScreenState extends State<HomeScreen> {
                 key: ValueKey(allCards.length),
                 isDark: widget.isDark,
                 categories: _buildTopNavCategories(allCards),
+                introAnimation: widget.unlockSettleAnimation,
                 onSelectionChanged: (ids) {
                   setState(() {
                     _activeFilters
@@ -1022,4 +1028,54 @@ enum _HomeSidePane {
   addCard,
   editCard,
   settings,
+}
+
+class _SidePaneNavigator extends StatefulWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+  final Widget child;
+
+  const _SidePaneNavigator({
+    required this.navigatorKey,
+    required this.child,
+  });
+
+  @override
+  State<_SidePaneNavigator> createState() => _SidePaneNavigatorState();
+}
+
+class _SidePaneNavigatorState extends State<_SidePaneNavigator> {
+  late final ValueNotifier<Widget> _childNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _childNotifier = ValueNotifier<Widget>(widget.child);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SidePaneNavigator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _childNotifier.value = widget.child;
+  }
+
+  @override
+  void dispose() {
+    _childNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: widget.navigatorKey,
+      onGenerateRoute: (_) {
+        return MaterialPageRoute<void>(
+          builder: (_) => ValueListenableBuilder<Widget>(
+            valueListenable: _childNotifier,
+            builder: (_, child, __) => child,
+          ),
+        );
+      },
+    );
+  }
 }

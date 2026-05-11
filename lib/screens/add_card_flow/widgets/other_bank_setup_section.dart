@@ -19,11 +19,13 @@ class OtherBankSetupSection extends StatefulWidget {
   final String? customCardImagePath;
   final String? customCardPatternAssetPath;
   final Color gradientStartColor;
+  final Color gradientMiddleColor;
   final Color gradientEndColor;
   final CustomCardVisualMode visualMode;
   final Alignment imageAlignment;
   final ValueChanged<String> onCustomBankNameChanged;
   final ValueChanged<Color> onGradientStartColorChanged;
+  final ValueChanged<Color> onGradientMiddleColorChanged;
   final ValueChanged<Color> onGradientEndColorChanged;
   final ValueChanged<CustomCardVisualMode> onVisualModeChanged;
   final ValueChanged<String?> onPatternChanged;
@@ -42,11 +44,13 @@ class OtherBankSetupSection extends StatefulWidget {
     required this.customCardImagePath,
     required this.customCardPatternAssetPath,
     required this.gradientStartColor,
+    required this.gradientMiddleColor,
     required this.gradientEndColor,
     required this.visualMode,
     required this.imageAlignment,
     required this.onCustomBankNameChanged,
     required this.onGradientStartColorChanged,
+    required this.onGradientMiddleColorChanged,
     required this.onGradientEndColorChanged,
     required this.onVisualModeChanged,
     required this.onPatternChanged,
@@ -121,12 +125,14 @@ class _OtherBankSetupSectionState extends State<OtherBankSetupSection> {
         CardVisualCustomizationSection(
           isDark: widget.isDark,
           startColor: widget.gradientStartColor,
+          middleColor: widget.gradientMiddleColor,
           endColor: widget.gradientEndColor,
           imagePath: widget.customCardImagePath,
           patternAssetPath: widget.customCardPatternAssetPath,
           visualMode: widget.visualMode,
           imageAlignment: widget.imageAlignment,
           onStartChanged: widget.onGradientStartColorChanged,
+          onMiddleChanged: widget.onGradientMiddleColorChanged,
           onEndChanged: widget.onGradientEndColorChanged,
           onVisualModeChanged: widget.onVisualModeChanged,
           onPatternChanged: widget.onPatternChanged,
@@ -248,12 +254,14 @@ class _CustomBankLogoPicker extends StatelessWidget {
 class CardVisualCustomizationSection extends StatefulWidget {
   final bool isDark;
   final Color startColor;
+  final Color middleColor;
   final Color endColor;
   final String? imagePath;
   final String? patternAssetPath;
   final CustomCardVisualMode visualMode;
   final Alignment imageAlignment;
   final ValueChanged<Color> onStartChanged;
+  final ValueChanged<Color> onMiddleChanged;
   final ValueChanged<Color> onEndChanged;
   final ValueChanged<CustomCardVisualMode> onVisualModeChanged;
   final ValueChanged<String?> onPatternChanged;
@@ -265,12 +273,14 @@ class CardVisualCustomizationSection extends StatefulWidget {
     super.key,
     required this.isDark,
     required this.startColor,
+    required this.middleColor,
     required this.endColor,
     required this.imagePath,
     required this.patternAssetPath,
     required this.visualMode,
     required this.imageAlignment,
     required this.onStartChanged,
+    required this.onMiddleChanged,
     required this.onEndChanged,
     required this.onVisualModeChanged,
     required this.onPatternChanged,
@@ -289,12 +299,17 @@ class _CardVisualCustomizationSectionState
   int _activeColorIndex = 0;
   bool _choosingGradientPattern = false;
 
-  Color get _activeColor =>
-      _activeColorIndex == 0 ? widget.startColor : widget.endColor;
+  Color get _activeColor => switch (_activeColorIndex) {
+        0 => widget.startColor,
+        1 => widget.middleColor,
+        _ => widget.endColor,
+      };
 
   void _setActiveColor(Color color) {
     if (_activeColorIndex == 0) {
       widget.onStartChanged(color);
+    } else if (_activeColorIndex == 1) {
+      widget.onMiddleChanged(color);
     } else {
       widget.onEndChanged(color);
     }
@@ -342,6 +357,7 @@ class _CardVisualCustomizationSectionState
                     key: const ValueKey('pattern_phase'),
                     isDark: widget.isDark,
                     startColor: widget.startColor,
+                    middleColor: widget.middleColor,
                     endColor: widget.endColor,
                     selectedAssetPath: widget.patternAssetPath,
                     onChanged: widget.onPatternChanged,
@@ -366,6 +382,7 @@ class _CardVisualCustomizationSectionState
                           _GradientColorRoundSelector(
                             activeIndex: _activeColorIndex,
                             startColor: widget.startColor,
+                            middleColor: widget.middleColor,
                             endColor: widget.endColor,
                             isDark: widget.isDark,
                             onChanged: (index) =>
@@ -458,6 +475,7 @@ class _PatternPhaseButton extends StatelessWidget {
 class _GradientPatternCarousel extends StatelessWidget {
   final bool isDark;
   final Color startColor;
+  final Color middleColor;
   final Color endColor;
   final String? selectedAssetPath;
   final ValueChanged<String?> onChanged;
@@ -467,6 +485,7 @@ class _GradientPatternCarousel extends StatelessWidget {
     super.key,
     required this.isDark,
     required this.startColor,
+    required this.middleColor,
     required this.endColor,
     required this.selectedAssetPath,
     required this.onChanged,
@@ -516,6 +535,7 @@ class _GradientPatternCarousel extends StatelessWidget {
               return _PatternPreviewTile(
                 isDark: isDark,
                 startColor: startColor,
+                middleColor: middleColor,
                 endColor: endColor,
                 assetPath: assetPath,
                 selected: selectedAssetPath == assetPath,
@@ -532,6 +552,7 @@ class _GradientPatternCarousel extends StatelessWidget {
 class _PatternPreviewTile extends StatelessWidget {
   final bool isDark;
   final Color startColor;
+  final Color middleColor;
   final Color endColor;
   final String? assetPath;
   final bool selected;
@@ -540,6 +561,7 @@ class _PatternPreviewTile extends StatelessWidget {
   const _PatternPreviewTile({
     required this.isDark,
     required this.startColor,
+    required this.middleColor,
     required this.endColor,
     required this.assetPath,
     required this.selected,
@@ -552,6 +574,7 @@ class _PatternPreviewTile extends StatelessWidget {
     final visual = CardVisuals.customGradient(
       startColor,
       endColor,
+      middle: middleColor,
       visualAssetPath: assetPath,
       previewBoost: true,
     );
@@ -706,7 +729,7 @@ class _CustomVisualModeChip extends StatelessWidget {
           curve: Curves.easeOutCubic,
           height: double.infinity,
           decoration: BoxDecoration(
-            color: selected ? tokens.primaryContainer : Colors.transparent,
+            color: selected ? tokens.segmentedSelected : Colors.transparent,
             borderRadius: BorderRadius.circular(radius),
           ),
           child: Row(
@@ -719,7 +742,7 @@ class _CustomVisualModeChip extends StatelessWidget {
                   icon,
                   size: 20,
                   color: selected
-                      ? tokens.onPrimaryContainer
+                      ? tokens.onSegmentedSelected
                       : tokens.onSurfaceVariant,
                 ),
               ),
@@ -729,7 +752,7 @@ class _CustomVisualModeChip extends StatelessWidget {
                 style: SwalletText.bodyMedium.copyWith(
                   fontSize: 14,
                   color: selected
-                      ? tokens.onPrimaryContainer
+                      ? tokens.onSegmentedSelected
                       : tokens.onSurfaceVariant,
                 ),
               ),
@@ -744,6 +767,7 @@ class _CustomVisualModeChip extends StatelessWidget {
 class _GradientColorRoundSelector extends StatelessWidget {
   final int activeIndex;
   final Color startColor;
+  final Color middleColor;
   final Color endColor;
   final bool isDark;
   final ValueChanged<int> onChanged;
@@ -751,6 +775,7 @@ class _GradientColorRoundSelector extends StatelessWidget {
   const _GradientColorRoundSelector({
     required this.activeIndex,
     required this.startColor,
+    required this.middleColor,
     required this.endColor,
     required this.isDark,
     required this.onChanged,
@@ -774,10 +799,18 @@ class _GradientColorRoundSelector extends StatelessWidget {
           const SizedBox(height: 10),
           _GradientColorDot(
             label: '2',
-            color: endColor,
+            color: middleColor,
             selected: activeIndex == 1,
             tokens: tokens,
             onTap: () => onChanged(1),
+          ),
+          const SizedBox(height: 10),
+          _GradientColorDot(
+            label: '3',
+            color: endColor,
+            selected: activeIndex == 2,
+            tokens: tokens,
+            onTap: () => onChanged(2),
           ),
         ],
       ),
@@ -803,6 +836,7 @@ class _GradientColorDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      key: ValueKey('gradient_color_dot_$label'),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),

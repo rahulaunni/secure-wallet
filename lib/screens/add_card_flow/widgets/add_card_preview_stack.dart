@@ -20,6 +20,7 @@ class AddCardPreviewStack extends StatelessWidget {
   final String? customBankName;
   final String? customBankLogoPath;
   final Color? customGradientStartColor;
+  final Color? customGradientMiddleColor;
   final Color? customGradientEndColor;
   final String? customCardImagePath;
   final Alignment customCardImageAlignment;
@@ -46,6 +47,7 @@ class AddCardPreviewStack extends StatelessWidget {
     this.customBankName,
     this.customBankLogoPath,
     this.customGradientStartColor,
+    this.customGradientMiddleColor,
     this.customGradientEndColor,
     this.customCardImagePath,
     this.customCardImageAlignment = Alignment.center,
@@ -85,6 +87,7 @@ class AddCardPreviewStack extends StatelessWidget {
               customBankName: customBankName,
               customBankLogoPath: customBankLogoPath,
               customGradientStartColor: customGradientStartColor,
+              customGradientMiddleColor: customGradientMiddleColor,
               customGradientEndColor: customGradientEndColor,
               customCardImagePath: customCardImagePath,
               customCardImageAlignment: customCardImageAlignment,

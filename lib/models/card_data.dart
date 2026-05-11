@@ -39,6 +39,9 @@ class CardData {
   @HiveField(10)
   final int? customGradientEndColor;
 
+  @HiveField(16)
+  final int? customGradientMiddleColor;
+
   @HiveField(11)
   final String? customCardImagePath;
 
@@ -66,6 +69,7 @@ class CardData {
     this.customBankLogoPath,
     this.customGradientStartColor,
     this.customGradientEndColor,
+    this.customGradientMiddleColor,
     this.customCardImagePath,
     this.customCardVisualMode,
     this.customCardImageAlignmentX,
@@ -85,6 +89,7 @@ class CardData {
     String? customBankLogoPath,
     int? customGradientStartColor,
     int? customGradientEndColor,
+    int? customGradientMiddleColor,
     String? customCardImagePath,
     int? customCardVisualMode,
     double? customCardImageAlignmentX,
@@ -112,6 +117,9 @@ class CardData {
       customGradientEndColor: clearCustomGradient
           ? null
           : customGradientEndColor ?? this.customGradientEndColor,
+      customGradientMiddleColor: clearCustomGradient
+          ? null
+          : customGradientMiddleColor ?? this.customGradientMiddleColor,
       customCardImagePath: clearCustomCardImage
           ? null
           : customCardImagePath ?? this.customCardImagePath,

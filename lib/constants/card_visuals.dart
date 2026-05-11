@@ -35,6 +35,7 @@ class CardVisuals {
   static CardVisual customGradient(
     Color start,
     Color end, {
+    Color? middle,
     String? visualAssetPath,
     bool previewBoost = false,
   }) {
@@ -42,10 +43,13 @@ class CardVisuals {
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [start, end],
+        colors: [start, middle ?? Color.lerp(start, end, 0.5)!, end],
       ),
       visualAssetPath: visualAssetPath,
-      visualColors: _visualColorsForBank([start, end], end),
+      visualColors: _visualColorsForBank(
+        [start, middle ?? Color.lerp(start, end, 0.5)!, end],
+        end,
+      ),
       visualOpacityBoost:
           visualAssetPath == null ? 1 : (previewBoost ? 1.25 : 1.1),
       visualMinOverlayOpacity:
@@ -66,6 +70,21 @@ class CardVisuals {
     }
 
     return 'Pattern';
+  }
+
+  static List<Color> editableGradientColorsForBank(String cid) {
+    final colors = forBank(cid).gradient.colors;
+    if (colors.isEmpty) {
+      return const [Color(0xFF111827), Color(0xFF1F4F9A), Color(0xFF2563EB)];
+    }
+
+    return [
+      colors.first,
+      colors.length > 2
+          ? colors[1]
+          : Color.lerp(colors.first, colors.last, 0.5)!,
+      colors.length > 1 ? colors.last : colors.first,
+    ];
   }
 
   static String resolveVisualAssetPath(String assetPath) {

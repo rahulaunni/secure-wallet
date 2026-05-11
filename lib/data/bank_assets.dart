@@ -258,13 +258,6 @@ class BankAssets {
       logoUrl: 'https://logo.clearbit.com/volksbank.at',
     ),
     BankInfo(
-      id: 'belgium__axa_bank',
-      name: 'AXA Bank',
-      countryId: 'belgium',
-      website: 'https://www.axabank.be',
-      logoUrl: 'https://logo.clearbit.com/axabank.be',
-    ),
-    BankInfo(
       id: 'belgium__argenta',
       name: 'Argenta',
       countryId: 'belgium',
@@ -3690,7 +3683,6 @@ class BankAssets {
       name: 'Belgium',
       flagAsset: 'assets/icons/flags/belgium.svg',
       bankIds: [
-        'belgium__axa_bank',
         'belgium__argenta',
         'belgium__bnp_paribas_fortis',
         'belgium__belfius',
