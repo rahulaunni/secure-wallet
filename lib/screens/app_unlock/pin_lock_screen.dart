@@ -19,6 +19,7 @@ import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/adaptive_layout.dart';
 import 'package:swallet/utils/security_store.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+import 'package:swallet/widgets/app_lock/security_features_intro_overlay.dart';
 import 'package:swallet/widgets/buttons/custom_back_button.dart';
 import 'package:swallet/widgets/card/bank_card.dart';
 import 'package:swallet/widgets/card/secure_reveal_wrapper.dart';
@@ -38,6 +39,8 @@ class PinLockScreen extends StatefulWidget {
 
 class _PinLockScreenState extends State<PinLockScreen>
     with TickerProviderStateMixin {
+  static const String _securityIntroSeenKey = 'security_intro_v1_seen';
+
   final LocalAuthentication _auth = LocalAuthentication();
   final Box _settingsBox = Hive.box(HiveBoxes.settings);
   static const int _pinLength = 4;
@@ -56,6 +59,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   bool _isError = false;
   bool _isUnlocking = false;
   bool _showResetButton = false;
+  bool _securityIntroQueued = false;
   String _errorMessage = '';
   String _statusMessage = 'Enter your App PIN';
 
@@ -121,6 +125,7 @@ class _PinLockScreenState extends State<PinLockScreen>
         _statusMessage = 'Set a 4-digit PIN';
         _showResetButton = false;
       });
+      _scheduleSecurityIntro();
       return;
     }
 
@@ -130,6 +135,53 @@ class _PinLockScreenState extends State<PinLockScreen>
       _showResetButton = false;
     });
     _triggerBiometrics();
+  }
+
+  void _scheduleSecurityIntro() {
+    if (_securityIntroQueued) return;
+    final seen = _settingsBox.get(_securityIntroSeenKey, defaultValue: false);
+    if (seen == true) return;
+
+    _securityIntroQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !_isCreating) {
+        _securityIntroQueued = false;
+        return;
+      }
+
+      final completed = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: 'Security features introduction',
+        barrierColor: Colors.transparent,
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (context, _, __) {
+          return SecurityFeaturesIntroOverlay(
+            isDark: _isDark,
+            onDone: () => Navigator.of(context).pop(true),
+          );
+        },
+        transitionBuilder: (context, animation, _, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      );
+
+      if (completed == true) {
+        await _settingsBox.put(_securityIntroSeenKey, true);
+      }
+      _securityIntroQueued = false;
+    });
   }
 
   void _onNumTapped(String number) {

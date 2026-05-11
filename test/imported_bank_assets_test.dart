@@ -38,6 +38,45 @@ void main() {
     expect(importedBankGradients, isNot(contains('belgium__axa_bank')));
   });
 
+  test('Colombia list uses DAVIbank after Scotiabank transition', () {
+    final colombia = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'colombia',
+    );
+
+    expect(colombia.bankIds, contains('colombia__davibank'));
+    expect(colombia.bankIds, isNot(contains('colombia__scotiabank_colpatria')));
+    expect(importedBankGradients, contains('colombia__davibank'));
+    expect(
+      importedBankGradients,
+      isNot(contains('colombia__scotiabank_colpatria')),
+    );
+  });
+
+  test('Denmark list uses AL Sydbank after AL and Vestjysk merger', () {
+    final denmark = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'denmark',
+    );
+
+    expect(denmark.bankIds, contains('denmark__sydbank'));
+    expect(
+      denmark.bankIds,
+      isNot(contains('denmark__arbejdernes_landsbank')),
+    );
+    expect(denmark.bankIds, isNot(contains('denmark__vestjysk_bank')));
+
+    final sydbank = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'denmark__sydbank',
+    );
+    expect(sydbank.name, 'AL Sydbank');
+
+    expect(importedBankGradients, contains('denmark__sydbank'));
+    expect(
+      importedBankGradients,
+      isNot(contains('denmark__arbejdernes_landsbank')),
+    );
+    expect(importedBankGradients, isNot(contains('denmark__vestjysk_bank')));
+  });
+
   test('imported bank gradients are unique per bank', () {
     final gradientKeys = <String>{};
 

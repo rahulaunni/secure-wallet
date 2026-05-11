@@ -1,5 +1,8 @@
-<svg width="320" height="72" viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="2" y="10" width="52" height="52" rx="16" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.32" stroke-width="2"/>
-<text x="28" y="42" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="Poppins, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0">KN</text>
-<text x="68" y="38" dominant-baseline="middle" fill="white" font-family="Poppins, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="0">Komerční banka</text>
+<svg width="94" height="40" viewBox="0 0 94 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M40 40H0V0H40V40Z" fill="white"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M2.43359 20H37.9892V2.22222H2.43359V20Z" fill="#E60028"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M2.43359 37.7778H37.9892V20H2.43359V37.7778Z" fill="black"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8.62207 21.0841H31.8017V18.9159H8.62207V21.0841Z" fill="#FFFFFE"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M48.8252 30.7288V9.46737H52.7657V19.3898L63.4536 9.46737H68.3004L57.3021 19.7016L68.7542 30.7288H63.4536L52.7657 20.4104V30.7288H48.8252Z" fill="white"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M89.172 24.4918C89.172 22.7057 88.2368 21.7428 86.2245 21.7428H75.6509V27.2131H85.743C88.096 27.2131 89.172 26.1937 89.172 24.4918ZM85.9693 18.2271C87.7555 18.2271 88.5775 16.9802 88.5775 15.6478C88.5775 14.1734 87.6424 12.9831 85.743 12.9831H75.6509V18.2271H85.9693ZM90.307 19.7016C92.1774 20.6643 93.2546 22.4504 93.2546 24.4918C93.2546 28.0074 90.7043 30.7288 85.8273 30.7288H71.7393V9.46737H85.743C89.6547 9.46737 92.4891 11.8493 92.4891 15.4492C92.4891 17.2919 91.696 18.6243 90.307 19.7016Z" fill="white"/>
 </svg>

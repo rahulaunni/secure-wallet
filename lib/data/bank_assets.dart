@@ -678,11 +678,11 @@ class BankAssets {
       logoUrl: 'https://logo.clearbit.com/nequi.com.co',
     ),
     BankInfo(
-      id: 'colombia__scotiabank_colpatria',
-      name: 'Scotiabank Colpatria',
+      id: 'colombia__davibank',
+      name: 'DAVIbank',
       countryId: 'colombia',
-      website: 'https://www.scotiabankcolpatria.com',
-      logoUrl: 'https://logo.clearbit.com/scotiabankcolpatria.com',
+      website: 'https://www.davibank.com',
+      logoUrl: 'https://logo.clearbit.com/davibank.com',
     ),
     BankInfo(
       id: 'czech_republic__air_bank',
@@ -755,13 +755,6 @@ class BankAssets {
       logoUrl: 'https://logo.clearbit.com/csas.cz',
     ),
     BankInfo(
-      id: 'denmark__arbejdernes_landsbank',
-      name: 'Arbejdernes Landsbank',
-      countryId: 'denmark',
-      website: 'https://www.al-bank.dk',
-      logoUrl: 'https://logo.clearbit.com/al-bank.dk',
-    ),
-    BankInfo(
       id: 'denmark__danske_bank',
       name: 'Danske Bank',
       countryId: 'denmark',
@@ -812,17 +805,10 @@ class BankAssets {
     ),
     BankInfo(
       id: 'denmark__sydbank',
-      name: 'Sydbank',
+      name: 'AL Sydbank',
       countryId: 'denmark',
       website: 'https://www.sydbank.dk',
       logoUrl: 'https://logo.clearbit.com/sydbank.dk',
-    ),
-    BankInfo(
-      id: 'denmark__vestjysk_bank',
-      name: 'Vestjysk Bank',
-      countryId: 'denmark',
-      website: 'https://www.vestjyskbank.dk',
-      logoUrl: 'https://logo.clearbit.com/vestjyskbank.dk',
     ),
     BankInfo(
       id: 'egypt__aaib',
@@ -3778,7 +3764,7 @@ class BankAssets {
         'colombia__bancolombia',
         'colombia__davivienda',
         'colombia__nequi',
-        'colombia__scotiabank_colpatria',
+        'colombia__davibank',
       ],
     ),
     BankCountry(
@@ -3803,7 +3789,6 @@ class BankAssets {
       name: 'Denmark',
       flagAsset: 'assets/icons/flags/denmark.svg',
       bankIds: [
-        'denmark__arbejdernes_landsbank',
         'denmark__danske_bank',
         'denmark__jyske_bank',
         'denmark__lunar',
@@ -3812,7 +3797,6 @@ class BankAssets {
         'denmark__spar_nord',
         'denmark__sparekassen_kronjylland',
         'denmark__sydbank',
-        'denmark__vestjysk_bank',
       ],
     ),
     BankCountry(

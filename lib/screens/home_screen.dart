@@ -10,6 +10,7 @@ import '../models/card_type.dart';
 import '../widgets/top_nav/top_nav_bar.dart';
 import '../widgets/top_nav/top_nav_category.dart';
 import '../widgets/home/empty_wallet_view.dart';
+import '../widgets/home/swipe_actions_tutorial_overlay.dart';
 import '../widgets/app_lock/mini_pin_pad.dart';
 
 import '../widgets/card/bank_card.dart';
@@ -50,6 +51,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  static const String _swipeActionsTutorialSeenKey =
+      'swipe_actions_tutorial_v1_seen';
+
   final ScrollController _scrollController = ScrollController();
   final AddCardFlowController _addCardFlowController = AddCardFlowController();
   GlobalKey<NavigatorState> _sidePaneNavigatorKey = GlobalKey();
@@ -72,6 +76,8 @@ class HomeScreenState extends State<HomeScreen> {
   String? _editingCardId;
   int _swipeResetToken = 0;
   String? _activeSwipeCardId;
+  bool _swipeTutorialQueued = false;
+  bool _homeEntrySettled = false;
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
@@ -278,12 +284,104 @@ class HomeScreenState extends State<HomeScreen> {
     return _cards.toList(growable: false);
   }
 
+  void _scheduleSwipeActionsTutorial({
+    required bool hasCards,
+    required bool showSidePane,
+  }) {
+    if (_swipeTutorialQueued ||
+        !_homeEntrySettled ||
+        !hasCards ||
+        showSidePane) {
+      return;
+    }
+
+    final settingsBox = Hive.box(HiveBoxes.settings);
+    final seen = settingsBox.get(
+      _swipeActionsTutorialSeenKey,
+      defaultValue: false,
+    );
+    if (seen == true) return;
+
+    _swipeTutorialQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (!_homeEntrySettled || _sidePane != null) {
+        _swipeTutorialQueued = false;
+        return;
+      }
+
+      final cardsBox = Hive.box<CardData>(HiveBoxes.cards);
+      if (_cardsForDisplay(cardsBox).isEmpty) {
+        _swipeTutorialQueued = false;
+        return;
+      }
+
+      final completed = await _showSwipeActionsTutorial();
+      if (completed == true) {
+        await settingsBox.put(_swipeActionsTutorialSeenKey, true);
+      }
+      _swipeTutorialQueued = false;
+    });
+  }
+
+  Future<bool?> _showSwipeActionsTutorial() {
+    return showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Swipe actions tutorial',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, _, __) {
+        return SwipeActionsTutorialOverlay(
+          isDark: widget.isDark,
+          onDone: () => Navigator.of(context).pop(true),
+        );
+      },
+      transitionBuilder: (context, animation, _, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  bool _isUnlockSettleComplete(Animation<double>? animation) {
+    return animation == null || animation.value >= 0.999;
+  }
+
+  void _handleUnlockSettleStatus(AnimationStatus status) {
+    final settled = status == AnimationStatus.completed ||
+        _isUnlockSettleComplete(widget.unlockSettleAnimation);
+    if (_homeEntrySettled == settled || !mounted) return;
+
+    setState(() => _homeEntrySettled = settled);
+  }
+
+  void _attachUnlockSettleAnimation() {
+    _homeEntrySettled = _isUnlockSettleComplete(widget.unlockSettleAnimation);
+    widget.unlockSettleAnimation?.addStatusListener(_handleUnlockSettleStatus);
+  }
+
+  void _detachUnlockSettleAnimation(Animation<double>? animation) {
+    animation?.removeStatusListener(_handleUnlockSettleStatus);
+  }
+
   // ================= LIFECYCLE =================
 
   @override
   void initState() {
     super.initState();
     _cards.addAll(CardRepository.getAll());
+    _attachUnlockSettleAnimation();
 
     _scrollController.addListener(() {
       final shouldCollapse = _scrollController.offset > 40;
@@ -294,7 +392,19 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.unlockSettleAnimation == widget.unlockSettleAnimation) {
+      return;
+    }
+
+    _detachUnlockSettleAnimation(oldWidget.unlockSettleAnimation);
+    _attachUnlockSettleAnimation();
+  }
+
+  @override
   void dispose() {
+    _detachUnlockSettleAnimation(widget.unlockSettleAnimation);
     _scrollController.dispose();
     super.dispose();
   }
@@ -842,6 +952,10 @@ class HomeScreenState extends State<HomeScreen> {
         final visibleCards = _filteredCards(allCards);
         final bool isEmptyState = allCards.isEmpty;
         final bool showSidePane = _sidePane != null && _usesSidePane(context);
+        _scheduleSwipeActionsTutorial(
+          hasCards: allCards.isNotEmpty,
+          showSidePane: showSidePane,
+        );
         final screenWidth = MediaQuery.sizeOf(context).width;
         final fabRightInset = showSidePane
             ? AdaptiveLayout.formPaneMaxWidth + 16

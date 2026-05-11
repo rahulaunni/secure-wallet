@@ -461,10 +461,10 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFDA0081),
     Color(0xFF220222),
   ],
-  'colombia__scotiabank_colpatria': [
+  'colombia__davibank': [
     Color(0xFFED0722),
-    Color(0xFF8230DF),
-    Color(0xFF3A0E6C),
+    Color(0xFFC4182B),
+    Color(0xFF4A0711),
   ],
   'czech_republic__air_bank': [
     Color(0xFF99CC33),
@@ -516,11 +516,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF333333),
     Color(0xFF2B1A1A),
   ],
-  'denmark__arbejdernes_landsbank': [
-    Color(0xFF1A325E),
-    Color(0xFFAF1E2D),
-    Color(0xFF10203E),
-  ],
   'denmark__danske_bank': [
     Color(0xFF003778),
     Color(0xFF222299),
@@ -560,11 +555,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFC6240C),
     Color(0xFF8B0027),
     Color(0xFF360311),
-  ],
-  'denmark__vestjysk_bank': [
-    Color(0xFF00B67B),
-    Color(0xFFF08350),
-    Color(0xFF044E36),
   ],
   'egypt__aaib': [
     Color(0xFFC8A900),
