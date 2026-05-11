@@ -1896,20 +1896,6 @@ class BankAssets {
       logoUrl: 'https://logo.clearbit.com/rabobank.nl',
     ),
     BankInfo(
-      id: 'netherlands__regiobank',
-      name: 'RegioBank',
-      countryId: 'netherlands',
-      website: 'https://www.regiobank.nl',
-      logoUrl: 'https://logo.clearbit.com/regiobank.nl',
-    ),
-    BankInfo(
-      id: 'netherlands__sns_bank',
-      name: 'SNS Bank',
-      countryId: 'netherlands',
-      website: 'https://www.snsbank.nl',
-      logoUrl: 'https://logo.clearbit.com/snsbank.nl',
-    ),
-    BankInfo(
       id: 'netherlands__triodos_bank',
       name: 'Triodos Bank',
       countryId: 'netherlands',
@@ -1922,13 +1908,6 @@ class BankAssets {
       countryId: 'netherlands',
       website: 'https://www.bunq.com',
       logoUrl: 'https://logo.clearbit.com/bunq.com',
-    ),
-    BankInfo(
-      id: 'netherlands__de_volksbank',
-      name: 'de Volksbank',
-      countryId: 'netherlands',
-      website: 'https://www.devolksbank.nl',
-      logoUrl: 'https://logo.clearbit.com/devolksbank.nl',
     ),
     BankInfo(
       id: 'new_zealand__anz_nz',
@@ -4064,11 +4043,8 @@ class BankAssets {
         'netherlands__ing_group',
         'netherlands__knab',
         'netherlands__rabobank',
-        'netherlands__regiobank',
-        'netherlands__sns_bank',
         'netherlands__triodos_bank',
         'netherlands__bunq',
-        'netherlands__de_volksbank',
       ],
     ),
     BankCountry(

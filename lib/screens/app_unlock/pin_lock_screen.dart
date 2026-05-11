@@ -39,8 +39,6 @@ class PinLockScreen extends StatefulWidget {
 
 class _PinLockScreenState extends State<PinLockScreen>
     with TickerProviderStateMixin {
-  static const String _securityIntroSeenKey = 'security_intro_v1_seen';
-
   final LocalAuthentication _auth = LocalAuthentication();
   final Box _settingsBox = Hive.box(HiveBoxes.settings);
   static const int _pinLength = 4;
@@ -60,6 +58,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   bool _isUnlocking = false;
   bool _showResetButton = false;
   bool _securityIntroQueued = false;
+  bool _securityIntroCompletedThisSession = false;
   String _errorMessage = '';
   String _statusMessage = 'Enter your App PIN';
 
@@ -138,9 +137,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   void _scheduleSecurityIntro() {
-    if (_securityIntroQueued) return;
-    final seen = _settingsBox.get(_securityIntroSeenKey, defaultValue: false);
-    if (seen == true) return;
+    if (_securityIntroQueued || _securityIntroCompletedThisSession) return;
 
     _securityIntroQueued = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -178,7 +175,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       );
 
       if (completed == true) {
-        await _settingsBox.put(_securityIntroSeenKey, true);
+        _securityIntroCompletedThisSession = true;
       }
       _securityIntroQueued = false;
     });

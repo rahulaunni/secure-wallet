@@ -1,5 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/swallet_theme.dart';
 
@@ -19,123 +21,168 @@ class SecurityFeaturesIntroOverlay extends StatefulWidget {
 }
 
 class _SecurityFeaturesIntroOverlayState
-    extends State<SecurityFeaturesIntroOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _shieldScale;
-  late final Animation<double> _ringOpacity;
+    extends State<SecurityFeaturesIntroOverlay> {
+  int _index = 0;
+  double _slideDragDx = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat(reverse: true);
+  static const List<_SecurityIntroSlide> _slides = [
+    _SecurityIntroSlide(
+      assetPath: 'assets/onboarding/no internet.svg',
+      title: 'Completely offline',
+      body:
+          'Your saved card details stay on this device, without needing a network connection.',
+    ),
+    _SecurityIntroSlide(
+      assetPath: 'assets/onboarding/secure card.svg',
+      title: 'Hive protected vault',
+      body:
+          'Cards are stored locally in an encrypted Hive box so your data stays protected.',
+    ),
+    _SecurityIntroSlide(
+      assetPath: 'assets/onboarding/fingerprint.svg',
+      title: 'Private unlock',
+      body:
+          'Your app PIN and device authentication guard access before cards open.',
+    ),
+  ];
 
-    _shieldScale = Tween<double>(begin: 0.96, end: 1.04).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
-    );
-    _ringOpacity = Tween<double>(begin: 0.18, end: 0.38).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
-    );
+  void _continue() {
+    if (_index == _slides.length - 1) {
+      widget.onDone();
+      return;
+    }
+    setState(() => _index++);
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _previous() {
+    if (_index == 0) return;
+    setState(() => _index--);
+  }
+
+  void _handleHorizontalDragStart(DragStartDetails details) {
+    _slideDragDx = 0;
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    _slideDragDx += details.delta.dx;
+  }
+
+  void _handleHorizontalDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final distance = _slideDragDx;
+    _slideDragDx = 0;
+
+    if (velocity < -120 || distance < -56) {
+      _continue();
+    } else if (velocity > 120 || distance > 56) {
+      _previous();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final palette = SwalletPalette(widget.isDark);
-    final media = MediaQuery.of(context);
-    final maxWidth = media.size.width >= 600 ? 430.0 : media.size.width - 32;
+    final background = palette.background;
+    final panelColor = palette.background;
+    final buttonColor =
+        widget.isDark ? const Color(0xFF34323D) : const Color(0xFFE8E8EE);
+    final buttonText =
+        widget.isDark ? const Color(0xFFFFFFFF) : const Color(0xFF16161C);
 
     return Material(
-      color: Colors.black.withValues(alpha: widget.isDark ? 0.76 : 0.58),
+      color: background,
       child: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
-              decoration: BoxDecoration(
-                color: palette.surface,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: palette.outline.withValues(alpha: 0.72),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final frameWidth =
+                  constraints.maxWidth >= 600 ? 420.0 : constraints.maxWidth;
+
+              return SizedBox(
+                width: frameWidth,
+                height: constraints.maxHeight,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: panelColor,
+                    borderRadius: constraints.maxWidth >= 600
+                        ? BorderRadius.circular(36)
+                        : BorderRadius.zero,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
+                    child: Column(
+                      children: [
+                        _SlideIndicator(
+                          count: _slides.length,
+                          activeIndex: _index,
+                          palette: palette,
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            key: const ValueKey('security_intro_slide_area'),
+                            behavior: HitTestBehavior.translucent,
+                            onHorizontalDragStart: _handleHorizontalDragStart,
+                            onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+                            onHorizontalDragEnd: _handleHorizontalDragEnd,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 260),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                final offset = Tween<Offset>(
+                                  begin: const Offset(0.08, 0),
+                                  end: Offset.zero,
+                                ).animate(animation);
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: offset,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: _SecurityIntroSlideView(
+                                key: ValueKey(_index),
+                                slide: _slides[_index],
+                                isDark: widget.isDark,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 158,
+                          height: 54,
+                          child: FilledButton(
+                            key:
+                                const ValueKey('security_intro_primary_button'),
+                            onPressed: _index == _slides.length - 1
+                                ? widget.onDone
+                                : _continue,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              foregroundColor: buttonText,
+                              elevation: 0,
+                              shape: const StadiumBorder(),
+                              textStyle: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1,
+                              ),
+                            ),
+                            child: Text(
+                              _index == _slides.length - 1
+                                  ? 'Continue'
+                                  : 'Next',
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.28),
-                    blurRadius: 34,
-                    offset: const Offset(0, 18),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SecurityShieldAnimation(
-                    palette: palette,
-                    shieldScale: _shieldScale,
-                    ringOpacity: _ringOpacity,
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Built for private card storage',
-                    textAlign: TextAlign.center,
-                    style: SwalletText.title.copyWith(
-                      color: palette.text,
-                      fontSize: 21,
-                      height: 1.12,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Your wallet is protected before you add your first card.',
-                    textAlign: TextAlign.center,
-                    style: SwalletText.body.copyWith(
-                      color: palette.textMuted,
-                      height: 1.32,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _FeatureRow(
-                    icon: CupertinoIcons.wifi_slash,
-                    title: 'Offline by design',
-                    body: 'Card details stay on this device.',
-                    palette: palette,
-                  ),
-                  const SizedBox(height: 10),
-                  _FeatureRow(
-                    icon: CupertinoIcons.lock_shield_fill,
-                    title: 'Hive encrypted vault',
-                    body: 'Saved cards are written to encrypted local storage.',
-                    palette: palette,
-                  ),
-                  const SizedBox(height: 10),
-                  _FeatureRow(
-                    icon: CupertinoIcons.person_crop_circle_badge_checkmark,
-                    title: 'Private unlock',
-                    body: 'Your PIN and device auth guard access.',
-                    palette: palette,
-                  ),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: widget.onDone,
-                      child: const Text('Continue'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -143,129 +190,247 @@ class _SecurityFeaturesIntroOverlayState
   }
 }
 
-class _SecurityShieldAnimation extends StatelessWidget {
-  final SwalletPalette palette;
-  final Animation<double> shieldScale;
-  final Animation<double> ringOpacity;
+class _SecurityIntroSlide {
+  final String assetPath;
+  final String title;
+  final String body;
 
-  const _SecurityShieldAnimation({
+  const _SecurityIntroSlide({
+    required this.assetPath,
+    required this.title,
+    required this.body,
+  });
+}
+
+class _SecurityIntroSlideView extends StatelessWidget {
+  final _SecurityIntroSlide slide;
+  final bool isDark;
+
+  const _SecurityIntroSlideView({
+    super.key,
+    required this.slide,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SwalletPalette(isDark);
+
+    return Column(
+      children: [
+        const Spacer(flex: 1),
+        SizedBox(
+          height: 310,
+          child: Center(
+            child: _StyledSvgAsset(
+              assetPath: slide.assetPath,
+              height: 286,
+            ),
+          ),
+        ),
+        const Spacer(flex: 1),
+        Text(
+          slide.title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            height: 1,
+            fontWeight: FontWeight.w600,
+            color: palette.text,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280),
+          child: Text(
+            slide.body,
+            textAlign: TextAlign.center,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              height: 1.35,
+              fontWeight: FontWeight.w400,
+              color: palette.textMuted,
+            ),
+          ),
+        ),
+        const Spacer(flex: 2),
+      ],
+    );
+  }
+}
+
+class _StyledSvgAsset extends StatelessWidget {
+  final String assetPath;
+  final double height;
+
+  const _StyledSvgAsset({
+    required this.assetPath,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: rootBundle.loadString(assetPath),
+      builder: (context, snapshot) {
+        final rawSvg = snapshot.data;
+        if (rawSvg == null) {
+          return SizedBox(height: height);
+        }
+
+        return SvgPicture.string(
+          _SvgStyleInliner.inline(rawSvg),
+          height: height,
+          fit: BoxFit.contain,
+        );
+      },
+    );
+  }
+}
+
+class _SvgStyleInliner {
+  const _SvgStyleInliner._();
+
+  static final RegExp _styleBlockPattern = RegExp(
+    r'<style[^>]*>([\s\S]*?)<\/style>',
+    multiLine: true,
+  );
+  static final RegExp _styleRulePattern = RegExp(
+    r'([^{}]+)\{([^{}]*)\}',
+    multiLine: true,
+  );
+  static final RegExp _styleCommentPattern = RegExp(r'/\*[\s\S]*?\*/');
+  static final RegExp _classSelectorPattern = RegExp(r'\.([A-Za-z_][\w-]*)');
+  static final RegExp _classPattern = RegExp(r'class="([^"]+)"');
+
+  static String inline(String svg) {
+    final styles = <String, Map<String, String>>{};
+
+    for (final styleBlock in _styleBlockPattern.allMatches(svg)) {
+      final css = (styleBlock.group(1) ?? '')
+          .replaceAll(_styleCommentPattern, '')
+          .replaceAll('<![CDATA[', '')
+          .replaceAll(']]>', '');
+
+      for (final rule in _styleRulePattern.allMatches(css)) {
+        final selectorList = rule.group(1);
+        final declarations = rule.group(2);
+        if (selectorList == null || declarations == null) continue;
+
+        final parsedDeclarations = _parseDeclarations(declarations);
+        if (parsedDeclarations.isEmpty) continue;
+
+        for (final selector in selectorList.split(',')) {
+          final classMatch = _classSelectorPattern.firstMatch(selector.trim());
+          final className = classMatch?.group(1);
+          if (className == null) continue;
+
+          styles[className] = {
+            ...?styles[className],
+            ...parsedDeclarations,
+          };
+        }
+      }
+    }
+
+    if (styles.isEmpty) return svg;
+
+    return svg.replaceAllMapped(_classPattern, (match) {
+      final classes = match.group(1)!.split(RegExp(r'\s+'));
+      final declarations = <String, String>{};
+
+      for (final className in classes) {
+        declarations.addAll(styles[className] ?? const {});
+      }
+
+      if (declarations.isEmpty) return match.group(0)!;
+
+      return declarations.entries
+          .where((entry) => entry.value.isNotEmpty)
+          .map((entry) => '${entry.key}="${entry.value}"')
+          .join(' ');
+    }).replaceAll(_styleBlockPattern, '');
+  }
+
+  static Map<String, String> _parseDeclarations(String declarations) {
+    final parsed = <String, String>{};
+
+    for (final declaration in declarations.split(';')) {
+      final parts = declaration.split(':');
+      if (parts.length < 2) continue;
+
+      final property = parts.first.trim();
+      final value = parts.sublist(1).join(':').trim();
+      final attribute = _cssPropertyToSvgAttribute(property);
+      if (attribute == null) continue;
+
+      parsed[attribute] = value.replaceAll('px', '');
+    }
+
+    return parsed;
+  }
+
+  static String? _cssPropertyToSvgAttribute(String property) {
+    switch (property) {
+      case 'fill':
+      case 'stroke':
+      case 'opacity':
+      case 'clip-path':
+      case 'clip-rule':
+      case 'display':
+      case 'fill-opacity':
+      case 'fill-rule':
+      case 'stop-color':
+      case 'stop-opacity':
+      case 'stroke-dasharray':
+      case 'stroke-dashoffset':
+      case 'stroke-linecap':
+      case 'stroke-linejoin':
+      case 'stroke-miterlimit':
+      case 'stroke-width':
+      case 'stroke-opacity':
+        return property;
+      default:
+        return null;
+    }
+  }
+}
+
+class _SlideIndicator extends StatelessWidget {
+  final int count;
+  final int activeIndex;
+  final SwalletPalette palette;
+
+  const _SlideIndicator({
+    required this.count,
+    required this.activeIndex,
     required this.palette,
-    required this.shieldScale,
-    required this.ringOpacity,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 112,
-      height: 112,
-      child: AnimatedBuilder(
-        animation: shieldScale,
-        builder: (context, _) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 104,
-                height: 104,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: palette.primary.withValues(alpha: ringOpacity.value),
-                ),
-              ),
-              Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: palette.primaryContainer,
-                  border: Border.all(
-                    color: palette.primary.withValues(alpha: 0.28),
-                  ),
-                ),
-              ),
-              Transform.scale(
-                scale: shieldScale.value,
-                child: Icon(
-                  CupertinoIcons.lock_shield_fill,
-                  size: 44,
-                  color: palette.onPrimaryContainer,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String body;
-  final SwalletPalette palette;
-
-  const _FeatureRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.palette,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: palette.surfaceLow,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: palette.outline.withValues(alpha: 0.58),
-        ),
-      ),
+      height: 26,
       child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (index) {
+          final active = index == activeIndex;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            width: active ? 22 : 4,
+            height: active ? 5 : 4,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
             decoration: BoxDecoration(
-              color: palette.primaryContainer,
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(99),
+              color: active
+                  ? palette.text
+                  : palette.textMuted.withValues(alpha: 0.46),
             ),
-            child: Icon(
-              icon,
-              size: 21,
-              color: palette.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SwalletText.bodyMedium.copyWith(
-                    color: palette.text,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: SwalletText.caption.copyWith(
-                    color: palette.textMuted,
-                    height: 1.25,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          );
+        }),
       ),
     );
   }

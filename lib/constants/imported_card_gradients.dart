@@ -1321,11 +1321,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFF00AA),
     Color(0xFF074380),
   ],
-  'netherlands__de_volksbank': [
-    Color(0xFFE84632),
-    Color(0xFFFADA87),
-    Color(0xFF70150A),
-  ],
   'netherlands__ing_group': [
     Color(0xFFFF6200),
     Color(0xFF07174A),
@@ -1340,16 +1335,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFF8D00),
     Color(0xFF21548B),
     Color(0xFF0D233C),
-  ],
-  'netherlands__regiobank': [
-    Color(0xFF1F7D65),
-    Color(0xFF761234),
-    Color(0xFF4C0A20),
-  ],
-  'netherlands__sns_bank': [
-    Color(0xFF1F7D65),
-    Color(0xFF761234),
-    Color(0xFF570B25),
   ],
   'netherlands__triodos_bank': [
     Color(0xFF3C132E),

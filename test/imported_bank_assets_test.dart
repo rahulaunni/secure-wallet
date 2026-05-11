@@ -77,6 +77,23 @@ void main() {
     expect(importedBankGradients, isNot(contains('denmark__vestjysk_bank')));
   });
 
+  test('Netherlands list uses ASN Bank after de Volksbank rename', () {
+    final netherlands = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'netherlands',
+    );
+
+    expect(netherlands.bankIds, contains('netherlands__asn_bank'));
+    expect(netherlands.bankIds, isNot(contains('netherlands__de_volksbank')));
+    expect(netherlands.bankIds, isNot(contains('netherlands__regiobank')));
+    expect(netherlands.bankIds, isNot(contains('netherlands__sns_bank')));
+    expect(netherlands.bankIds, isNot(contains('netherlands__aegon')));
+    expect(importedBankGradients, contains('netherlands__asn_bank'));
+    expect(importedBankGradients, isNot(contains('netherlands__de_volksbank')));
+    expect(importedBankGradients, isNot(contains('netherlands__regiobank')));
+    expect(importedBankGradients, isNot(contains('netherlands__sns_bank')));
+    expect(importedBankGradients, isNot(contains('netherlands__aegon')));
+  });
+
   test('imported bank gradients are unique per bank', () {
     final gradientKeys = <String>{};
 
