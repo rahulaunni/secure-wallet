@@ -27,10 +27,12 @@ import 'package:swallet/widgets/top_nav/top_nav_constants.dart';
 
 class PinLockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
+  final VoidCallback? onUnlockStarted;
 
   const PinLockScreen({
     super.key,
     required this.onUnlocked,
+    this.onUnlockStarted,
   });
 
   @override
@@ -291,6 +293,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       _errorMessage = '';
     });
 
+    widget.onUnlockStarted?.call();
     await _unlockController.forward(from: 0);
     if (!mounted) return;
     widget.onUnlocked();
@@ -377,16 +380,38 @@ class _PinLockScreenState extends State<PinLockScreen>
           _isDark ? Brightness.light : Brightness.dark,
     );
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: overlayStyle,
-      child: Scaffold(
-        backgroundColor: useClassicPinLayout ? tokens.surface : lockBackground,
-        body: useClassicPinLayout
-            ? _buildClassicPinContent(tokens: tokens, isStep2: isStep2)
-            : _buildPinContent(
+    final content = useClassicPinLayout
+        ? _buildClassicPinContent(tokens: tokens, isStep2: isStep2)
+        : Stack(
+            children: [
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _unlockController,
+                  builder: (context, _) {
+                    final fade =
+                        1 - _interval(_unlockController.value, 0.08, 0.5);
+                    return IgnorePointer(
+                      child: Opacity(
+                        opacity: fade,
+                        child: ColoredBox(color: lockBackground),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              _buildPinContent(
                 tokens: tokens,
                 isStep2: isStep2,
               ),
+            ],
+          );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
+        backgroundColor:
+            useClassicPinLayout ? tokens.surface : Colors.transparent,
+        body: content,
       ),
     );
   }
@@ -466,7 +491,7 @@ class _PinLockScreenState extends State<PinLockScreen>
         final canvasHeight = maxHeight;
         final walletLeft = (canvasWidth - walletWidth) / 2;
         final homeFirstCardTop =
-            mediaPadding.top + 12 + 40 + 12 + topNavHeight + 12;
+            mediaPadding.top + 14 + 48 + 14 + topNavHeight + 12;
 
         return SizedBox(
           width: canvasWidth,
@@ -892,6 +917,14 @@ class _PinLockScreenState extends State<PinLockScreen>
                 customCardPatternAssetPath: card.customCardVisualMode == 0
                     ? card.customCardPatternAssetPath
                     : null,
+                customCardImagePath: card.customCardVisualMode == 1
+                    ? card.customCardImagePath
+                    : null,
+                customCardImageAlignment: Alignment(
+                  card.customCardImageAlignmentX ?? 0,
+                  card.customCardImageAlignmentY ?? 0,
+                ),
+                showActions: false,
                 onEyeTap: () {},
                 onShareTap: () {},
               ),

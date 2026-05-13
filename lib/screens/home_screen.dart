@@ -561,6 +561,7 @@ class HomeScreenState extends State<HomeScreen> {
               card.customCardImageAlignmentX ?? 0,
               card.customCardImageAlignmentY ?? 0,
             ),
+            showActions: true,
             onEyeTap: () => _toggleReveal(card),
             onShareTap: () {
               if (_revealedCardId != cardId) {
@@ -801,6 +802,21 @@ class HomeScreenState extends State<HomeScreen> {
     required List<CardData> visibleCards,
   }) {
     final palette = SwalletPalette(widget.isDark);
+    final cardArea = isEmptyState
+        ? EmptyWalletView(isDark: widget.isDark)
+        : visibleCards.isEmpty
+            ? Center(
+                child: Text(
+                  'No cards found',
+                  style: SwalletText.bodyMedium.copyWith(
+                    color: palette.textMuted,
+                  ),
+                ),
+              )
+            : _UnlockEntryCardStage(
+                animation: widget.unlockSettleAnimation,
+                child: _buildCardsLayout(visibleCards),
+              );
 
     return SafeArea(
       child: Column(
@@ -898,18 +914,7 @@ class HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
           ],
           Expanded(
-            child: isEmptyState
-                ? EmptyWalletView(isDark: widget.isDark)
-                : visibleCards.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No cards found',
-                          style: SwalletText.bodyMedium.copyWith(
-                            color: palette.textMuted,
-                          ),
-                        ),
-                      )
-                    : _buildCardsLayout(visibleCards),
+            child: cardArea,
           ),
         ],
       ),
@@ -982,6 +987,42 @@ class HomeScreenState extends State<HomeScreen> {
               visibleCards: visibleCards,
               showSidePane: showSidePane,
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _UnlockEntryCardStage extends StatelessWidget {
+  final Animation<double>? animation;
+  final Widget child;
+
+  const _UnlockEntryCardStage({
+    required this.animation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = this.animation;
+    if (animation == null || animation.value >= 0.999) {
+      return child;
+    }
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final raw =
+            ((animation.value - 0.94) / 0.06).clamp(0.0, 1.0).toDouble();
+        final opacity = Curves.easeOutCubic.transform(raw);
+
+        return IgnorePointer(
+          ignoring: opacity < 1,
+          child: Opacity(
+            opacity: opacity,
+            child: child,
           ),
         );
       },

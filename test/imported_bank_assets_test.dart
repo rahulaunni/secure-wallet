@@ -94,6 +94,103 @@ void main() {
     expect(importedBankGradients, isNot(contains('netherlands__aegon')));
   });
 
+  test('Greece list uses CrediaBank after Attica and Pancreta merger', () {
+    final greece = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'greece',
+    );
+
+    expect(greece.bankIds, contains('greece__crediabank'));
+    expect(greece.bankIds, isNot(contains('greece__attica_bank')));
+    expect(greece.bankIds, isNot(contains('greece__pancreta_bank')));
+
+    final crediaBank = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'greece__crediabank',
+    );
+    expect(crediaBank.name, 'CrediaBank');
+    expect(crediaBank.website, 'https://www.crediabank.com');
+
+    final aegeanBalticBank = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'greece__aegean_baltic_bank',
+    );
+    expect(aegeanBalticBank.website, 'https://aegeanbalticbank.com');
+
+    final optimaBank = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'greece__optima_bank',
+    );
+    expect(optimaBank.website, 'https://www.optimabank.gr/en');
+
+    expect(importedBankGradients, contains('greece__crediabank'));
+    expect(importedBankGradients, isNot(contains('greece__attica_bank')));
+    expect(importedBankGradients, isNot(contains('greece__pancreta_bank')));
+  });
+
+  test('Indonesia list follows top ten banks by total assets', () {
+    final indonesia = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'indonesia',
+    );
+
+    expect(indonesia.bankIds, [
+      'indonesia__bank_mandiri',
+      'indonesia__bri',
+      'indonesia__bca',
+      'indonesia__bni',
+      'indonesia__bank_tabungan_negara',
+      'indonesia__bank_syariah_indonesia',
+      'indonesia__cimb_niaga',
+      'indonesia__ocbc_nisp',
+      'indonesia__permatabank',
+      'indonesia__bank_danamon',
+    ]);
+    expect(indonesia.bankIds, isNot(contains('indonesia__bank_panin')));
+
+    final expectedNames = {
+      'indonesia__bri': 'Bank Rakyat Indonesia (BRI)',
+      'indonesia__bca': 'Bank Central Asia (BCA)',
+      'indonesia__bni': 'Bank Negara Indonesia (BNI)',
+      'indonesia__bank_tabungan_negara': 'Bank Tabungan Negara (BTN)',
+      'indonesia__bank_syariah_indonesia': 'Bank Syariah Indonesia (BSI)',
+      'indonesia__cimb_niaga': 'Bank CIMB Niaga',
+      'indonesia__ocbc_nisp': 'Bank OCBC Indonesia',
+      'indonesia__permatabank': 'Permata Bank',
+    };
+
+    for (final entry in expectedNames.entries) {
+      final bank = BankAssets.importedBanks.firstWhere(
+        (bank) => bank.id == entry.key,
+      );
+      expect(bank.name, entry.value);
+    }
+
+    expect(importedBankGradients, contains('indonesia__bank_tabungan_negara'));
+    expect(importedBankGradients, isNot(contains('indonesia__bank_panin')));
+  });
+
+  test('Israel list keeps Pepper alongside licensed banks', () {
+    final israel = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'israel',
+    );
+
+    expect(israel.bankIds, contains('israel__bank_massad'));
+    expect(israel.bankIds, contains('israel__esh_bank'));
+    expect(israel.bankIds, contains('israel__mercantile'));
+    expect(israel.bankIds, contains('israel__bank_yahav'));
+    expect(israel.bankIds, contains('israel__pepper'));
+
+    final massad = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'israel__bank_massad',
+    );
+    expect(massad.website, 'https://www.bankmassad.co.il');
+
+    final esh = BankAssets.importedBanks.firstWhere(
+      (bank) => bank.id == 'israel__esh_bank',
+    );
+    expect(esh.website, 'https://esh.com/en/home');
+
+    expect(importedBankGradients, contains('israel__bank_massad'));
+    expect(importedBankGradients, contains('israel__esh_bank'));
+    expect(importedBankGradients, contains('israel__pepper'));
+  });
+
   test('imported bank gradients are unique per bank', () {
     final gradientKeys = <String>{};
 

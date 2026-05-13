@@ -766,10 +766,10 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF00527A),
     Color(0xFF052064),
   ],
-  'greece__attica_bank': [
-    Color(0xFF004677),
-    Color(0xFFDA532C),
-    Color(0xFF021B2D),
+  'greece__crediabank': [
+    Color(0xFF003C64),
+    Color(0xFFE85B2A),
+    Color(0xFF071B2F),
   ],
   'greece__chania_bank': [
     Color(0xFF003B05),
@@ -790,11 +790,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF0D46AF),
     Color(0xFF004B7A),
     Color(0xFF032338),
-  ],
-  'greece__pancreta_bank': [
-    Color(0xFF0D3DAF),
-    Color(0xFF00507A),
-    Color(0xFF04194C),
   ],
   'greece__piraeus_bank': [
     Color(0xFF00B2FF),
@@ -866,15 +861,15 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFB00040),
     Color(0xFF5A0524),
   ],
-  'indonesia__bank_panin': [
-    Color(0xFFE70008),
-    Color(0xFFB00026),
-    Color(0xFF5F0518),
-  ],
   'indonesia__bank_syariah_indonesia': [
     Color(0xFFE70100),
     Color(0xFFB0002C),
     Color(0xFF5A051A),
+  ],
+  'indonesia__bank_tabungan_negara': [
+    Color(0xFF0050A4),
+    Color(0xFFFF8A00),
+    Color(0xFF00376F),
   ],
   'indonesia__bca': [
     Color(0xFF1473E6),
@@ -966,6 +961,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFFFA90),
     Color(0xFF062A6D),
   ],
+  'israel__bank_massad': [
+    Color(0xFF006A45),
+    Color(0xFF5DBB63),
+    Color(0xFF083C2A),
+  ],
   'israel__bank_of_jerusalem': [
     Color(0xFF12192E),
     Color(0xFF2C4284),
@@ -980,6 +980,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF36B455),
     Color(0xFF68C950),
     Color(0xFF1A5C2A),
+  ],
+  'israel__esh_bank': [
+    Color(0xFF111827),
+    Color(0xFF7C3AED),
+    Color(0xFF2563EB),
   ],
   'israel__fibi': [
     Color(0xFF264769),

@@ -1037,10 +1037,6 @@ class CardVisuals {
       name: 'Nested Rings',
     ),
     _CardVisualAsset(
-      path: 'assets/card visuals/prism-tiles.svg',
-      name: 'Prism Tiles',
-    ),
-    _CardVisualAsset(
       path: 'assets/card visuals/inset-waves.svg',
       name: 'Inset Waves',
     ),
@@ -1075,7 +1071,7 @@ class CardVisuals {
     'assets/card visuals/style1-09.svg': 'assets/card visuals/orbit-rings.svg',
     'assets/card visuals/style1-09-1.svg':
         'assets/card visuals/nested-rings.svg',
-    'assets/card visuals/style1-10.svg': 'assets/card visuals/prism-tiles.svg',
+    'assets/card visuals/style1-10.svg': 'assets/card visuals/inset-waves.svg',
     'assets/card visuals/style1-11.svg': 'assets/card visuals/inset-waves.svg',
     'assets/card visuals/style2.svg': 'assets/card visuals/glass-panels.svg',
     'assets/card visuals/style4.svg': 'assets/card visuals/prism-cross.svg',
@@ -1090,7 +1086,7 @@ class CardVisuals {
     'assets/card visuals/style13.svg': 'assets/card visuals/radial-sweep.svg',
     'assets/card visuals/style14.svg': 'assets/card visuals/orbit-rings.svg',
     'assets/card visuals/style15.svg': 'assets/card visuals/nested-rings.svg',
-    'assets/card visuals/style16.svg': 'assets/card visuals/prism-tiles.svg',
+    'assets/card visuals/style16.svg': 'assets/card visuals/inset-waves.svg',
   };
 
   static int _stableStyleHash(String value) {

@@ -75,7 +75,7 @@ class _CardVaultAppState extends State<CardVaultApp>
 
     _unlockController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 680),
+      duration: const Duration(milliseconds: 1180),
     );
   }
 
@@ -123,8 +123,18 @@ class _CardVaultAppState extends State<CardVaultApp>
     return _homeKey.currentState?.isPrimarySurfaceVisible ?? true;
   }
 
-  void _handleAppUnlocked() {
+  void _handleAppUnlockStarted() {
+    if (_unlockController.isAnimating || _unlockController.isCompleted) {
+      return;
+    }
+
     _unlockController.forward(from: 0);
+  }
+
+  void _handleAppUnlocked() {
+    if (!_unlockController.isCompleted) {
+      _unlockController.value = 1;
+    }
     setState(() => _isUnlocked = true);
   }
 
@@ -202,36 +212,14 @@ class _CardVaultAppState extends State<CardVaultApp>
       home: Scaffold(
         body: Stack(
           children: [
-            AnimatedBuilder(
-              animation: _unlockController,
-              builder: (_, child) {
-                final progress = Curves.easeOutQuart.transform(
-                  _unlockController.value,
-                );
-                final scale = lerpDouble(0.985, 1, progress)!;
-                final yOffset = lerpDouble(10, 0, progress)!;
-                final opacity = lerpDouble(0.96, 1, progress)!;
-
-                return Opacity(
-                  opacity: opacity,
-                  child: Transform.translate(
-                    offset: Offset(0, yOffset),
-                    child: Transform.scale(
-                      scale: scale,
-                      child: child,
-                    ),
-                  ),
-                );
+            HomeScreen(
+              key: _homeKey,
+              isDark: _isDark,
+              unlockSettleAnimation: _unlockController,
+              onThemeChanged: (value) {
+                setState(() => _isDark = value);
+                Hive.box(HiveBoxes.settings).put(_themeKey, value);
               },
-              child: HomeScreen(
-                key: _homeKey,
-                isDark: _isDark,
-                unlockSettleAnimation: _unlockController,
-                onThemeChanged: (value) {
-                  setState(() => _isDark = value);
-                  Hive.box(HiveBoxes.settings).put(_themeKey, value);
-                },
-              ),
             ),
             Positioned.fill(
               child: AnimatedSwitcher(
@@ -257,6 +245,7 @@ class _CardVaultAppState extends State<CardVaultApp>
             if (!_isUnlocked)
               Positioned.fill(
                 child: PinLockScreen(
+                  onUnlockStarted: _handleAppUnlockStarted,
                   onUnlocked: _handleAppUnlocked,
                 ),
               ),

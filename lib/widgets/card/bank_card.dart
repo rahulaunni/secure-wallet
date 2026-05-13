@@ -28,6 +28,7 @@ class BankCard extends StatelessWidget {
   final String? customCardImagePath;
   final Alignment customCardImageAlignment;
   final String? customCardPatternAssetPath;
+  final bool showActions;
 
   final VoidCallback onEyeTap;
   final VoidCallback? onShareTap;
@@ -49,6 +50,7 @@ class BankCard extends StatelessWidget {
     this.customCardImagePath,
     this.customCardImageAlignment = Alignment.center,
     this.customCardPatternAssetPath,
+    this.showActions = true,
     // Gradient is removed from constructor; it is now resolved internally.
     required this.onEyeTap,
     this.onShareTap,
@@ -157,32 +159,34 @@ class BankCard extends StatelessWidget {
                               customLogoPath: customBankLogoPath,
                               customLabel: customBankName,
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: bankDividerWidth,
-                              height: bankDividerHeight,
-                              color: Colors.white54,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              cardType,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            ),
                           ],
                         ),
                       ),
 
-                      // ================= NETWORK LOGO =================
+                      // ================= NETWORK LOGO + TYPE =================
                       Positioned(
                         top: 0,
                         right: 0,
-                        child: SvgPicture.asset(
-                          networkLogo,
-                          height: networkLogoHeight,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            SvgPicture.asset(
+                              networkLogo,
+                              height: networkLogoHeight,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              cardType,
+                              textAlign: TextAlign.right,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                height: 1,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -213,28 +217,29 @@ class BankCard extends StatelessWidget {
                         ),
                       ),
 
-                      // ================= CARD ACTIONS =================
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Row(
-                          children: [
-                            _CardActionButton(
-                              icon: scope.revealed
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              onTap: onEyeTap,
-                            ),
-                            if (scope.revealed) ...[
-                              const SizedBox(width: 8),
+                      if (showActions)
+                        // ================= CARD ACTIONS =================
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Row(
+                            children: [
                               _CardActionButton(
-                                icon: Icons.share,
-                                onTap: onShareTap,
+                                icon: scope.revealed
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                onTap: onEyeTap,
                               ),
+                              if (scope.revealed) ...[
+                                const SizedBox(width: 8),
+                                _CardActionButton(
+                                  icon: Icons.share,
+                                  onTap: onShareTap,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -75,6 +75,17 @@ void main() {
     }
   });
 
+  test('Prism Tiles visual is removed from selectable card patterns', () {
+    expect(
+      CardVisuals.customVisualAssetPaths,
+      isNot(contains('assets/card visuals/prism-tiles.svg')),
+    );
+    expect(
+      CardVisuals.resolveVisualAssetPath('assets/card visuals/style16.svg'),
+      isNot('assets/card visuals/prism-tiles.svg'),
+    );
+  });
+
   test('legacy card visual asset paths resolve to renamed assets', () {
     final assetPaths = CardVisuals.customVisualAssetPaths.toSet();
     const legacyPaths = [

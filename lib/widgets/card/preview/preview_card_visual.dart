@@ -64,35 +64,37 @@ class PreviewCardVisual extends StatelessWidget {
                           size: bankLogoHeight,
                           width: bankLogoMaxWidth,
                         ),
-                        const SizedBox(width: bankHeaderSpacing),
-                        Container(
-                          width: bankDividerWidth,
-                          height: bankDividerHeight,
-                          color: Colors.white54,
-                        ),
-                        const SizedBox(width: bankHeaderSpacing),
-                        Text(
-                          cardType,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // ================= NETWORK LOGO =================
+                // ================= NETWORK LOGO + TYPE =================
                 Positioned(
                   top: 0,
                   right: 0,
                   child: Opacity(
                     opacity: showNetwork ? 1 : 0,
-                    child: SvgPicture.asset(
-                      networkLogo,
-                      height: networkLogoHeight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        SvgPicture.asset(
+                          networkLogo,
+                          height: networkLogoHeight,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          cardType,
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

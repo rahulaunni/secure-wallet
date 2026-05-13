@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/card_number_format.dart';
+import 'package:swallet/utils/card_network_detector.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
+import 'package:swallet/models/card_network.dart';
 
 class CardNumberSlotField extends StatefulWidget {
   final ValueChanged<String> onChanged;
@@ -27,7 +30,7 @@ class CardNumberSlotField extends StatefulWidget {
 
 class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
   late final TextEditingController _controller;
-  bool _isAmex = false;
+  CardNetwork? _detectedNetwork;
 
   @override
   void initState() {
@@ -35,7 +38,7 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
     _controller = TextEditingController(
       text: CardNumberFormat.format(widget.initialValue),
     );
-    _isAmex = CardNumberFormat.isAmexNumber(widget.initialValue);
+    _detectedNetwork = CardNetworkDetector.detect(widget.initialValue);
   }
 
   @override
@@ -44,7 +47,7 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
     if (widget.initialValue != oldWidget.initialValue &&
         CardNumberFormat.digitsOnly(_controller.text) != widget.initialValue) {
       _controller.text = CardNumberFormat.format(widget.initialValue);
-      _isAmex = CardNumberFormat.isAmexNumber(widget.initialValue);
+      _detectedNetwork = CardNetworkDetector.detect(widget.initialValue);
     }
   }
 
@@ -57,6 +60,9 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(widget.isDark);
+    final network = _detectedNetwork;
+    final networkAssetPath = network?.assetPath;
+    final isAmex = network == CardNetwork.amex;
 
     return SizedBox(
       height: 64,
@@ -70,9 +76,9 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
         ],
         onChanged: (value) {
           final digits = CardNumberFormat.digitsOnly(value);
-          final isAmex = CardNumberFormat.isAmexNumber(digits);
-          if (isAmex != _isAmex) {
-            setState(() => _isAmex = isAmex);
+          final detectedNetwork = CardNetworkDetector.detect(digits);
+          if (detectedNetwork != _detectedNetwork) {
+            setState(() => _detectedNetwork = detectedNetwork);
           }
 
           widget.onChanged(digits);
@@ -91,7 +97,7 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
         decoration: InputDecoration(
           counterText: '',
           labelText: 'Card number',
-          hintText: _isAmex ? 'XXXX XXXXXX XXXXX' : 'XXXX XXXX XXXX XXXX',
+          hintText: isAmex ? 'XXXX XXXXXX XXXXX' : 'XXXX XXXX XXXX XXXX',
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           prefixIcon: const Icon(CupertinoIcons.creditcard, size: 22),
           prefixIconColor: WidgetStateColor.resolveWith((states) {
@@ -99,17 +105,16 @@ class _CardNumberSlotFieldState extends State<CardNumberSlotField> {
                 ? tokens.primary
                 : tokens.onSurfaceVariant;
           }),
-          suffixIcon: _isAmex
+          suffixIcon: networkAssetPath != null && networkAssetPath.isNotEmpty
               ? Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: Center(
                     widthFactor: 1,
-                    child: Text(
-                      'AMEX',
-                      style: SwalletText.section.copyWith(
-                        fontSize: 11,
-                        color: tokens.primary,
-                      ),
+                    child: SvgPicture.asset(
+                      networkAssetPath,
+                      width: 34,
+                      height: 18,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 )

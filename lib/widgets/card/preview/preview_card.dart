@@ -168,23 +168,6 @@ class PreviewCard extends StatelessWidget {
                                 customLogoPath: customBankLogoPath,
                                 customLabel: customBankName,
                               ),
-                              if (cardType.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: bankDividerWidth,
-                                  height: bankDividerHeight,
-                                  color: Colors.white54,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  cardType,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                         ),
@@ -192,9 +175,28 @@ class PreviewCard extends StatelessWidget {
                         Positioned(
                           top: 0,
                           right: 0,
-                          child: Image.asset(
-                            networkLogo,
-                            height: networkLogoHeight,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Image.asset(
+                                networkLogo,
+                                height: networkLogoHeight,
+                              ),
+                              if (cardType.isNotEmpty) ...[
+                                const SizedBox(height: 5),
+                                Text(
+                                  cardType,
+                                  textAlign: TextAlign.right,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       Positioned(
