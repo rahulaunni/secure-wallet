@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../constants/layout_constants.dart';
 
 class CardDetailsBlock extends StatelessWidget {
-  final String cardNumber;        // DISPLAY number
-  final String rawCardNumber;     // FULL number for clipboard
+  final String cardNumber; // DISPLAY number
+  final String rawCardNumber; // FULL number for clipboard
   final String validThru;
   final String holderName;
   final String cvv;
@@ -84,7 +84,7 @@ class CardDetailsBlock extends StatelessWidget {
             // 2. Scale down ONLY if text is wider than the card
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            
+
             child: GestureDetector(
               onLongPress: () async {
                 // 🔒 Only allow copy when revealed
@@ -105,12 +105,12 @@ class CardDetailsBlock extends StatelessWidget {
               },
               child: Text(
                 cardNumber,
-                
+
                 // 🔒 CRITICAL FIX: Force text to be one long line
                 // This allows FittedBox to calculate the true width and shrink it.
-                maxLines: 1, 
-                softWrap: false, 
-                overflow: TextOverflow.visible, 
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.visible,
 
                 style: GoogleFonts.poppins(
                   fontSize: cardNumberFontSize, // Ideally ~22.0
@@ -178,13 +178,32 @@ class CardDetailsBlock extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            if (showCvvToggle) ...[
-              const SizedBox(width: 8),
-              _CvvPill(
-                isOn: isCvvVisible,
-                onTap: onToggleCvv,
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 58,
+              height: 26,
+              child: AnimatedOpacity(
+                opacity: showCvvToggle ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: AnimatedScale(
+                  scale: showCvvToggle ? 1 : 0.9,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  child: IgnorePointer(
+                    ignoring: !showCvvToggle,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: _CvvPill(
+                        isOn: isCvvVisible,
+                        onTap: onToggleCvv,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ),
           ],
         ),
 
@@ -222,8 +241,7 @@ class _CvvPill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isOn ? Colors.green : Colors.grey.shade700,
           borderRadius: BorderRadius.circular(999),

@@ -561,7 +561,7 @@ class HomeScreenState extends State<HomeScreen> {
               card.customCardImageAlignmentX ?? 0,
               card.customCardImageAlignmentY ?? 0,
             ),
-            showActions: true,
+            showActions: _homeEntrySettled,
             onEyeTap: () => _toggleReveal(card),
             onShareTap: () {
               if (_revealedCardId != cardId) {
@@ -1069,6 +1069,7 @@ class _UnlockEntryCardStage extends StatelessWidget {
 }
 
 class _StackedCardListSection extends StatelessWidget {
+  static const Curve _stackSettleCurve = Cubic(0.22, 1, 0.36, 1);
   static const double _cardTiltPadding = 8;
   static const double _collapsedScaleStep = 0.045;
   static const int _maxCollapsedDepth = 4;
@@ -1103,7 +1104,7 @@ class _StackedCardListSection extends StatelessWidget {
     final itemHeight = cardHeight + _cardTiltPadding;
     const itemGap = bankCardVerticalSpacing;
     final slotHeight = itemHeight + itemGap;
-    final progress = Curves.easeOutCubic.transform(
+    final progress = _stackSettleCurve.transform(
       (scrollOffset / (cardHeight * 0.72)).clamp(0.0, 1.0).toDouble(),
     );
     final sectionHeight = cards.length * slotHeight;

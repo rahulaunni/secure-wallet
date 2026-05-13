@@ -222,22 +222,10 @@ class BankCard extends StatelessWidget {
                         Positioned(
                           right: 0,
                           bottom: 0,
-                          child: Row(
-                            children: [
-                              _CardActionButton(
-                                icon: scope.revealed
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                onTap: onEyeTap,
-                              ),
-                              if (scope.revealed) ...[
-                                const SizedBox(width: 8),
-                                _CardActionButton(
-                                  icon: Icons.share,
-                                  onTap: onShareTap,
-                                ),
-                              ],
-                            ],
+                          child: _CardActions(
+                            revealed: scope.revealed,
+                            onEyeTap: onEyeTap,
+                            onShareTap: onShareTap,
                           ),
                         ),
                     ],
@@ -254,11 +242,199 @@ class BankCard extends StatelessWidget {
 
 // ================= ACTION BUTTON =================
 
+class _CardActions extends StatefulWidget {
+  static const double _buttonSize = 44;
+  static const double _buttonGap = 8;
+
+  final bool revealed;
+  final VoidCallback onEyeTap;
+  final VoidCallback? onShareTap;
+
+  const _CardActions({
+    required this.revealed,
+    required this.onEyeTap,
+    this.onShareTap,
+  });
+
+  @override
+  State<_CardActions> createState() => _CardActionsState();
+}
+
+class _CardActionsState extends State<_CardActions>
+    with TickerProviderStateMixin {
+  static const Curve _iosSettleCurve = Cubic(0.22, 1, 0.36, 1);
+  static const Duration _eyeDelay = Duration(milliseconds: 110);
+  static const Duration _eyeDuration = Duration(milliseconds: 260);
+  static const Duration _shareDelay = Duration(milliseconds: 120);
+  static const Duration _shareDuration = Duration(milliseconds: 260);
+
+  late final AnimationController _eyeController;
+  late final AnimationController _shareController;
+  late final Animation<double> _eyeAnimation;
+  late final Animation<double> _shareAnimation;
+  Future<void>? _eyeSequence;
+  Future<void>? _shareSequence;
+
+  @override
+  void initState() {
+    super.initState();
+    _eyeController = AnimationController(
+      vsync: this,
+      duration: _eyeDuration,
+    );
+    _shareController = AnimationController(
+      vsync: this,
+      duration: _shareDuration,
+      value: widget.revealed ? 1 : 0,
+    );
+    _eyeAnimation = CurvedAnimation(
+      parent: _eyeController,
+      curve: _iosSettleCurve,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _shareAnimation = CurvedAnimation(
+      parent: _shareController,
+      curve: _iosSettleCurve,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _startEyeEntrance();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CardActions oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.revealed == oldWidget.revealed) return;
+
+    if (widget.revealed) {
+      final sequence = Future<void>.delayed(_shareDelay);
+      _shareSequence = sequence;
+      sequence.then((_) {
+        if (!mounted || _shareSequence != sequence || !widget.revealed) {
+          return;
+        }
+        _shareController.forward();
+      });
+    } else {
+      _shareSequence = null;
+      _shareController.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _eyeController.dispose();
+    _shareController.dispose();
+    super.dispose();
+  }
+
+  void _startEyeEntrance() {
+    final sequence = Future<void>.delayed(_eyeDelay);
+    _eyeSequence = sequence;
+    sequence.then((_) {
+      if (!mounted || _eyeSequence != sequence) return;
+      _eyeController.forward();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: (_CardActions._buttonSize * 2) + _CardActions._buttonGap,
+      height: _CardActions._buttonSize,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _eyeAnimation,
+              builder: (context, child) {
+                final entrance = _eyeAnimation.value;
+                return IgnorePointer(
+                  ignoring: entrance < 0.98,
+                  child: Opacity(
+                    opacity: entrance,
+                    child: Transform.scale(
+                      scale: 0.72 + (0.28 * entrance),
+                      alignment: Alignment.center,
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: _iosSettleCurve,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.92, end: 1).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: _iosSettleCurve,
+                        ),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _CardActionButton(
+                  key: ValueKey(widget.revealed),
+                  icon:
+                      widget.revealed ? Icons.visibility_off : Icons.visibility,
+                  onTap: widget.onEyeTap,
+                ),
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _shareAnimation,
+              builder: (context, child) {
+                final progress = _shareAnimation.value;
+                return SizedBox(
+                  width: (_CardActions._buttonGap + _CardActions._buttonSize) *
+                      progress,
+                  height: _CardActions._buttonSize,
+                  child: ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: IgnorePointer(
+                        ignoring: !widget.revealed,
+                        child: Opacity(
+                          opacity: progress,
+                          child: Transform.translate(
+                            offset: Offset(10 * (1 - progress), 0),
+                            child: Transform.scale(
+                              scale: 0.72 + (0.28 * progress),
+                              alignment: Alignment.center,
+                              child: child,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: _CardActionButton(
+                icon: Icons.share,
+                onTap: widget.onShareTap,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CardActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
 
   const _CardActionButton({
+    super.key,
     required this.icon,
     this.onTap,
   });
