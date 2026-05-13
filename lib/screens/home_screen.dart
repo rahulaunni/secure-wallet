@@ -683,19 +683,57 @@ class HomeScreenState extends State<HomeScreen> {
             AdaptiveLayout.horizontalPaddingForWidth(constraints.maxWidth);
 
         if (paneCount == 1) {
-          return ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              0,
-              horizontalPadding,
-              120,
-            ),
-            itemCount: visibleCards.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: bankCardVerticalSpacing),
-                child: _buildCardItem(visibleCards[index]),
+          final cardWidth = constraints.maxWidth - (horizontalPadding * 2);
+
+          return AnimatedBuilder(
+            animation: _scrollController,
+            builder: (context, _) {
+              if (visibleCards.length <= 3) {
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    120,
+                  ),
+                  itemCount: visibleCards.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: bankCardVerticalSpacing,
+                      ),
+                      child: _buildCardItem(visibleCards[index]),
+                    );
+                  },
+                );
+              }
+
+              return ListView(
+                controller: _scrollController,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  0,
+                  horizontalPadding,
+                  120,
+                ),
+                children: [
+                  for (var index = 0; index < 2; index++)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: bankCardVerticalSpacing,
+                      ),
+                      child: _buildCardItem(visibleCards[index]),
+                    ),
+                  _StackedCardListSection(
+                    cards: visibleCards.sublist(2),
+                    cardWidth: cardWidth,
+                    scrollOffset: _scrollController.hasClients
+                        ? _scrollController.offset
+                        : 0,
+                    itemBuilder: _buildCardItem,
+                  ),
+                ],
               );
             },
           );
@@ -1026,6 +1064,150 @@ class _UnlockEntryCardStage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _StackedCardListSection extends StatelessWidget {
+  static const double _cardTiltPadding = 8;
+  static const double _collapsedScaleStep = 0.045;
+  static const int _maxCollapsedDepth = 4;
+  static const int _visibleCollapsedCards = 4;
+  static const List<double> _collapsedTopOffsets = <double>[
+    64,
+    30,
+    12,
+    0,
+  ];
+
+  final List<CardData> cards;
+  final double cardWidth;
+  final double scrollOffset;
+  final Widget Function(CardData card) itemBuilder;
+
+  const _StackedCardListSection({
+    required this.cards,
+    required this.cardWidth,
+    required this.scrollOffset,
+    required this.itemBuilder,
+  });
+
+  double _lerp(double from, double to, double progress) {
+    return from + ((to - from) * progress);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cardHeight =
+        cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    final itemHeight = cardHeight + _cardTiltPadding;
+    const itemGap = bankCardVerticalSpacing;
+    final slotHeight = itemHeight + itemGap;
+    final progress = Curves.easeOutCubic.transform(
+      (scrollOffset / (cardHeight * 0.72)).clamp(0.0, 1.0).toDouble(),
+    );
+    final sectionHeight = cards.length * slotHeight;
+    final maxDepth = (cards.length - 1).clamp(1, _maxCollapsedDepth);
+
+    return SizedBox(
+      height: sectionHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (var index = cards.length - 1; index >= 0; index--)
+            _StackedCardPosition(
+              top: _topForIndex(
+                index: index,
+                maxDepth: maxDepth,
+                slotHeight: slotHeight,
+                progress: progress,
+              ),
+              scale: _scaleForIndex(
+                index: index,
+                maxDepth: maxDepth,
+                progress: progress,
+              ),
+              opacity: _opacityForIndex(index: index, progress: progress),
+              interactionsEnabled: progress >= 0.995,
+              child: itemBuilder(cards[index]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  double _topForIndex({
+    required int index,
+    required int maxDepth,
+    required double slotHeight,
+    required double progress,
+  }) {
+    final collapsedTop = _collapsedTopForIndex(index);
+    final expandedTop = index * slotHeight;
+
+    return _lerp(collapsedTop, expandedTop, progress);
+  }
+
+  double _scaleForIndex({
+    required int index,
+    required int maxDepth,
+    required double progress,
+  }) {
+    final collapsedDepth = index.clamp(0, maxDepth);
+    final collapsedScale = 1 - (_collapsedScaleStep * collapsedDepth);
+
+    return _lerp(collapsedScale, 1, progress);
+  }
+
+  double _collapsedTopForIndex(int index) {
+    if (index < _collapsedTopOffsets.length) {
+      return _collapsedTopOffsets[index];
+    }
+
+    return _collapsedTopOffsets.last;
+  }
+
+  double _opacityForIndex({
+    required int index,
+    required double progress,
+  }) {
+    final collapsedOpacity = index < _visibleCollapsedCards ? 1.0 : 0.0;
+    return _lerp(collapsedOpacity, 1, progress);
+  }
+}
+
+class _StackedCardPosition extends StatelessWidget {
+  final double top;
+  final double scale;
+  final double opacity;
+  final bool interactionsEnabled;
+  final Widget child;
+
+  const _StackedCardPosition({
+    required this.top,
+    required this.scale,
+    required this.opacity,
+    required this.interactionsEnabled,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        ignoring: !interactionsEnabled,
+        child: Opacity(
+          opacity: opacity,
+          child: Transform.scale(
+            scale: scale,
+            alignment: Alignment.topCenter,
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }

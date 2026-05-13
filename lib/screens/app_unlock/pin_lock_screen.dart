@@ -52,6 +52,11 @@ class _PinLockScreenState extends State<PinLockScreen>
   static const Color _lockSubtitleDark = Color(0xFFA7ACB5);
   static const Color _keyTextLight = Color(0xFF141414);
   static const Color _keyTextDark = Color(0xFFF2F2F2);
+  static const double _homeStackCollapsedScaleStep = 0.045;
+  static const int _homeStackMaxCollapsedDepth = 4;
+  static const int _homeStackVisibleCollapsedCards = 4;
+  static const double _lockStackCollapsedStep = 24;
+  static const Curve _iosSettleCurve = Cubic(0.22, 1, 0.36, 1);
 
   String _enteredPin = '';
   String? _tempPinForCreation;
@@ -76,7 +81,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     _initShakeAnimation();
     _unlockController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1180),
+      duration: const Duration(milliseconds: 1360),
     );
     _checkPinStatus();
   }
@@ -389,7 +394,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                   animation: _unlockController,
                   builder: (context, _) {
                     final fade =
-                        1 - _interval(_unlockController.value, 0.08, 0.5);
+                        1 - _interval(_unlockController.value, 0.05, 0.34);
                     return IgnorePointer(
                       child: Opacity(
                         opacity: fade,
@@ -518,9 +523,11 @@ class _PinLockScreenState extends State<PinLockScreen>
                     top: walletTop,
                     child: _buildWalletHero(
                       cards: _lockCards(savedCards),
+                      totalCardCount: savedCards.length,
                       hasSavedCards: true,
                       scale: walletScale,
                       canvasWidth: canvasWidth,
+                      canvasHeight: canvasHeight,
                       walletLeftOnCanvas: walletLeft,
                       walletTopOnCanvas: walletTop,
                       homeFirstCardTop: homeFirstCardTop,
@@ -610,14 +617,22 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   List<CardData> _lockCards(List<CardData> savedCards) {
+    if (savedCards.length > 3) {
+      return savedCards
+          .take(2 + _homeStackVisibleCollapsedCards)
+          .toList(growable: false);
+    }
+
     return savedCards.take(3).toList(growable: false);
   }
 
   Widget _buildWalletHero({
     required List<CardData> cards,
+    required int totalCardCount,
     required bool hasSavedCards,
     required double scale,
     required double canvasWidth,
+    required double canvasHeight,
     required double walletLeftOnCanvas,
     required double walletTopOnCanvas,
     required double homeFirstCardTop,
@@ -640,7 +655,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       builder: (context, child) {
         final unlock = _unlockController.value;
         final walletExit = _walletExitProgress(unlock);
-        final walletOpacity = 1 - _interval(unlock, 0.12, 0.42);
+        final walletOpacity = 1 - _interval(unlock, 0.08, 0.34);
         final walletOffset = Offset(0, 178 * scale * walletExit);
 
         return Transform.translate(
@@ -667,7 +682,11 @@ class _PinLockScreenState extends State<PinLockScreen>
                     ),
                   ),
                 ),
-                for (var i = 0; i < cards.length; i++)
+                for (final i in _walletPaintOrder(
+                  cardCount: cards.length,
+                  totalCardCount: totalCardCount,
+                  canvasWidth: canvasWidth,
+                ))
                   Positioned(
                     left: hasSavedCards
                         ? _animatedCardLeft(
@@ -675,22 +694,35 @@ class _PinLockScreenState extends State<PinLockScreen>
                             unlock: unlock,
                             startLeft: cardStartLeft,
                             startWidth: cardStartWidth,
-                            finalLeft: _homeCardLeft(
+                            normalFinalLeft: _homeCardNormalLeft(
                                   i,
                                   canvasWidth: canvasWidth,
                                 ) -
                                 walletLeftOnCanvas,
+                            finalLeft: _homeCardLeft(
+                                  i,
+                                  totalCardCount: totalCardCount,
+                                  canvasWidth: canvasWidth,
+                                ) -
+                                walletLeftOnCanvas,
+                            totalCardCount: totalCardCount,
+                            canvasWidth: canvasWidth,
                           )
                         : cardStartLeft,
                     top: hasSavedCards
                         ? _animatedCardTop(
                             index: i,
-                            stackSlot: i + (3 - cards.length),
+                            stackSlot: _walletStackSlotForIndex(
+                              i,
+                              cards.length,
+                            ),
                             unlock: unlock,
                             scale: scale,
                             walletTopOnCanvas: walletTopOnCanvas,
                             homeFirstCardTop: homeFirstCardTop,
+                            totalCardCount: totalCardCount,
                             canvasWidth: canvasWidth,
+                            canvasHeight: canvasHeight,
                           )
                         : switch (i) {
                             0 => 8.38098 * scale,
@@ -700,7 +732,14 @@ class _PinLockScreenState extends State<PinLockScreen>
                     child: Transform.translate(
                       offset: hasSavedCards ? Offset.zero : walletOffset,
                       child: Opacity(
-                        opacity: hasSavedCards ? 1 : walletOpacity,
+                        opacity: hasSavedCards
+                            ? _animatedCardOpacity(
+                                index: i,
+                                unlock: unlock,
+                                totalCardCount: totalCardCount,
+                                canvasWidth: canvasWidth,
+                              )
+                            : walletOpacity,
                         child: _buildScaledHomeCard(
                           cards[i],
                           width: hasSavedCards
@@ -708,8 +747,13 @@ class _PinLockScreenState extends State<PinLockScreen>
                                   index: i,
                                   unlock: unlock,
                                   startWidth: cardStartWidth,
+                                  totalCardCount: totalCardCount,
+                                  canvasWidth: canvasWidth,
                                 )
                               : cardStartWidth,
+                          baseWidth: hasSavedCards
+                              ? _homeCardWidth(canvasWidth: canvasWidth)
+                              : AdaptiveLayout.phoneCardWidth,
                         ),
                       ),
                     ),
@@ -745,14 +789,47 @@ class _PinLockScreenState extends State<PinLockScreen>
     required double unlock,
     required double startLeft,
     required double startWidth,
+    required double normalFinalLeft,
     required double finalLeft,
+    required int totalCardCount,
+    required double canvasWidth,
   }) {
+    final usesStackedHomeLayout = _usesStackedHomeLayout(
+      totalCardCount: totalCardCount,
+      canvasWidth: canvasWidth,
+    );
     final stackLeft = startLeft;
     final liftProgress = _cardLiftProgress(unlock);
     final settleProgress = _cardSettleProgress(index, unlock);
     final liftedLeft = startLeft + ((stackLeft - startLeft) * liftProgress);
 
-    return liftedLeft + ((finalLeft - liftedLeft) * settleProgress);
+    final normalLeft =
+        liftedLeft + ((normalFinalLeft - liftedLeft) * settleProgress);
+
+    if (!usesStackedHomeLayout || index < 2) {
+      return normalLeft;
+    }
+
+    if (index == 2) {
+      return _lerp(
+        normalLeft,
+        finalLeft,
+        _stackFormationProgress(
+          index: index,
+          unlock: unlock,
+        ),
+      );
+    }
+
+    return finalLeft;
+  }
+
+  int _walletStackSlotForIndex(int index, int previewCardCount) {
+    if (previewCardCount <= 3) {
+      return index + (3 - previewCardCount);
+    }
+
+    return index;
   }
 
   double _animatedCardTop({
@@ -762,39 +839,122 @@ class _PinLockScreenState extends State<PinLockScreen>
     required double scale,
     required double walletTopOnCanvas,
     required double homeFirstCardTop,
+    required int totalCardCount,
     required double canvasWidth,
+    required double canvasHeight,
   }) {
-    final startTop = switch (stackSlot) {
-      0 => 8.38098 * scale,
-      1 => 47.2382 * scale,
-      _ => 83.0477 * scale,
-    };
+    final usesStackedHomeLayout = _usesStackedHomeLayout(
+      totalCardCount: totalCardCount,
+      canvasWidth: canvasWidth,
+    );
+    final startTop = _walletCardStartTop(stackSlot, scale);
     final stackedTop = (-24 + (stackSlot * 13.0)) * scale;
-    final finalTop = _homeCardTop(
+    final normalFinalTop = _homeCardNormalTop(
           index,
           canvasWidth: canvasWidth,
           homeFirstCardTop: homeFirstCardTop,
+        ) -
+        walletTopOnCanvas;
+    final stackedFinalTop = _homeCardTop(
+          index,
+          canvasWidth: canvasWidth,
+          homeFirstCardTop: homeFirstCardTop,
+          totalCardCount: totalCardCount,
         ) -
         walletTopOnCanvas;
     final liftProgress = _cardLiftProgress(unlock);
     final settleProgress = _cardSettleProgress(index, unlock);
     final liftedTop = startTop + ((stackedTop - startTop) * liftProgress);
 
-    return liftedTop + ((finalTop - liftedTop) * settleProgress);
+    final normalTop =
+        liftedTop + ((normalFinalTop - liftedTop) * settleProgress);
+
+    if (!usesStackedHomeLayout || index < 2) {
+      return normalTop;
+    }
+
+    final stackProgress = _stackFormationProgress(
+      index: index,
+      unlock: unlock,
+    );
+
+    if (index == 2) {
+      return _lerp(normalTop, stackedFinalTop, stackProgress);
+    }
+
+    final bottomStartTop =
+        canvasHeight - walletTopOnCanvas + (36 * (index - 3));
+
+    return _lerp(bottomStartTop, stackedFinalTop, stackProgress);
   }
 
   double _animatedCardWidth({
     required int index,
     required double unlock,
     required double startWidth,
+    required int totalCardCount,
+    required double canvasWidth,
   }) {
-    final progress = _cardScaleProgress(index, unlock);
-    const finalWidth = AdaptiveLayout.phoneCardWidth;
+    final homeCardWidth = _homeCardWidth(canvasWidth: canvasWidth);
+    final usesStackedHomeLayout = _usesStackedHomeLayout(
+      totalCardCount: totalCardCount,
+      canvasWidth: canvasWidth,
+    );
+    final scaleProgress = _cardScaleProgress(index, unlock);
+    final finalWidth = homeCardWidth *
+        _homeCardFinalScale(
+          index,
+          totalCardCount: totalCardCount,
+          canvasWidth: canvasWidth,
+        );
 
-    return startWidth + ((finalWidth - startWidth) * progress);
+    if (!usesStackedHomeLayout || index < 2) {
+      return startWidth + ((homeCardWidth - startWidth) * scaleProgress);
+    }
+
+    if (index == 2) {
+      final normalWidth =
+          startWidth + ((homeCardWidth - startWidth) * scaleProgress);
+      return _lerp(
+        normalWidth,
+        finalWidth,
+        _stackFormationProgress(
+          index: index,
+          unlock: unlock,
+        ),
+      );
+    }
+
+    return finalWidth;
   }
 
-  double _homeCardLeft(
+  double _animatedCardOpacity({
+    required int index,
+    required double unlock,
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    if (!_usesStackedHomeLayout(
+          totalCardCount: totalCardCount,
+          canvasWidth: canvasWidth,
+        ) ||
+        index < 3) {
+      return 1;
+    }
+
+    return _stackFormationProgress(
+      index: index,
+      unlock: unlock,
+    );
+  }
+
+  double _walletCardStartTop(int stackSlot, double scale) {
+    if (stackSlot <= 0) return 8.38098 * scale;
+    if (stackSlot == 1) return 47.2382 * scale;
+    return (83.0477 + ((stackSlot - 2) * 6)) * scale;
+  }
+
+  double _homeCardNormalLeft(
     int index, {
     required double canvasWidth,
   }) {
@@ -802,7 +962,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     final horizontalPadding =
         AdaptiveLayout.horizontalPaddingForWidth(canvasWidth);
     const spacing = AdaptiveLayout.cardPaneSpacing;
-    const cardWidth = AdaptiveLayout.phoneCardWidth;
+    final cardWidth = _homeCardWidth(canvasWidth: canvasWidth);
 
     if (paneCount == 1) {
       return horizontalPadding;
@@ -815,36 +975,200 @@ class _PinLockScreenState extends State<PinLockScreen>
     return contentLeft + (column * (cardWidth + spacing));
   }
 
-  double _homeCardTop(
+  double _homeCardLeft(
+    int index, {
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    final paneCount = AdaptiveLayout.cardPaneCountForWidth(canvasWidth);
+    final horizontalPadding =
+        AdaptiveLayout.horizontalPaddingForWidth(canvasWidth);
+    const spacing = AdaptiveLayout.cardPaneSpacing;
+    final cardWidth = _homeCardWidth(canvasWidth: canvasWidth);
+
+    if (paneCount == 1) {
+      final finalScale = _homeCardFinalScale(
+        index,
+        totalCardCount: totalCardCount,
+        canvasWidth: canvasWidth,
+      );
+      return horizontalPadding + ((cardWidth - (cardWidth * finalScale)) / 2);
+    }
+
+    final contentWidth = (cardWidth * paneCount) + (spacing * (paneCount - 1));
+    final contentLeft = (canvasWidth - contentWidth) / 2;
+    final column = index % paneCount;
+
+    return contentLeft + (column * (cardWidth + spacing));
+  }
+
+  double _homeCardWidth({
+    required double canvasWidth,
+  }) {
+    final paneCount = AdaptiveLayout.cardPaneCountForWidth(canvasWidth);
+    if (paneCount == 1) {
+      final horizontalPadding =
+          AdaptiveLayout.horizontalPaddingForWidth(canvasWidth);
+      return canvasWidth - (horizontalPadding * 2);
+    }
+
+    return AdaptiveLayout.phoneCardWidth;
+  }
+
+  double _homeCardNormalTop(
     int index, {
     required double canvasWidth,
     required double homeFirstCardTop,
   }) {
     final paneCount = AdaptiveLayout.cardPaneCountForWidth(canvasWidth);
-    const fullWidth = AdaptiveLayout.phoneCardWidth;
-    const cardHeight =
+    final fullWidth = _homeCardWidth(canvasWidth: canvasWidth);
+    final cardHeight =
         fullWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    const cardTiltPadding = 8.0;
+    final slotHeight = cardHeight + cardTiltPadding + bankCardVerticalSpacing;
     final row = index ~/ paneCount;
 
-    return homeFirstCardTop + (row * (cardHeight + bankCardVerticalSpacing));
+    return homeFirstCardTop + (row * slotHeight) + cardTiltPadding;
+  }
+
+  double _homeCardTop(
+    int index, {
+    required double canvasWidth,
+    required double homeFirstCardTop,
+    required int totalCardCount,
+  }) {
+    final paneCount = AdaptiveLayout.cardPaneCountForWidth(canvasWidth);
+    final fullWidth = _homeCardWidth(canvasWidth: canvasWidth);
+    final cardHeight =
+        fullWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    const cardTiltPadding = 8.0;
+    final slotHeight = cardHeight + cardTiltPadding + bankCardVerticalSpacing;
+
+    if (_usesStackedHomeLayout(
+          totalCardCount: totalCardCount,
+          canvasWidth: canvasWidth,
+        ) &&
+        index >= 2) {
+      return homeFirstCardTop +
+          (2 * slotHeight) +
+          _homeStackCollapsedTop(
+            index,
+            totalCardCount: totalCardCount,
+          ) +
+          cardTiltPadding;
+    }
+
+    final row = index ~/ paneCount;
+
+    return homeFirstCardTop + (row * slotHeight) + cardTiltPadding;
+  }
+
+  bool _usesStackedHomeLayout({
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    return totalCardCount > 3 &&
+        AdaptiveLayout.cardPaneCountForWidth(canvasWidth) == 1;
+  }
+
+  double _homeCardFinalScale(
+    int index, {
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    if (!_usesStackedHomeLayout(
+          totalCardCount: totalCardCount,
+          canvasWidth: canvasWidth,
+        ) ||
+        index < 2) {
+      return 1;
+    }
+
+    final collapsedDepth = _homeStackCollapsedDepth(
+      index,
+      totalCardCount: totalCardCount,
+    );
+    return 1 - (_homeStackCollapsedScaleStep * collapsedDepth);
+  }
+
+  double _homeStackCollapsedTop(
+    int index, {
+    required int totalCardCount,
+  }) {
+    final stackIndex = index - 2;
+    final stackCount = totalCardCount - 2;
+    final visibleStackCount = math.min(
+      stackCount,
+      _homeStackVisibleCollapsedCards,
+    );
+    final maxVisibleDepth = math.max(visibleStackCount - 1, 1);
+    final collapsedDepth = stackIndex.clamp(0, maxVisibleDepth);
+
+    return (maxVisibleDepth - collapsedDepth) * _lockStackCollapsedStep;
+  }
+
+  int _homeStackCollapsedDepth(
+    int index, {
+    required int totalCardCount,
+  }) {
+    final stackIndex = index - 2;
+    final stackCount = totalCardCount - 2;
+    final maxDepth = (stackCount - 1).clamp(1, _homeStackMaxCollapsedDepth);
+
+    return stackIndex.clamp(0, maxDepth);
+  }
+
+  List<int> _walletPaintOrder({
+    required int cardCount,
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    if (!_usesStackedHomeLayout(
+          totalCardCount: totalCardCount,
+          canvasWidth: canvasWidth,
+        ) ||
+        cardCount <= 3) {
+      return List<int>.generate(cardCount, (index) => index);
+    }
+
+    return <int>[
+      0,
+      1,
+      for (var index = cardCount - 1; index >= 2; index--) index,
+    ];
+  }
+
+  double _stackFormationProgress({
+    required int index,
+    required double unlock,
+  }) {
+    final stagger = index <= 2 ? 0.0 : ((index - 3).clamp(0, 4) * 0.04);
+    final start = index <= 2 ? 0.66 : 0.6 + stagger;
+    final end = math.min(0.99, start + 0.34);
+
+    return _interval(unlock, start, end);
+  }
+
+  double _lerp(double from, double to, double progress) {
+    return from + ((to - from) * progress);
   }
 
   double _walletExitProgress(double unlock) {
-    return _interval(unlock, 0.02, 0.36);
+    return _interval(unlock, 0.02, 0.34);
   }
 
   double _cardLiftProgress(double unlock) {
-    return _interval(unlock, 0.04, 0.34);
+    return _interval(unlock, 0.03, 0.32);
   }
 
   double _cardSettleProgress(int index, double unlock) {
-    final start = 0.34 + (index * 0.10);
-    return _interval(unlock, start, start + 0.44);
+    final start = 0.3 + (index * 0.085);
+    return _interval(unlock, start, start + 0.5);
   }
 
   double _cardScaleProgress(int index, double unlock) {
-    final start = 0.42 + (index * 0.10);
-    return _interval(unlock, start, start + 0.42);
+    final start = 0.36 + (index * 0.08);
+    return _interval(unlock, start, start + 0.46);
   }
 
   double _interval(double value, double start, double end) {
@@ -852,7 +1176,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     if (value >= end) return 1;
 
     final t = (value - start) / (end - start);
-    return Curves.easeInOutCubic.transform(t);
+    return _iosSettleCurve.transform(t);
   }
 
   Widget _buildWalletBackPlate({
@@ -872,12 +1196,12 @@ class _PinLockScreenState extends State<PinLockScreen>
   Widget _buildScaledHomeCard(
     CardData card, {
     required double width,
+    required double baseWidth,
   }) {
     final cardTypeLabel = card.cardType == CardType.credit ? 'Credit' : 'Debit';
-    const fullWidth = AdaptiveLayout.phoneCardWidth;
     const aspect = cardAspectRatioWidth / cardAspectRatioHeight;
-    const fullHeight = fullWidth / aspect;
-    final scale = width / fullWidth;
+    final fullHeight = baseWidth / aspect;
+    final scale = width / baseWidth;
 
     return SizedBox(
       width: width,
@@ -888,7 +1212,7 @@ class _PinLockScreenState extends State<PinLockScreen>
           fit: BoxFit.fill,
           alignment: Alignment.topLeft,
           child: SizedBox(
-            width: fullWidth,
+            width: baseWidth,
             height: fullHeight,
             child: BankCardScope(
               revealed: false,
@@ -1560,21 +1884,6 @@ class _WalletBackPainter extends CustomPainter {
       size.height / _sourceSize.height,
     );
 
-    final outerPath = Path()
-      ..moveTo(298.667, 0)
-      ..cubicTo(310.449, 0, 320, 9.55125, 320, 21.3333)
-      ..lineTo(320, 192)
-      ..lineTo(319.993, 192.551)
-      ..cubicTo(319.706, 203.895, 310.562, 213.039, 299.217, 213.327)
-      ..lineTo(298.667, 213.333)
-      ..lineTo(21.3333, 213.333)
-      ..cubicTo(9.73541, 213.333, 0.298641, 204.078, 0.00651042, 192.551)
-      ..lineTo(0, 192)
-      ..lineTo(0, 21.3333)
-      ..cubicTo(0.0000073302, 9.55126, 9.55127, 0.00000160354, 21.3333, 0)
-      ..lineTo(298.667, 0)
-      ..close();
-
     final outerPaint = Paint()
       ..style = PaintingStyle.fill
       ..shader = ui.Gradient.linear(
@@ -1588,26 +1897,19 @@ class _WalletBackPainter extends CustomPainter {
         const [0.017217, 0.966318, 1],
       );
 
-    canvas.drawPath(outerPath, outerPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(0, 0, 320, 213.333),
+        const Radius.circular(36),
+      ),
+      outerPaint,
+    );
 
-    final innerPath = Path()
-      ..moveTo(298.667, 13.3333)
-      ..cubicTo(303.085, 13.3333, 306.667, 16.915, 306.667, 21.3333)
-      ..lineTo(306.667, 192)
-      ..lineTo(306.664, 192.214)
-      ..cubicTo(306.556, 196.455, 303.132, 199.882, 298.892, 199.996)
-      ..lineTo(298.62, 200)
-      ..lineTo(21.3335, 200)
-      ..cubicTo(17.1216, 200, 13.6666, 196.742, 13.3556, 192.615)
-      ..lineTo(13.3361, 192.214)
-      ..lineTo(13.3335, 192)
-      ..lineTo(13.3335, 21.3333)
-      ..cubicTo(13.3335, 16.915, 16.9152, 13.3333, 21.3335, 13.3333)
-      ..lineTo(298.667, 13.3333)
-      ..close();
-
-    canvas.drawPath(
-      innerPath,
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(13.3335, 13.3333, 293.3335, 186.6667),
+        const Radius.circular(24),
+      ),
       Paint()
         ..style = PaintingStyle.fill
         ..color = const Color(0xFF000100),
@@ -1641,10 +1943,10 @@ class _WalletPocketPainter extends CustomPainter {
       ..lineTo(204.0264, 4.7253)
       ..cubicTo(207.4444, 1.6815, 211.8634, 0, 216.4404, 0)
       ..lineTo(320, 0)
-      ..lineTo(320, 128.0002)
-      ..cubicTo(320, 139.7822, 310.4484, 149.3332, 298.6664, 149.3332)
-      ..lineTo(21.3334, 149.3332)
-      ..cubicTo(9.5513, 149.3332, 0, 139.7822, 0, 128.0002)
+      ..lineTo(320, 115.3332)
+      ..cubicTo(320, 134.1112, 304.7784, 149.3332, 286.0004, 149.3332)
+      ..lineTo(34.0004, 149.3332)
+      ..cubicTo(15.2223, 149.3332, 0, 134.1112, 0, 115.3332)
       ..lineTo(0, 0)
       ..lineTo(104.8934, 0)
       ..close();

@@ -152,6 +152,8 @@ class _TopNavBarState extends State<TopNavBar> {
 }
 
 class _IntroChip extends StatelessWidget {
+  static const Curve _settleCurve = Cubic(0.22, 1, 0.36, 1);
+
   final int index;
   final int totalCount;
   final Animation<double>? animation;
@@ -177,20 +179,22 @@ class _IntroChip extends StatelessWidget {
       child: child,
       builder: (context, child) {
         final visibleTotal = totalCount.clamp(1, 8);
-        final start = (index * 0.055).clamp(0.0, 0.42);
+        final cappedIndex = index.clamp(0, visibleTotal - 1);
+        final start = (0.44 + (cappedIndex * 0.065)).clamp(0.0, 0.82);
         final end =
-            (start + 0.44 + (0.02 * (8 - visibleTotal))).clamp(start, 1.0);
+            (start + 0.34 + (0.012 * (8 - visibleTotal))).clamp(start, 1.0);
         final progress = ((animation.value - start) / (end - start))
             .clamp(0.0, 1.0)
             .toDouble();
-        final eased = Curves.easeOutCubic.transform(progress);
+        final eased = _settleCurve.transform(progress);
+        final settle = Curves.easeOutBack.transform(progress);
 
         return Opacity(
           opacity: eased,
           child: Transform.translate(
-            offset: Offset(22 * (1 - eased), 0),
+            offset: Offset(34 * (1 - eased), 0),
             child: Transform.scale(
-              scale: 0.96 + (0.04 * eased),
+              scale: 0.94 + (0.06 * settle),
               alignment: Alignment.centerLeft,
               child: child,
             ),
