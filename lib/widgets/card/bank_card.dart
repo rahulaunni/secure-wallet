@@ -263,10 +263,10 @@ class _CardActions extends StatefulWidget {
 class _CardActionsState extends State<_CardActions>
     with TickerProviderStateMixin {
   static const Curve _iosSettleCurve = Cubic(0.22, 1, 0.36, 1);
-  static const Duration _eyeDelay = Duration(milliseconds: 110);
-  static const Duration _eyeDuration = Duration(milliseconds: 260);
-  static const Duration _shareDelay = Duration(milliseconds: 120);
-  static const Duration _shareDuration = Duration(milliseconds: 260);
+  static const Duration _eyeDelay = Duration(milliseconds: 130);
+  static const Duration _eyeDuration = Duration(milliseconds: 310);
+  static const Duration _shareDelay = Duration(milliseconds: 150);
+  static const Duration _shareDuration = Duration(milliseconds: 320);
 
   late final AnimationController _eyeController;
   late final AnimationController _shareController;

@@ -75,7 +75,7 @@ class _CardVaultAppState extends State<CardVaultApp>
 
     _unlockController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1360),
+      duration: const Duration(milliseconds: 1480),
     );
   }
 

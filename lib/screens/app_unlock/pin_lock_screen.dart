@@ -55,7 +55,12 @@ class _PinLockScreenState extends State<PinLockScreen>
   static const double _homeStackCollapsedScaleStep = 0.045;
   static const int _homeStackMaxCollapsedDepth = 4;
   static const int _homeStackVisibleCollapsedCards = 4;
-  static const double _lockStackCollapsedStep = 24;
+  static const List<double> _homeStackCollapsedTopOffsets = <double>[
+    64,
+    30,
+    12,
+    0,
+  ];
   static const Curve _iosSettleCurve = Cubic(0.22, 1, 0.36, 1);
 
   String _enteredPin = '';
@@ -81,7 +86,7 @@ class _PinLockScreenState extends State<PinLockScreen>
     _initShakeAnimation();
     _unlockController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1360),
+      duration: const Duration(milliseconds: 1480),
     );
     _checkPinStatus();
   }
@@ -504,8 +509,10 @@ class _PinLockScreenState extends State<PinLockScreen>
           child: AnimatedBuilder(
             animation: _unlockController,
             builder: (context, _) {
-              final chromeOpacity =
-                  1 - Curves.easeOut.transform(_unlockController.value);
+              final unlock = _unlockController.value;
+              final chromeExit = _walletExitProgress(unlock);
+              final chromeOpacity = 1 - chromeExit;
+              final chromeOffset = Offset(0, 178 * scale * chromeExit);
 
               return Stack(
                 children: [
@@ -513,9 +520,12 @@ class _PinLockScreenState extends State<PinLockScreen>
                     left: 16 * scale,
                     right: 16 * scale,
                     top: titleTop,
-                    child: Opacity(
-                      opacity: chromeOpacity,
-                      child: _buildTitleHeader(tokens, isStep2, scale),
+                    child: Transform.translate(
+                      offset: Offset(0, -20 * scale * chromeExit),
+                      child: Opacity(
+                        opacity: chromeOpacity,
+                        child: _buildTitleHeader(tokens, isStep2, scale),
+                      ),
                     ),
                   ),
                   Positioned(
@@ -523,11 +533,11 @@ class _PinLockScreenState extends State<PinLockScreen>
                     top: walletTop,
                     child: _buildWalletHero(
                       cards: _lockCards(savedCards),
+                      stackCards: _stackFormationCards(savedCards),
                       totalCardCount: savedCards.length,
                       hasSavedCards: true,
                       scale: walletScale,
                       canvasWidth: canvasWidth,
-                      canvasHeight: canvasHeight,
                       walletLeftOnCanvas: walletLeft,
                       walletTopOnCanvas: walletTop,
                       homeFirstCardTop: homeFirstCardTop,
@@ -536,9 +546,12 @@ class _PinLockScreenState extends State<PinLockScreen>
                   Positioned(
                     left: (canvasWidth - keypadWidth) / 2,
                     top: keypadTop,
-                    child: Opacity(
-                      opacity: chromeOpacity,
-                      child: _buildNumPad(tokens, scale: scale),
+                    child: Transform.translate(
+                      offset: chromeOffset,
+                      child: Opacity(
+                        opacity: chromeOpacity,
+                        child: _buildNumPad(tokens, scale: scale),
+                      ),
                     ),
                   ),
                 ],
@@ -617,22 +630,27 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   List<CardData> _lockCards(List<CardData> savedCards) {
-    if (savedCards.length > 3) {
-      return savedCards
-          .take(2 + _homeStackVisibleCollapsedCards)
-          .toList(growable: false);
+    return savedCards.take(3).toList(growable: false);
+  }
+
+  List<CardData> _stackFormationCards(List<CardData> savedCards) {
+    if (savedCards.length <= 3) {
+      return const <CardData>[];
     }
 
-    return savedCards.take(3).toList(growable: false);
+    return savedCards
+        .skip(3)
+        .take(_homeStackVisibleCollapsedCards - 1)
+        .toList(growable: false);
   }
 
   Widget _buildWalletHero({
     required List<CardData> cards,
+    required List<CardData> stackCards,
     required int totalCardCount,
     required bool hasSavedCards,
     required double scale,
     required double canvasWidth,
-    required double canvasHeight,
     required double walletLeftOnCanvas,
     required double walletTopOnCanvas,
     required double homeFirstCardTop,
@@ -682,11 +700,42 @@ class _PinLockScreenState extends State<PinLockScreen>
                     ),
                   ),
                 ),
-                for (final i in _walletPaintOrder(
-                  cardCount: cards.length,
-                  totalCardCount: totalCardCount,
-                  canvasWidth: canvasWidth,
-                ))
+                for (var stackIndex = stackCards.length - 1;
+                    stackIndex >= 0;
+                    stackIndex--)
+                  Positioned(
+                    left: _homeCardLeft(
+                          stackIndex + 3,
+                          totalCardCount: totalCardCount,
+                          canvasWidth: canvasWidth,
+                        ) -
+                        walletLeftOnCanvas,
+                    top: _animatedStackCardTop(
+                      stackIndex: stackIndex,
+                      unlock: unlock,
+                      walletTopOnCanvas: walletTopOnCanvas,
+                      homeFirstCardTop: homeFirstCardTop,
+                      totalCardCount: totalCardCount,
+                      canvasWidth: canvasWidth,
+                    ),
+                    child: Opacity(
+                      opacity: _stackFormationProgress(
+                        index: stackIndex + 3,
+                        unlock: unlock,
+                      ),
+                      child: _buildScaledHomeCard(
+                        stackCards[stackIndex],
+                        width: _homeCardWidth(canvasWidth: canvasWidth) *
+                            _homeCardFinalScale(
+                              stackIndex + 3,
+                              totalCardCount: totalCardCount,
+                              canvasWidth: canvasWidth,
+                            ),
+                        baseWidth: _homeCardWidth(canvasWidth: canvasWidth),
+                      ),
+                    ),
+                  ),
+                for (var i = 0; i < cards.length; i++)
                   Positioned(
                     left: hasSavedCards
                         ? _animatedCardLeft(
@@ -722,7 +771,6 @@ class _PinLockScreenState extends State<PinLockScreen>
                             homeFirstCardTop: homeFirstCardTop,
                             totalCardCount: totalCardCount,
                             canvasWidth: canvasWidth,
-                            canvasHeight: canvasHeight,
                           )
                         : switch (i) {
                             0 => 8.38098 * scale,
@@ -732,14 +780,7 @@ class _PinLockScreenState extends State<PinLockScreen>
                     child: Transform.translate(
                       offset: hasSavedCards ? Offset.zero : walletOffset,
                       child: Opacity(
-                        opacity: hasSavedCards
-                            ? _animatedCardOpacity(
-                                index: i,
-                                unlock: unlock,
-                                totalCardCount: totalCardCount,
-                                canvasWidth: canvasWidth,
-                              )
-                            : walletOpacity,
+                        opacity: hasSavedCards ? 1 : walletOpacity,
                         child: _buildScaledHomeCard(
                           cards[i],
                           width: hasSavedCards
@@ -810,18 +851,14 @@ class _PinLockScreenState extends State<PinLockScreen>
       return normalLeft;
     }
 
-    if (index == 2) {
-      return _lerp(
-        normalLeft,
-        finalLeft,
-        _stackFormationProgress(
-          index: index,
-          unlock: unlock,
-        ),
-      );
-    }
-
-    return finalLeft;
+    return _lerp(
+      normalLeft,
+      finalLeft,
+      _stackFormationProgress(
+        index: index,
+        unlock: unlock,
+      ),
+    );
   }
 
   int _walletStackSlotForIndex(int index, int previewCardCount) {
@@ -841,7 +878,6 @@ class _PinLockScreenState extends State<PinLockScreen>
     required double homeFirstCardTop,
     required int totalCardCount,
     required double canvasWidth,
-    required double canvasHeight,
   }) {
     final usesStackedHomeLayout = _usesStackedHomeLayout(
       totalCardCount: totalCardCount,
@@ -878,14 +914,39 @@ class _PinLockScreenState extends State<PinLockScreen>
       unlock: unlock,
     );
 
-    if (index == 2) {
-      return _lerp(normalTop, stackedFinalTop, stackProgress);
-    }
+    return _lerp(normalTop, stackedFinalTop, stackProgress);
+  }
 
-    final bottomStartTop =
-        canvasHeight - walletTopOnCanvas + (36 * (index - 3));
+  double _animatedStackCardTop({
+    required int stackIndex,
+    required double unlock,
+    required double walletTopOnCanvas,
+    required double homeFirstCardTop,
+    required int totalCardCount,
+    required double canvasWidth,
+  }) {
+    final cardIndex = stackIndex + 3;
+    final progress = _stackFormationProgress(
+      index: cardIndex,
+      unlock: unlock,
+    );
+    final frontStackTop = _homeCardTop(
+          2,
+          canvasWidth: canvasWidth,
+          homeFirstCardTop: homeFirstCardTop,
+          totalCardCount: totalCardCount,
+        ) -
+        walletTopOnCanvas;
+    final finalTop = _homeCardTop(
+          cardIndex,
+          canvasWidth: canvasWidth,
+          homeFirstCardTop: homeFirstCardTop,
+          totalCardCount: totalCardCount,
+        ) -
+        walletTopOnCanvas;
+    final behindThirdStartTop = frontStackTop + (10 * stackIndex);
 
-    return _lerp(bottomStartTop, stackedFinalTop, stackProgress);
+    return _lerp(behindThirdStartTop, finalTop, progress);
   }
 
   double _animatedCardWidth({
@@ -912,39 +973,15 @@ class _PinLockScreenState extends State<PinLockScreen>
       return startWidth + ((homeCardWidth - startWidth) * scaleProgress);
     }
 
-    if (index == 2) {
-      final normalWidth =
-          startWidth + ((homeCardWidth - startWidth) * scaleProgress);
-      return _lerp(
-        normalWidth,
-        finalWidth,
-        _stackFormationProgress(
-          index: index,
-          unlock: unlock,
-        ),
-      );
-    }
-
-    return finalWidth;
-  }
-
-  double _animatedCardOpacity({
-    required int index,
-    required double unlock,
-    required int totalCardCount,
-    required double canvasWidth,
-  }) {
-    if (!_usesStackedHomeLayout(
-          totalCardCount: totalCardCount,
-          canvasWidth: canvasWidth,
-        ) ||
-        index < 3) {
-      return 1;
-    }
-
-    return _stackFormationProgress(
-      index: index,
-      unlock: unlock,
+    final normalWidth =
+        startWidth + ((homeCardWidth - startWidth) * scaleProgress);
+    return _lerp(
+      normalWidth,
+      finalWidth,
+      _stackFormationProgress(
+        index: index,
+        unlock: unlock,
+      ),
     );
   }
 
@@ -1096,15 +1133,11 @@ class _PinLockScreenState extends State<PinLockScreen>
     required int totalCardCount,
   }) {
     final stackIndex = index - 2;
-    final stackCount = totalCardCount - 2;
-    final visibleStackCount = math.min(
-      stackCount,
-      _homeStackVisibleCollapsedCards,
-    );
-    final maxVisibleDepth = math.max(visibleStackCount - 1, 1);
-    final collapsedDepth = stackIndex.clamp(0, maxVisibleDepth);
+    if (stackIndex < _homeStackCollapsedTopOffsets.length) {
+      return _homeStackCollapsedTopOffsets[stackIndex];
+    }
 
-    return (maxVisibleDepth - collapsedDepth) * _lockStackCollapsedStep;
+    return _homeStackCollapsedTopOffsets.last;
   }
 
   int _homeStackCollapsedDepth(
@@ -1118,33 +1151,13 @@ class _PinLockScreenState extends State<PinLockScreen>
     return stackIndex.clamp(0, maxDepth);
   }
 
-  List<int> _walletPaintOrder({
-    required int cardCount,
-    required int totalCardCount,
-    required double canvasWidth,
-  }) {
-    if (!_usesStackedHomeLayout(
-          totalCardCount: totalCardCount,
-          canvasWidth: canvasWidth,
-        ) ||
-        cardCount <= 3) {
-      return List<int>.generate(cardCount, (index) => index);
-    }
-
-    return <int>[
-      0,
-      1,
-      for (var index = cardCount - 1; index >= 2; index--) index,
-    ];
-  }
-
   double _stackFormationProgress({
     required int index,
     required double unlock,
   }) {
     final stagger = index <= 2 ? 0.0 : ((index - 3).clamp(0, 4) * 0.04);
-    final start = index <= 2 ? 0.66 : 0.6 + stagger;
-    final end = math.min(0.99, start + 0.34);
+    final start = index <= 2 ? 0.8 : 0.81 + stagger;
+    final end = math.min(0.99, start + 0.23);
 
     return _interval(unlock, start, end);
   }
@@ -1154,21 +1167,21 @@ class _PinLockScreenState extends State<PinLockScreen>
   }
 
   double _walletExitProgress(double unlock) {
-    return _interval(unlock, 0.02, 0.34);
+    return _interval(unlock, 0.02, 0.38);
   }
 
   double _cardLiftProgress(double unlock) {
-    return _interval(unlock, 0.03, 0.32);
+    return _interval(unlock, 0.03, 0.36);
   }
 
   double _cardSettleProgress(int index, double unlock) {
-    final start = 0.3 + (index * 0.085);
-    return _interval(unlock, start, start + 0.5);
+    final start = 0.25 + (index * 0.075);
+    return _interval(unlock, start, start + 0.42);
   }
 
   double _cardScaleProgress(int index, double unlock) {
-    final start = 0.36 + (index * 0.08);
-    return _interval(unlock, start, start + 0.46);
+    final start = 0.31 + (index * 0.07);
+    return _interval(unlock, start, start + 0.4);
   }
 
   double _interval(double value, double start, double end) {

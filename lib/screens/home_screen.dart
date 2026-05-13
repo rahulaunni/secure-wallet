@@ -1013,9 +1013,12 @@ class HomeScreenState extends State<HomeScreen> {
           child: Scaffold(
             floatingActionButton: Padding(
               padding: EdgeInsets.only(right: fabRightInset),
-              child: AnimatedAddCardButton(
-                collapsed: _fabCollapsed && !isEmptyState,
-                onTap: _openAddCard,
+              child: _HomeEntryFabStage(
+                visible: _homeEntrySettled,
+                child: AnimatedAddCardButton(
+                  collapsed: _fabCollapsed && !isEmptyState,
+                  onTap: _openAddCard,
+                ),
               ),
             ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -1024,6 +1027,95 @@ class HomeScreenState extends State<HomeScreen> {
               allCards: allCards,
               visibleCards: visibleCards,
               showSidePane: showSidePane,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeEntryFabStage extends StatefulWidget {
+  final bool visible;
+  final Widget child;
+
+  const _HomeEntryFabStage({
+    required this.visible,
+    required this.child,
+  });
+
+  @override
+  State<_HomeEntryFabStage> createState() => _HomeEntryFabStageState();
+}
+
+class _HomeEntryFabStageState extends State<_HomeEntryFabStage>
+    with SingleTickerProviderStateMixin {
+  static const Duration _delay = Duration(milliseconds: 90);
+  static const Duration _duration = Duration(milliseconds: 360);
+  static const Curve _curve = Cubic(0.22, 1, 0.36, 1);
+
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+  Future<void>? _sequence;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: _duration,
+      value: widget.visible ? 1 : 0,
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: _curve,
+      reverseCurve: Curves.easeInCubic,
+    );
+    if (widget.visible) {
+      _controller.value = 1;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _HomeEntryFabStage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visible == oldWidget.visible) return;
+
+    if (widget.visible) {
+      final sequence = Future<void>.delayed(_delay);
+      _sequence = sequence;
+      sequence.then((_) {
+        if (!mounted || _sequence != sequence || !widget.visible) return;
+        _controller.forward();
+      });
+    } else {
+      _sequence = null;
+      _controller.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _sequence = null;
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      child: widget.child,
+      builder: (context, child) {
+        final progress = _animation.value;
+
+        return IgnorePointer(
+          ignoring: progress < 1,
+          child: Opacity(
+            opacity: progress,
+            child: Transform.translate(
+              offset: Offset(96 * (1 - progress), 0),
+              child: child,
             ),
           ),
         );
@@ -1105,7 +1197,7 @@ class _StackedCardListSection extends StatelessWidget {
     const itemGap = bankCardVerticalSpacing;
     final slotHeight = itemHeight + itemGap;
     final progress = _stackSettleCurve.transform(
-      (scrollOffset / (cardHeight * 0.72)).clamp(0.0, 1.0).toDouble(),
+      (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
     );
     final sectionHeight = cards.length * slotHeight;
     final maxDepth = (cards.length - 1).clamp(1, _maxCollapsedDepth);

@@ -180,9 +180,9 @@ class _IntroChip extends StatelessWidget {
       builder: (context, child) {
         final visibleTotal = totalCount.clamp(1, 8);
         final cappedIndex = index.clamp(0, visibleTotal - 1);
-        final start = (0.44 + (cappedIndex * 0.065)).clamp(0.0, 0.82);
+        final start = (0.46 + (cappedIndex * 0.075)).clamp(0.0, 0.82);
         final end =
-            (start + 0.34 + (0.012 * (8 - visibleTotal))).clamp(start, 1.0);
+            (start + 0.38 + (0.012 * (8 - visibleTotal))).clamp(start, 1.0);
         final progress = ((animation.value - start) / (end - start))
             .clamp(0.0, 1.0)
             .toDouble();
