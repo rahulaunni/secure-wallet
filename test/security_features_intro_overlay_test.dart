@@ -23,22 +23,40 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Completely offline'), findsOneWidget);
+    expect(find.text('Hive encrypted vault'), findsOneWidget);
+    expect(find.text('What if someone peeks at app storage?'), findsOneWidget);
+    expect(find.text('They meet cipher soup, not your card number.'),
+        findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
 
-    await tester
-        .tap(find.byKey(const ValueKey('security_intro_primary_button')));
+    await tester.tap(
+      find.byKey(
+        const ValueKey('security_intro_primary_button_Hive encrypted vault'),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 320));
-    expect(find.text('Hive protected vault'), findsOneWidget);
+    expect(find.text('No internet required'), findsOneWidget);
+    expect(find.text('Cable unplugged and Wi-Fi panicking?'), findsOneWidget);
+    expect(find.text('Still fine. Swallet keeps your cards local.'),
+        findsOneWidget);
 
-    await tester
-        .tap(find.byKey(const ValueKey('security_intro_primary_button')));
+    await tester.tap(
+      find.byKey(
+        const ValueKey('security_intro_primary_button_No internet required'),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 520));
     expect(find.text('Private unlock'), findsOneWidget);
+    expect(find.text('Can anyone just open the vault?'), findsOneWidget);
+    expect(find.text('Only after your PIN or device unlock says yes.'),
+        findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
 
-    await tester
-        .tap(find.byKey(const ValueKey('security_intro_primary_button')));
+    await tester.tap(
+      find.byKey(
+        const ValueKey('security_intro_primary_button_Private unlock'),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 120));
 
     expect(completed, isTrue);
