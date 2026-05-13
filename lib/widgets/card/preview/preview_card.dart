@@ -228,7 +228,6 @@ class PreviewCard extends StatelessWidget {
                           right: 0,
                           bottom: 0,
                           child: _PreviewCardActionButton(
-                            icon: Icons.tune,
                             onTap: onEditVisualTap!,
                           ),
                         ),
@@ -245,11 +244,11 @@ class PreviewCard extends StatelessWidget {
 }
 
 class _PreviewCardActionButton extends StatelessWidget {
-  final IconData icon;
+  static const String _assetPath = 'assets/icons/palette-swatch.svg';
+
   final VoidCallback onTap;
 
   const _PreviewCardActionButton({
-    required this.icon,
     required this.onTap,
   });
 
@@ -264,10 +263,16 @@ class _PreviewCardActionButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Colors.black26,
         ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: Colors.white,
+        child: Center(
+          child: SvgPicture.asset(
+            _assetPath,
+            width: 22,
+            height: 22,
+            colorFilter: const ColorFilter.mode(
+              Colors.white,
+              BlendMode.srcIn,
+            ),
+          ),
         ),
       ),
     );

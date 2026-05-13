@@ -108,9 +108,10 @@ class _SecuritySetupScreenState extends State<SecuritySetupScreen> {
       SnackBar(
         content: Text(
           message,
-          style: SwalletText.body.copyWith(color: Colors.white),
+          style: SwalletText.body
+              .copyWith(color: SwalletPalette(widget.isDark).onPrimary),
         ),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: SwalletColors.destructive,
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -79,10 +79,10 @@ class AnimatedAddCardButton extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           CupertinoIcons.add,
                           size: _iconSize,
-                          color: Colors.white,
+                          color: tokens.onPrimary,
                         ),
                         ClipRect(
                           child: Align(
@@ -99,7 +99,7 @@ class AnimatedAddCardButton extends StatelessWidget {
                                   overflow: TextOverflow.clip,
                                   textScaler: TextScaler.noScaling,
                                   style: SwalletText.button.copyWith(
-                                    color: Colors.white,
+                                    color: tokens.onPrimary,
                                   ),
                                 ),
                               ),

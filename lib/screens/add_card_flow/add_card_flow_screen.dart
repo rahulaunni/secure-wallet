@@ -560,13 +560,16 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     final isOtherBank = _selectedBankCid == BankAssets.otherBankId;
     final hasCustomOtherBank =
         _customBankName.trim().isNotEmpty || _customBankLogoPath != null;
-    final requiredCardNumberLength = _cardNetwork == CardNetwork.amex ? 15 : 16;
     final requiredCvvLength =
         CardNumberFormat.cvvLengthForNetwork(_cardNetwork);
+    final hasValidCardNumberLength = CardNumberFormat.isValidLengthForNetwork(
+      network: _cardNetwork,
+      length: _cardNumber.length,
+    );
 
     if (_selectedBankCid == null ||
         _cardNetwork == null ||
-        _cardNumber.length != requiredCardNumberLength ||
+        !hasValidCardNumberLength ||
         _expiry.length != 5 ||
         _cvv.length != requiredCvvLength ||
         _holderName.isEmpty ||

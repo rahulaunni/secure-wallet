@@ -45,8 +45,7 @@ class SwalletPalette {
       isDark ? SwalletColors.darkOutline : SwalletColors.lightOutline;
   Color get primary =>
       isDark ? const Color(0xFF4D7CFF) : SwalletColors.brandBlue;
-  Color get onPrimary =>
-      isDark ? const Color(0xFF06102E) : const Color(0xFFFFFFFF);
+  Color get onPrimary => const Color(0xFFFFFFFF);
   Color get primaryContainer =>
       isDark ? const Color(0xFF1F3D8F) : const Color(0xFFE8EEFF);
   Color get onPrimaryContainer =>
@@ -190,6 +189,16 @@ class SwalletTheme {
         style: TextButton.styleFrom(
           foregroundColor: palette.primary,
           textStyle: SwalletText.button,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: palette.primary,
+          textStyle: SwalletText.button,
+          side: BorderSide(color: palette.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),

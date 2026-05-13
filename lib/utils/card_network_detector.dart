@@ -31,13 +31,35 @@ class CardNetworkDetector {
     }
 
     // RUPAY
-    if (digits.startsWith('60') ||
-        digits.startsWith('65') ||
-        digits.startsWith('81') ||
-        digits.startsWith('82')) {
+    if (_isRuPayPrefix(digits)) {
       return CardNetwork.rupay;
     }
 
     return null;
+  }
+
+  static bool _isRuPayPrefix(String digits) {
+    return digits.startsWith('60') ||
+        digits.startsWith('65') ||
+        digits.startsWith('81') ||
+        digits.startsWith('82') ||
+        digits.startsWith('508') ||
+        digits.startsWith('353') ||
+        digits.startsWith('356') ||
+        digits.startsWith('36') ||
+        _isPrefixInRange(digits, 3, 606, 608) ||
+        _isPrefixInRange(digits, 4, 6521, 6530);
+  }
+
+  static bool _isPrefixInRange(
+    String digits,
+    int length,
+    int start,
+    int end,
+  ) {
+    if (digits.length < length) return false;
+
+    final prefix = int.tryParse(digits.substring(0, length));
+    return prefix != null && prefix >= start && prefix <= end;
   }
 }

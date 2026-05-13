@@ -121,7 +121,7 @@ class DeleteCardSheet extends StatelessWidget {
                                   'Delete card',
                                   style: SwalletText.button.copyWith(
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.white,
+                                    color: palette.onPrimary,
                                   ),
                                 ),
                               ),

@@ -94,10 +94,6 @@ class _SecurityFeaturesIntroOverlayState
     final palette = SwalletPalette(widget.isDark);
     final background = palette.background;
     final panelColor = palette.background;
-    final buttonColor =
-        widget.isDark ? const Color(0xFF34323D) : const Color(0xFFE8E8EE);
-    final buttonText =
-        widget.isDark ? const Color(0xFFFFFFFF) : const Color(0xFF16161C);
 
     return Material(
       color: background,
@@ -155,8 +151,6 @@ class _SecurityFeaturesIntroOverlayState
                                 key: ValueKey(_index),
                                 slide: _slides[_index],
                                 isDark: widget.isDark,
-                                buttonColor: buttonColor,
-                                buttonTextColor: buttonText,
                                 buttonLabel: _index == _slides.length - 1
                                     ? 'Continue'
                                     : 'Next',
@@ -205,8 +199,6 @@ class _SecurityIntroSlide {
 class _SecurityIntroSlideView extends StatelessWidget {
   final _SecurityIntroSlide slide;
   final bool isDark;
-  final Color buttonColor;
-  final Color buttonTextColor;
   final String buttonLabel;
   final VoidCallback onButtonPressed;
 
@@ -214,8 +206,6 @@ class _SecurityIntroSlideView extends StatelessWidget {
     super.key,
     required this.slide,
     required this.isDark,
-    required this.buttonColor,
-    required this.buttonTextColor,
     required this.buttonLabel,
     required this.onButtonPressed,
   });
@@ -291,8 +281,6 @@ class _SecurityIntroSlideView extends StatelessWidget {
               title: slide.title,
               body: slide.body,
               palette: palette,
-              buttonColor: buttonColor,
-              buttonTextColor: buttonTextColor,
               buttonLabel: buttonLabel,
               onButtonPressed: onButtonPressed,
               titleBodyGap: titleBodyGap,
@@ -309,8 +297,6 @@ class _SlideBottomActionGroup extends StatelessWidget {
   final String title;
   final String body;
   final SwalletPalette palette;
-  final Color buttonColor;
-  final Color buttonTextColor;
   final String buttonLabel;
   final VoidCallback onButtonPressed;
   final double titleBodyGap;
@@ -320,8 +306,6 @@ class _SlideBottomActionGroup extends StatelessWidget {
     required this.title,
     required this.body,
     required this.palette,
-    required this.buttonColor,
-    required this.buttonTextColor,
     required this.buttonLabel,
     required this.onButtonPressed,
     required this.titleBodyGap,
@@ -367,15 +351,11 @@ class _SlideBottomActionGroup extends StatelessWidget {
             key: ValueKey('security_intro_primary_button_$title'),
             onPressed: onButtonPressed,
             style: FilledButton.styleFrom(
-              backgroundColor: buttonColor,
-              foregroundColor: buttonTextColor,
+              backgroundColor: palette.primary,
+              foregroundColor: palette.onPrimary,
               elevation: 0,
               shape: const StadiumBorder(),
-              textStyle: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                height: 1,
-              ),
+              textStyle: SwalletText.button,
             ),
             child: Text(
               buttonLabel,

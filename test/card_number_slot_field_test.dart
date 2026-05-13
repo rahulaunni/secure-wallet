@@ -52,6 +52,14 @@ void main() {
           'assets/images/networks/rupay.svg'),
     );
 
+    await tester.enterText(field, '6076281111111111');
+    await tester.pump();
+    expect(
+      tester.widgetList<SvgPicture>(find.byType(SvgPicture)).last.bytesLoader,
+      isA<SvgAssetLoader>().having((loader) => loader.assetName, 'assetName',
+          'assets/images/networks/rupay.svg'),
+    );
+
     await tester.enterText(field, '371449635398431');
     await tester.pump();
     expect(

@@ -163,11 +163,11 @@ class SecurityQuestionPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: SwalletColors.brandBlue,
+          backgroundColor: style.palette.primary,
           disabledBackgroundColor:
-              SwalletColors.brandBlue.withValues(alpha: 0.45),
-          foregroundColor: Colors.white,
-          disabledForegroundColor: Colors.white,
+              style.palette.primary.withValues(alpha: 0.45),
+          foregroundColor: style.palette.onPrimary,
+          disabledForegroundColor: style.palette.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(r(14)),
@@ -175,7 +175,7 @@ class SecurityQuestionPrimaryButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: style.button.copyWith(color: Colors.white),
+          style: style.button.copyWith(color: style.palette.onPrimary),
         ),
       ),
     );

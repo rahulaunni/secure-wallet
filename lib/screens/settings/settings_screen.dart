@@ -155,8 +155,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+              backgroundColor: SwalletColors.destructive,
+              foregroundColor: palette.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: tokens.pillRadius),
             ),
             child: Text(
@@ -327,7 +327,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AddCardMaterialTokens tokens, {
     bool destructive = false,
   }) {
-    final color = destructive ? Colors.redAccent : tokens.onPrimaryContainer;
+    final color =
+        destructive ? SwalletColors.destructive : tokens.onPrimaryContainer;
     return SizedBox(
       width: 24,
       height: 24,
@@ -347,7 +348,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool destructive = false,
     bool hideArrow = false,
   }) {
-    final titleColor = destructive ? Colors.redAccent : tokens.onSurface;
+    final titleColor =
+        destructive ? SwalletColors.destructive : tokens.onSurface;
 
     return Material(
       color: Colors.transparent,

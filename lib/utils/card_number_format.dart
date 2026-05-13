@@ -1,7 +1,9 @@
 import 'package:swallet/models/card_network.dart';
+import 'package:swallet/utils/card_network_detector.dart';
 
 class CardNumberFormat {
   static const String standardTemplate = '**** **** **** ****';
+  static const String longTemplate = '**** **** **** **** ***';
   static const String amexTemplate = '**** ****** *****';
 
   static String digitsOnly(String input) {
@@ -13,8 +15,33 @@ class CardNumberFormat {
     return digits.startsWith('34') || digits.startsWith('37');
   }
 
+  static CardNetwork? networkForNumber(String input) {
+    return CardNetworkDetector.detect(input);
+  }
+
   static int maxLengthForNumber(String input) {
-    return isAmexNumber(input) ? 15 : 16;
+    return maxLengthForNetwork(networkForNumber(input));
+  }
+
+  static int maxLengthForNetwork(CardNetwork? network) {
+    return switch (network) {
+      CardNetwork.amex => 15,
+      CardNetwork.mastercard || CardNetwork.rupay => 16,
+      CardNetwork.visa => 19,
+      _ => 19,
+    };
+  }
+
+  static bool isValidLengthForNetwork({
+    required CardNetwork? network,
+    required int length,
+  }) {
+    return switch (network) {
+      CardNetwork.amex => length == 15,
+      CardNetwork.mastercard || CardNetwork.rupay => length == 16,
+      CardNetwork.visa => length == 13 || length == 16 || length == 19,
+      _ => false,
+    };
   }
 
   static int cvvLengthForNetwork(CardNetwork? network) {
@@ -26,7 +53,7 @@ class CardNumberFormat {
     final maxLength = maxLengthForNumber(digits);
     final limitedLength = digits.length > maxLength ? maxLength : digits.length;
     final limited = digits.substring(0, limitedLength);
-    final groups = isAmexNumber(limited) ? const [4, 6, 5] : const [4, 4, 4, 4];
+    final groups = _groupsForNumber(limited);
     final buffer = StringBuffer();
     int offset = 0;
 
@@ -45,7 +72,7 @@ class CardNumberFormat {
 
   static String progressiveMask(String input) {
     final clean = digitsOnly(input);
-    final template = isAmexNumber(clean) ? amexTemplate : standardTemplate;
+    final template = _templateForNumber(clean);
     final buffer = StringBuffer();
     int digitIndex = 0;
 
@@ -68,7 +95,7 @@ class CardNumberFormat {
   static String masked(String input) {
     final clean = digitsOnly(input);
     if (clean.length < 8) {
-      return isAmexNumber(clean) ? amexTemplate : standardTemplate;
+      return _templateForNumber(clean);
     }
 
     if (isAmexNumber(clean)) {
@@ -76,5 +103,23 @@ class CardNumberFormat {
     }
 
     return '${clean.substring(0, 4)} **** **** ${clean.substring(clean.length - 4)}';
+  }
+
+  static List<int> _groupsForNumber(String input) {
+    final network = networkForNumber(input);
+    if (network == CardNetwork.amex) return const [4, 6, 5];
+    if (network == CardNetwork.visa && digitsOnly(input).length > 16) {
+      return const [4, 4, 4, 4, 3];
+    }
+    return const [4, 4, 4, 4];
+  }
+
+  static String _templateForNumber(String input) {
+    final network = networkForNumber(input);
+    if (network == CardNetwork.amex) return amexTemplate;
+    if (network == CardNetwork.visa && digitsOnly(input).length > 16) {
+      return longTemplate;
+    }
+    return standardTemplate;
   }
 }
