@@ -481,6 +481,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _autoLock(CardData card) {
+    if (!mounted) return;
     if (_revealedCardId == _cardId(card)) {
       setState(() {
         _revealedCardId = null;

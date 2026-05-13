@@ -84,6 +84,11 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
 
   @override
   void dispose() {
+    if (widget.revealed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onAutoLock();
+      });
+    }
     _timer?.cancel();
     _controller.dispose();
     super.dispose();
