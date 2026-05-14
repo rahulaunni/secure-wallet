@@ -1,5 +1,12 @@
-<svg width="320" height="72" viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="2" y="10" width="52" height="52" rx="16" fill="white" fill-opacity="0.16" stroke="white" stroke-opacity="0.32" stroke-width="2"/>
-<text x="28" y="42" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="Poppins, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0">WN</text>
-<text x="68" y="38" dominant-baseline="middle" fill="white" font-family="Poppins, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="0">Westpac NZ</text>
+<svg width="98" height="40" viewBox="0 0 98 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_411_983)">
+<path d="M34.7275 35.7825L25.1248 5.86491C23.7436 1.31796 21.4416 0 17.8899 0H0C1.38121 0.593081 2.30201 4.21746 2.30201 4.21746L10.9839 34.2669C11.9705 38.0231 15.1275 40 18.6134 40H37.5557C36.2403 39.8023 34.7275 35.7825 34.7275 35.7825Z" fill="white"/>
+<path d="M63.2715 35.7825L72.8742 5.86491C74.3212 1.31796 76.6232 0 80.1091 0H97.9991C96.6179 0.593081 95.6313 4.21746 95.6313 4.21746L87.0809 34.2669C86.0944 38.0231 82.9373 40 79.4514 40H60.4434C61.8246 39.8023 63.2715 35.7825 63.2715 35.7825Z" fill="white"/>
+<path d="M59.5899 0.263588H38.543V40.0659H59.5899V0.263588Z" fill="white"/>
+</g>
+<defs>
+<clipPath id="clip0_411_983">
+<rect width="98" height="40" fill="white"/>
+</clipPath>
+</defs>
 </svg>
