@@ -1883,7 +1883,7 @@ class BankAssets {
     ),
     BankInfo(
       id: 'netherlands__ing_group',
-      name: 'ING Group',
+      name: 'ING Bank',
       countryId: 'netherlands',
       website: 'https://www.ing.nl',
       logoUrl: 'https://logo.clearbit.com/ing.nl',
