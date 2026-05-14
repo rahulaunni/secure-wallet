@@ -61,6 +61,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF007DBA),
     Color(0xFF01121B),
   ],
+  'australia__bank_of_china_australia': [
+    Color(0xFFE60012),
+    Color(0xFFFFD7D7),
+    Color(0xFF300006),
+  ],
   'australia__bank_australia': [
     Color(0xFFDC188B),
     Color(0xFF003764),
@@ -85,6 +90,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFF6200),
     Color(0xFF525199),
     Color(0xFF2A2951),
+  ],
+  'australia__hsbc_australia': [
+    Color(0xFFDB0011),
+    Color(0xFF3A3A3A),
+    Color(0xFF1C0E12),
   ],
   'australia__macquarie_bank': [
     Color(0xFF111111),
@@ -585,6 +595,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF579AF6),
     Color(0xFF428BCA),
     Color(0xFF194061),
+  ],
+  'egypt__hsbc_egypt': [
+    Color(0xFFDB0011),
+    Color(0xFF4A4A4A),
+    Color(0xFF210C0F),
   ],
   'egypt__faisal_islamic_bank': [
     Color(0xFFFFFF00),
@@ -1181,6 +1196,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFDC3545),
     Color(0xFF650F17),
   ],
+  'malaysia__bank_of_china_malaysia': [
+    Color(0xFFE60012),
+    Color(0xFFB81C2B),
+    Color(0xFF260004),
+  ],
   'malaysia__bank_rakyat': [
     Color(0xFF84BA3F),
     Color(0xFF0071A5),
@@ -1196,10 +1216,20 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFF0000),
     Color(0xFF020F1E),
   ],
+  'malaysia__hsbc_malaysia': [
+    Color(0xFFDB0011),
+    Color(0xFF2F2F2F),
+    Color(0xFF1D1010),
+  ],
   'malaysia__maybank': [
     Color(0xFFFFCC00),
     Color(0xFF111111),
     Color(0xFF110B0B),
+  ],
+  'malaysia__ocbc_malaysia': [
+    Color(0xFFE31B23),
+    Color(0xFF1F1F1F),
+    Color(0xFF290B0F),
   ],
   'malaysia__public_bank': [
     Color(0xFFFF0000),
@@ -1210,6 +1240,16 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF0067B1),
     Color(0xFFEF3E42),
     Color(0xFF053C64),
+  ],
+  'malaysia__standard_chartered_malaysia': [
+    Color(0xFF00A3E0),
+    Color(0xFF6DB33F),
+    Color(0xFF053B4A),
+  ],
+  'malaysia__uob_malaysia': [
+    Color(0xFFD71920),
+    Color(0xFF003B70),
+    Color(0xFF061D36),
   ],
   'mexico__banco_azteca': [
     Color(0xFF17A54D),
@@ -1350,6 +1390,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF006BDE),
     Color(0xFF8ADAF9),
     Color(0xFF063B74),
+  ],
+  'new_zealand__bank_of_china_nz': [
+    Color(0xFFE60012),
+    Color(0xFF7A0010),
+    Color(0xFF250005),
   ],
   'new_zealand__asb': [
     Color(0xFF001F7D),
@@ -1681,6 +1726,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF5B3F3F),
     Color(0xFF110B0B),
   ],
+  'philippines__hsbc_philippines': [
+    Color(0xFFDB0011),
+    Color(0xFF404040),
+    Color(0xFF260A0D),
+  ],
   'philippines__landbank': [
     Color(0xFF6BBF59),
     Color(0xFF3399FF),
@@ -1735,6 +1785,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF056DAE),
     Color(0xFF255BE3),
     Color(0xFF0C286F),
+  ],
+  'poland__credit_agricole_poland': [
+    Color(0xFF006B3F),
+    Color(0xFFB5D334),
+    Color(0xFF022A19),
   ],
   'poland__ing_bank_l_ski': [
     Color(0xFFFF6200),
@@ -1831,6 +1886,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF4C1044),
     Color(0xFF360A30),
   ],
+  'qatar__hsbc_qatar': [
+    Color(0xFFDB0011),
+    Color(0xFF525252),
+    Color(0xFF220A0D),
+  ],
   'qatar__dukhan_bank': [
     Color(0xFF4197CB),
     Color(0xFF24366F),
@@ -1860,6 +1920,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF8A3315),
     Color(0xFF4C104B),
     Color(0xFF250725),
+  ],
+  'qatar__standard_chartered_qatar': [
+    Color(0xFF0072CE),
+    Color(0xFF6DB33F),
+    Color(0xFF032E53),
   ],
   'saudi_arabia__al_rajhi_bank': [
     Color(0xFF221AFB),
@@ -1916,6 +1981,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFDC3545),
     Color(0xFF75121C),
   ],
+  'singapore__bank_of_china_singapore': [
+    Color(0xFFE60012),
+    Color(0xFF9F0010),
+    Color(0xFF210004),
+  ],
   'singapore__citibank_sg': [
     Color(0xFF0465A7),
     Color(0xFF255BE3),
@@ -1935,6 +2005,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFDB0011),
     Color(0xFF333333),
     Color(0xFF251616),
+  ],
+  'singapore__icbc_singapore': [
+    Color(0xFFC7000B),
+    Color(0xFFFFCC00),
+    Color(0xFF5A0308),
   ],
   'singapore__maybank_sg': [
     Color(0xFFFF6200),
@@ -2216,6 +2291,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFDA1C49),
     Color(0xFF09044C),
   ],
+  'thailand__bank_of_china_thailand': [
+    Color(0xFFE60012),
+    Color(0xFF8F0012),
+    Color(0xFF2D0007),
+  ],
   'thailand__cimb_thai': [
     Color(0xFFBA0019),
     Color(0xFF780000),
@@ -2316,6 +2396,16 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFFC107),
     Color(0xFF063170),
   ],
+  'uae__bank_of_baroda_uae': [
+    Color(0xFFFF5F00),
+    Color(0xFF003D7C),
+    Color(0xFF061E3A),
+  ],
+  'uae__citibank_uae': [
+    Color(0xFF056DAE),
+    Color(0xFFED1C24),
+    Color(0xFF062F4B),
+  ],
   'uae__adcb': [
     Color(0xFF007360),
     Color(0xFFCE116B),
@@ -2341,6 +2431,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF2A5082),
     Color(0xFF042051),
   ],
+  'uae__hsbc_uae': [
+    Color(0xFFDB0011),
+    Color(0xFF383838),
+    Color(0xFF28090D),
+  ],
   'uae__mashreq': [
     Color(0xFFFF7524),
     Color(0xFFFFDC00),
@@ -2355,6 +2450,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF007369),
     Color(0xFFCE1178),
     Color(0xFF044842),
+  ],
+  'uae__standard_chartered_uae': [
+    Color(0xFF0072CE),
+    Color(0xFF00A3E0),
+    Color(0xFF042C4D),
   ],
   'uae__wio_bank': [
     Color(0xFF5700FF),
@@ -2511,6 +2611,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF0D6EFD),
     Color(0xFF063374),
   ],
+  'vietnam__hsbc_vietnam': [
+    Color(0xFFDB0011),
+    Color(0xFF464646),
+    Color(0xFF1E0C0F),
+  ],
   'vietnam__mb_bank': [
     Color(0xFF222266),
     Color(0xFF225500),
@@ -2520,6 +2625,16 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF2A81D0),
     Color(0xFF0058A0),
     Color(0xFF05355C),
+  ],
+  'vietnam__shinhan_bank_vietnam': [
+    Color(0xFF0046AD),
+    Color(0xFF55A5FF),
+    Color(0xFF032557),
+  ],
+  'vietnam__standard_chartered_vietnam': [
+    Color(0xFF0072CE),
+    Color(0xFF6DB33F),
+    Color(0xFF073A58),
   ],
   'vietnam__techcombank': [
     Color(0xFFED1C24),
@@ -2540,5 +2655,10 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF00B74F),
     Color(0xFF1D4289),
     Color(0xFF0D1F43),
+  ],
+  'vietnam__uob_vietnam': [
+    Color(0xFFD71920),
+    Color(0xFF003B70),
+    Color(0xFF071A2E),
   ],
 };
