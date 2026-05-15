@@ -1,7 +1,6 @@
 package com.secure.swallet
 
 import android.os.Bundle
-import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 class MainActivity: FlutterFragmentActivity() {
@@ -16,6 +15,6 @@ class MainActivity: FlutterFragmentActivity() {
     }
 
     private fun enableScreenshotProtection() {
-        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        // Temporarily disabled so wallet design screenshots can be captured.
     }
 }

@@ -55,6 +55,8 @@ class _PinLockScreenState extends State<PinLockScreen>
   static const double _homeStackCollapsedScaleStep = 0.045;
   static const int _homeStackMaxCollapsedDepth = 4;
   static const int _homeStackVisibleCollapsedCards = 4;
+  static const String _walletLeatherTextureAsset =
+      'assets/images/textures/blue_leather_texture.jpeg';
   static const List<double> _homeStackCollapsedTopOffsets = <double>[
     64,
     30,
@@ -78,6 +80,7 @@ class _PinLockScreenState extends State<PinLockScreen>
   late Animation<double> _shakeAnimation;
   late AnimationController _unlockController;
   late bool _isDark;
+  ui.Image? _walletLeatherImage;
 
   @override
   void initState() {
@@ -88,6 +91,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1480),
     );
+    _loadWalletLeatherTexture();
     _checkPinStatus();
   }
 
@@ -95,7 +99,33 @@ class _PinLockScreenState extends State<PinLockScreen>
   void dispose() {
     _shakeController.dispose();
     _unlockController.dispose();
+    _walletLeatherImage?.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadWalletLeatherTexture() async {
+    late final ui.FrameInfo frame;
+    try {
+      final data = await rootBundle.load(_walletLeatherTextureAsset);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final codec = await ui.instantiateImageCodec(bytes);
+      frame = await codec.getNextFrame();
+    } catch (_) {
+      return;
+    }
+
+    if (!mounted) {
+      frame.image.dispose();
+      return;
+    }
+
+    setState(() {
+      _walletLeatherImage?.dispose();
+      _walletLeatherImage = frame.image;
+    });
   }
 
   void _initShakeAnimation() {
@@ -1201,7 +1231,7 @@ class _PinLockScreenState extends State<PinLockScreen>
       width: width,
       height: height,
       child: CustomPaint(
-        painter: _WalletBackPainter(),
+        painter: _WalletBackPainter(leather: _walletLeatherImage),
       ),
     );
   }
@@ -1293,7 +1323,7 @@ class _PinLockScreenState extends State<PinLockScreen>
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: _WalletPocketPainter(),
+              painter: _WalletPocketPainter(leather: _walletLeatherImage),
             ),
           ),
           Positioned(
@@ -1889,6 +1919,10 @@ class _PinLockScreenState extends State<PinLockScreen>
 class _WalletBackPainter extends CustomPainter {
   static const _sourceSize = Size(320, 213.333);
 
+  final ui.Image? leather;
+
+  const _WalletBackPainter({required this.leather});
+
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -1897,47 +1931,75 @@ class _WalletBackPainter extends CustomPainter {
       size.height / _sourceSize.height,
     );
 
-    final outerPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..shader = ui.Gradient.linear(
-        const Offset(292.952, 0),
-        const Offset(63.2381, 169.905),
-        const [
-          Color(0xFF51C7FF),
-          Color(0xFF90F4FC),
-          Color(0xFF219BD5),
-        ],
-        const [0.017217, 0.966318, 1],
-      );
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(0, 0, 320, 213.333),
-        const Radius.circular(36),
+    const outerRect = Rect.fromLTWH(0, 0, 320, 213.333);
+    final outerPath = _WalletLeather.handmadeRoundedRectPath(
+      outerRect,
+      radius: 42,
+      phase: 0.15,
+    );
+    _WalletLeather.paintSoftPathCastShadow(canvas, outerPath);
+    canvas.drawShadow(
+      outerPath,
+      Colors.black.withValues(alpha: 0.30),
+      11,
+      false,
+    );
+    _WalletLeather.paintTextureSurface(
+      canvas,
+      rect: outerRect,
+      clip: outerPath,
+      leather: leather,
+      shadow: const Color(0xFF01020B),
+      mid: const Color(0xFF11132D),
+      glow: const Color(0xFF272D5D),
+      textureScale: 1.1,
+    );
+    _WalletLeather.paintBackPanelSideWalls(canvas, outerPath, outerRect);
+    _WalletLeather.paintCardPressureBulge(canvas, outerPath, outerRect);
+    _WalletLeather.paintFoldedLeatherEdge(
+      canvas,
+      outerPath: outerPath,
+      innerPath: _WalletLeather.handmadeRoundedRectPath(
+        outerRect.deflate(10),
+        radius: 32,
+        phase: 1.1,
       ),
-      outerPaint,
+      bounds: outerRect,
     );
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(13.3335, 13.3333, 293.3335, 186.6667),
-        const Radius.circular(24),
-      ),
-      Paint()
-        ..style = PaintingStyle.fill
-        ..color = const Color(0xFF000100),
+    const innerRect = Rect.fromLTWH(14, 14, 292, 186);
+    final innerRRect = RRect.fromRectAndRadius(
+      innerRect,
+      const Radius.circular(30),
     );
+    _WalletLeather.paintTextureSurface(
+      canvas,
+      rect: innerRect,
+      clip: innerRRect.outerPath,
+      leather: leather,
+      shadow: const Color(0xFF01020D),
+      mid: const Color(0xFF080B21),
+      glow: const Color(0xFF191E49),
+      textureScale: 1.24,
+    );
+    _WalletLeather.paintInsetHighlight(canvas, innerRRect);
 
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WalletBackPainter oldDelegate) {
+    return oldDelegate.leather != leather;
+  }
 }
 
 class _WalletPocketPainter extends CustomPainter {
   static const _sourceSize = Size(320, 149.3332);
 
+  final ui.Image? leather;
+
+  const _WalletPocketPainter({required this.leather});
+
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -1946,50 +2008,739 @@ class _WalletPocketPainter extends CustomPainter {
       size.height / _sourceSize.height,
     );
 
-    final path = Path()
-      ..moveTo(104.8934, 0)
-      ..cubicTo(109.4704, 0, 113.8884, 1.6815, 117.3074, 4.7253)
-      ..lineTo(126.1594, 12.6081)
-      ..cubicTo(129.5774, 15.6519, 133.9954, 17.3334, 138.5734, 17.3334)
-      ..lineTo(182.7604, 17.3334)
-      ..cubicTo(187.3374, 17.3334, 191.7564, 15.6519, 195.1744, 12.6081)
-      ..lineTo(204.0264, 4.7253)
-      ..cubicTo(207.4444, 1.6815, 211.8634, 0, 216.4404, 0)
-      ..lineTo(320, 0)
-      ..lineTo(320, 115.3332)
-      ..cubicTo(320, 134.1112, 304.7784, 149.3332, 286.0004, 149.3332)
-      ..lineTo(34.0004, 149.3332)
-      ..cubicTo(15.2223, 149.3332, 0, 134.1112, 0, 115.3332)
-      ..lineTo(0, 0)
-      ..lineTo(104.8934, 0)
-      ..close();
+    const frontRect = Rect.fromLTWH(0, 0, 320, 149.3332);
+    final path = _WalletLeather.pocketOuterPath();
 
-    canvas.drawShadow(
-      path.shift(const Offset(0, -6.85714)),
-      Colors.black.withValues(alpha: 0.25),
-      9.14286,
-      false,
+    _WalletLeather.paintPocketCastShadow(canvas, path);
+    _WalletLeather.paintTextureSurface(
+      canvas,
+      rect: frontRect,
+      clip: path,
+      leather: leather,
+      shadow: const Color(0xFF01020B),
+      mid: const Color(0xFF11142F),
+      glow: const Color(0xFF2E3470),
+      textureScale: 1.06,
     );
-
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..shader = ui.Gradient.radial(
-        const Offset(160, -34.66664),
-        184,
-        const [
-          Color(0xFF41FEFE),
-          Color(0xFF90F4FC),
-          Color(0xFF219BD5),
-        ],
-        const [0, 0.351981, 1],
-        TileMode.clamp,
-        Matrix4.diagonal3Values(278.377 / 184, 1, 1).storage,
-      );
-
-    canvas.drawPath(path, paint);
+    _WalletLeather.paintFrontPanelLift(canvas, path);
+    _WalletLeather.paintCornerCompression(canvas, path);
+    _WalletLeather.paintFoldedLeatherEdge(
+      canvas,
+      outerPath: path,
+      innerPath: _WalletLeather.pocketInnerEdgePath(),
+      bounds: frontRect,
+    );
+    _WalletLeather.paintPocketOpeningLip(
+        canvas, _WalletLeather.pocketOpeningPath());
+    final pocketStitchPath = _WalletLeather.pocketStitchPath();
+    _WalletLeather.paintStitchChannel(canvas, pocketStitchPath);
+    _WalletLeather.paintSaddleStitches(
+      canvas,
+      pocketStitchPath,
+      threadColor: const Color(0xFF39433F),
+      bounds: frontRect,
+      startOffset: 0.4,
+    );
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WalletPocketPainter oldDelegate) {
+    return oldDelegate.leather != leather;
+  }
+}
+
+extension on RRect {
+  Path get outerPath => Path()..addRRect(this);
+}
+
+class _WalletLeather {
+  static Path pocketOuterPath() {
+    return Path()
+      ..moveTo(0, 8.2)
+      ..lineTo(111.8, 8.6)
+      ..cubicTo(125.6, 8.7, 134.3, 21.6, 153.8, 23.2)
+      ..cubicTo(174.4, 24.9, 188.9, 20.0, 198.4, 11.2)
+      ..cubicTo(205.5, 5.05, 217.4, 7.2, 231.6, 7.1)
+      ..lineTo(320, 5.2)
+      ..lineTo(320, 115.0)
+      ..cubicTo(320.35, 134.0, 305.0, 149.22, 286.15, 149.3332)
+      ..lineTo(33.8, 149.3332)
+      ..cubicTo(15.18, 149.05, -0.2, 134.3, 0, 115.1)
+      ..lineTo(0, 8.2)
+      ..close();
+  }
+
+  static Path pocketInnerEdgePath() {
+    return Path()
+      ..moveTo(10.6, 16.4)
+      ..lineTo(111.8, 16.7)
+      ..cubicTo(124.1, 16.8, 134.3, 28.0, 154.2, 29.4)
+      ..cubicTo(174.3, 30.8, 189.55, 26.1, 200.8, 17.9)
+      ..cubicTo(209.0, 12.1, 218.7, 14.1, 231.2, 14.0)
+      ..lineTo(310.0, 12.8)
+      ..lineTo(310.2, 114.4)
+      ..cubicTo(310.45, 128.6, 299.05, 140.05, 284.75, 140.1)
+      ..lineTo(35.0, 140.1)
+      ..cubicTo(20.85, 139.85, 9.6, 128.4, 9.8, 114.25)
+      ..lineTo(10.6, 16.4)
+      ..close();
+  }
+
+  static Path pocketOpeningPath() {
+    return Path()
+      ..moveTo(4.0, 9.2)
+      ..lineTo(112.2, 9.55)
+      ..cubicTo(126.0, 9.55, 134.8, 22.15, 154.0, 23.9)
+      ..cubicTo(174.1, 25.6, 189.0, 20.8, 198.95, 12.0)
+      ..cubicTo(206.2, 5.85, 217.2, 7.95, 231.2, 7.9)
+      ..lineTo(316.0, 6.1);
+  }
+
+  static Path pocketStitchPath() {
+    return Path()
+      ..moveTo(13.6, 22.2)
+      ..lineTo(13.6, 109.8)
+      ..cubicTo(13.6, 126.4, 25.6, 135.4, 40.6, 135.4)
+      ..lineTo(279.8, 136.0)
+      ..cubicTo(294.4, 135.8, 306.2, 126.3, 306.2, 110.0)
+      ..lineTo(306.2, 20.4);
+  }
+
+  static Path handmadeRoundedRectPath(
+    Rect rect, {
+    required double radius,
+    required double phase,
+  }) {
+    final maxRadius = math.min(rect.width, rect.height) / 2;
+    final baseRadius = radius.clamp(0.0, maxRadius);
+    final left = rect.left + _edgeNoise(phase, 1);
+    final top = rect.top + _edgeNoise(phase, 2);
+    final right = rect.right + _edgeNoise(phase, 3);
+    final bottom = rect.bottom + _edgeNoise(phase, 4);
+    final tl = (baseRadius + _edgeNoise(phase, 5)).clamp(0.0, maxRadius);
+    final tr = (baseRadius + _edgeNoise(phase, 6)).clamp(0.0, maxRadius);
+    final br = (baseRadius + _edgeNoise(phase, 7)).clamp(0.0, maxRadius);
+    final bl = (baseRadius + _edgeNoise(phase, 8)).clamp(0.0, maxRadius);
+    const k = 0.5522847498307936;
+
+    return Path()
+      ..moveTo(left + tl, top + (_edgeNoise(phase, 9) * 0.25))
+      ..lineTo(right - tr, top + (_edgeNoise(phase, 10) * 0.25))
+      ..cubicTo(
+        right - tr + (tr * k),
+        top,
+        right,
+        top + tr - (tr * k),
+        right,
+        top + tr,
+      )
+      ..lineTo(right + (_edgeNoise(phase, 11) * 0.18), bottom - br)
+      ..cubicTo(
+        right,
+        bottom - br + (br * k),
+        right - br + (br * k),
+        bottom,
+        right - br,
+        bottom,
+      )
+      ..lineTo(left + bl, bottom + (_edgeNoise(phase, 12) * 0.2))
+      ..cubicTo(
+        left + bl - (bl * k),
+        bottom,
+        left,
+        bottom - bl + (bl * k),
+        left,
+        bottom - bl,
+      )
+      ..lineTo(left + (_edgeNoise(phase, 13) * 0.18), top + tl)
+      ..cubicTo(
+        left,
+        top + tl - (tl * k),
+        left + tl - (tl * k),
+        top,
+        left + tl,
+        top,
+      )
+      ..close();
+  }
+
+  static double _edgeNoise(double phase, int step) {
+    return math.sin((phase + step) * 1.71) * 0.46 +
+        math.sin((phase + step) * 0.53) * 0.18;
+  }
+
+  static void paintSoftPathCastShadow(Canvas canvas, Path path) {
+    canvas.drawPath(
+      path.shift(const Offset(0, 10)),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.24)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0, 4)),
+      Paint()
+        ..color = const Color(0xFF020814).withValues(alpha: 0.34)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+  }
+
+  static void paintTextureSurface(
+    Canvas canvas, {
+    required Rect rect,
+    required Path clip,
+    required ui.Image? leather,
+    required Color shadow,
+    required Color mid,
+    required Color glow,
+    double textureScale = 1,
+  }) {
+    canvas.save();
+    canvas.clipPath(clip);
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          rect.topLeft,
+          rect.bottomRight,
+          [glow, mid, shadow],
+          const [0, 0.48, 1],
+        ),
+    );
+
+    if (leather != null) {
+      final source = Rect.fromLTWH(
+        0,
+        0,
+        leather.width.toDouble(),
+        leather.height.toDouble(),
+      );
+      final textureRect = Rect.fromCenter(
+        center: rect.center,
+        width: rect.width * textureScale,
+        height: rect.height * textureScale,
+      );
+      canvas.drawImageRect(
+        leather,
+        source,
+        textureRect,
+        Paint()
+          ..filterQuality = FilterQuality.high
+          ..isAntiAlias = true
+          ..colorFilter = ColorFilter.mode(
+            Colors.white.withValues(alpha: 0.36),
+            BlendMode.modulate,
+          ),
+      );
+    } else {
+      _paintProceduralGrain(canvas, rect);
+    }
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          rect.topRight,
+          rect.bottomLeft,
+          [
+            Colors.black.withValues(alpha: 0.10),
+            Colors.black.withValues(alpha: 0.34),
+          ],
+          const [0, 1],
+        ),
+    );
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..shader = ui.Gradient.radial(
+          rect.topCenter.translate(rect.width * 0.1, rect.height * 0.12),
+          rect.width * 0.7,
+          [
+            Colors.white.withValues(alpha: 0.11),
+            Colors.transparent,
+          ],
+          const [0, 1],
+        ),
+    );
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..shader = ui.Gradient.radial(
+          rect.topLeft.translate(rect.width * 0.32, rect.height * 0.22),
+          rect.width * 0.62,
+          [
+            Colors.white.withValues(alpha: 0.072),
+            Colors.white.withValues(alpha: 0.018),
+            Colors.transparent,
+          ],
+          const [0, 0.42, 1],
+        ),
+    );
+    canvas.restore();
+  }
+
+  static void paintBackPanelSideWalls(Canvas canvas, Path path, Rect bounds) {
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      Rect.fromLTWH(bounds.left, bounds.top + 18, 28, bounds.height - 34),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          bounds.centerLeft,
+          bounds.centerRight,
+          [
+            Colors.black.withValues(alpha: 0.28),
+            Colors.black.withValues(alpha: 0.08),
+            Colors.transparent,
+          ],
+          const [0, 0.55, 1],
+        ),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(bounds.right - 28, bounds.top + 18, 28, bounds.height - 34),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          bounds.centerRight,
+          bounds.centerLeft,
+          [
+            Colors.black.withValues(alpha: 0.24),
+            Colors.black.withValues(alpha: 0.07),
+            Colors.transparent,
+          ],
+          const [0, 0.58, 1],
+        ),
+    );
+    canvas.restore();
+  }
+
+  static void paintCardPressureBulge(Canvas canvas, Path path, Rect bounds) {
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(bounds.center.dx, bounds.top + 96),
+        width: 214,
+        height: 72,
+      ),
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..shader = ui.Gradient.radial(
+          Offset(bounds.center.dx, bounds.top + 90),
+          118,
+          [
+            Colors.white.withValues(alpha: 0.042),
+            Colors.white.withValues(alpha: 0.014),
+            Colors.transparent,
+          ],
+          const [0, 0.56, 1],
+        ),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(bounds.center.dx, bounds.top + 116),
+        width: 236,
+        height: 86,
+      ),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.radial(
+          Offset(bounds.center.dx, bounds.top + 116),
+          128,
+          [
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.06),
+          ],
+          const [0.46, 1],
+        ),
+    );
+    canvas.restore();
+  }
+
+  static void _paintProceduralGrain(Canvas canvas, Rect rect) {
+    final lightPaint = Paint()
+      ..strokeWidth = 0.55
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: 0.035);
+    final darkPaint = Paint()
+      ..strokeWidth = 0.75
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.black.withValues(alpha: 0.12);
+
+    for (var i = 0; i < 280; i++) {
+      final n = i.toDouble();
+      final x = rect.left + (((n * 37.0) % 997) / 997.0) * rect.width;
+      final y = rect.top + (((n * 61.0) % 991) / 991.0) * rect.height;
+      final wave = math.sin(n * 1.73) * 1.8;
+      final length = 2.4 + (((n * 17.0) % 100) / 100.0) * 5.2;
+      final angle = -0.35 + math.sin(n * 0.79) * 0.24;
+      final dx = math.cos(angle) * length;
+      final dy = math.sin(angle) * length;
+      canvas.drawLine(
+        Offset(x, y + wave),
+        Offset(x + dx, y + wave + dy),
+        i.isEven ? lightPaint : darkPaint,
+      );
+    }
+  }
+
+  static void paintInsetHighlight(Canvas canvas, RRect rrect) {
+    canvas.drawRRect(
+      rrect.deflate(1.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1
+        ..shader = ui.Gradient.linear(
+          rrect.outerRect.topLeft,
+          rrect.outerRect.bottomRight,
+          [
+            const Color(0xFF7CC2F5).withValues(alpha: 0.14),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.20),
+          ],
+          const [0, 0.42, 1],
+        ),
+    );
+  }
+
+  static void paintFoldedLeatherEdge(
+    Canvas canvas, {
+    required Path outerPath,
+    required Path innerPath,
+    required Rect bounds,
+  }) {
+    final edgeBand = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addPath(outerPath, Offset.zero)
+      ..addPath(innerPath, Offset.zero);
+
+    canvas.save();
+    canvas.clipPath(outerPath);
+
+    canvas.drawPath(
+      edgeBand,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          bounds.topCenter,
+          bounds.bottomCenter,
+          [
+            const Color(0xFF01020A),
+            const Color(0xFF080A1C),
+            const Color(0xFF161A3E),
+            const Color(0xFF01020A),
+          ],
+          const [0, 0.2, 0.58, 1],
+        ),
+    );
+    canvas.drawPath(
+      edgeBand,
+      Paint()
+        ..blendMode = BlendMode.screen
+        ..shader = ui.Gradient.linear(
+          bounds.topLeft,
+          bounds.bottomRight,
+          [
+            const Color(0xFFC9D1FF).withValues(alpha: 0.09),
+            Colors.transparent,
+            Colors.white.withValues(alpha: 0.022),
+          ],
+          const [0, 0.45, 1],
+        ),
+    );
+    canvas.drawPath(
+      edgeBand,
+      Paint()
+        ..blendMode = BlendMode.softLight
+        ..shader = ui.Gradient.linear(
+          bounds.centerLeft,
+          bounds.centerRight,
+          [
+            Colors.white.withValues(alpha: 0.025),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.10),
+          ],
+          const [0, 0.52, 1],
+        ),
+    );
+    canvas.drawPath(
+      edgeBand,
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          bounds.topRight,
+          bounds.bottomLeft,
+          [
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.28),
+            Colors.black.withValues(alpha: 0.52),
+          ],
+          const [0.1, 0.64, 1],
+        ),
+    );
+
+    canvas.drawPath(
+      innerPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.8
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF030827).withValues(alpha: 0.40),
+    );
+    canvas.drawPath(
+      innerPath.shift(const Offset(0, -0.55)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.75
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFFD0D7FF).withValues(alpha: 0.10),
+    );
+
+    canvas.restore();
+  }
+
+  static void paintCornerCompression(Canvas canvas, Path path) {
+    canvas.save();
+    canvas.clipPath(path);
+    final paint = Paint()
+      ..blendMode = BlendMode.multiply
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9)
+      ..color = Colors.black.withValues(alpha: 0.105);
+
+    canvas.drawOval(
+      const Rect.fromLTWH(2, 123, 58, 32),
+      paint,
+    );
+    canvas.drawOval(
+      const Rect.fromLTWH(260, 122, 58, 32),
+      paint..color = Colors.black.withValues(alpha: 0.095),
+    );
+    canvas.restore();
+  }
+
+  static void paintFrontPanelLift(Canvas canvas, Path path) {
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 320, 28),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          const Offset(0, 0),
+          const Offset(0, 30),
+          [
+            Colors.black.withValues(alpha: 0.16),
+            Colors.black.withValues(alpha: 0.05),
+            Colors.transparent,
+          ],
+          const [0, 0.58, 1],
+        ),
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(8, 18, 18, 102),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          const Offset(8, 70),
+          const Offset(28, 70),
+          [
+            Colors.black.withValues(alpha: 0.18),
+            Colors.black.withValues(alpha: 0.04),
+            Colors.transparent,
+          ],
+          const [0, 0.55, 1],
+        ),
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(294, 18, 18, 102),
+      Paint()
+        ..blendMode = BlendMode.multiply
+        ..shader = ui.Gradient.linear(
+          const Offset(312, 70),
+          const Offset(292, 70),
+          [
+            Colors.black.withValues(alpha: 0.16),
+            Colors.black.withValues(alpha: 0.04),
+            Colors.transparent,
+          ],
+          const [0, 0.55, 1],
+        ),
+    );
+    canvas.restore();
+  }
+
+  static void paintPocketOpeningLip(Canvas canvas, Path path) {
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF01020C).withValues(alpha: 0.72),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0, 0.85)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF111842).withValues(alpha: 0.42),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0, -0.7)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFFD3D8FF).withValues(alpha: 0.045),
+    );
+  }
+
+  static void paintStitchChannel(Canvas canvas, Path path) {
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.55
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.black.withValues(alpha: 0.15)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0, -0.45)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.white.withValues(alpha: 0.04),
+    );
+    canvas.drawPath(
+      path.shift(const Offset(0, 0.55)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.9
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.black.withValues(alpha: 0.10),
+    );
+  }
+
+  static void paintSaddleStitches(
+    Canvas canvas,
+    Path path, {
+    required Color threadColor,
+    required Rect bounds,
+    double startOffset = 0,
+  }) {
+    final metrics = path.computeMetrics(forceClosed: false);
+    final shadowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.46
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.black.withValues(alpha: 0.18)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.55);
+    final dentPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.038)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+    var stitchIndex = 0;
+    for (final metric in metrics) {
+      var distance = 5.2 + startOffset;
+      while (distance < metric.length - 2) {
+        final tangent = metric.getTangentForOffset(distance);
+        if (tangent == null) {
+          distance += 10.6;
+          continue;
+        }
+
+        final direction = tangent.vector;
+        final normal = Offset(-direction.dy, direction.dx);
+        final angle = _stitchNoise(stitchIndex, 0.31) * (math.pi / 60);
+        final rawStitchDirection = Offset(
+          (normal.dx * 0.9) + (direction.dx * 0.28),
+          (normal.dy * 0.9) + (direction.dy * 0.28),
+        );
+        final stitchDirection = _rotateOffset(rawStitchDirection, angle);
+        final length = 4.8 + (_stitchNoise(stitchIndex, 1.97) * 0.5);
+        final half = stitchDirection * (length / 2);
+        final center = tangent.position;
+        final start = center - half;
+        final end = center + half;
+
+        canvas.drawCircle(start, 2.4, dentPaint);
+        canvas.drawCircle(end, 2.1, dentPaint);
+        canvas.drawLine(
+          start + const Offset(0, 0.75),
+          end + const Offset(0, 0.75),
+          shadowPaint,
+        );
+        canvas.drawLine(
+          start,
+          end,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.18 + (_stitchNoise(stitchIndex, 4.2).abs() * 0.14)
+            ..strokeCap = StrokeCap.round
+            ..shader = ui.Gradient.linear(
+              start,
+              end,
+              [
+                Color.lerp(threadColor, Colors.black, 0.18)!
+                    .withValues(alpha: 0.86),
+                threadColor.withValues(alpha: 0.90),
+                Color.lerp(threadColor, Colors.black, 0.24)!
+                    .withValues(alpha: 0.82),
+              ],
+              const [0, 0.46, 1],
+            ),
+        );
+        canvas.drawLine(
+          start + (normal * 0.18),
+          end + (normal * 0.18),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.42
+            ..strokeCap = StrokeCap.round
+            ..color = Colors.white.withValues(alpha: 0.05),
+        );
+
+        distance += 9.55 + (_stitchNoise(stitchIndex, 7.3) * 0.4);
+        stitchIndex++;
+      }
+    }
+  }
+
+  static double _stitchNoise(int index, double salt) {
+    return math.sin((index * 12.9898) + (salt * 78.233)) * 0.5 +
+        math.sin((index * 3.173) + salt) * 0.18;
+  }
+
+  static Offset _rotateOffset(Offset offset, double radians) {
+    final cosA = math.cos(radians);
+    final sinA = math.sin(radians);
+    return Offset(
+      (offset.dx * cosA) - (offset.dy * sinA),
+      (offset.dx * sinA) + (offset.dy * cosA),
+    );
+  }
+
+  static void paintPocketCastShadow(Canvas canvas, Path path) {
+    canvas.drawPath(
+      path.shift(const Offset(0, 5)),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.24)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+  }
 }

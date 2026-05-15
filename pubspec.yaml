@@ -53,6 +53,7 @@ flutter:
     # ---------- IMAGES ----------
     - assets/images/
     - assets/images/networks/
+    - assets/images/textures/
     - assets/onboarding/
     - assets/card visuals/
 
