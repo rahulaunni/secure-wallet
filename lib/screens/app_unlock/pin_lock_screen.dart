@@ -494,7 +494,7 @@ class _PinLockScreenState extends State<PinLockScreen>
             : mediaSize.height;
         final safeHeight = maxHeight - mediaPadding.top - mediaPadding.bottom;
         const sourceWidth = 357.0;
-        const titleHeight = 52.0;
+        const titleHeight = 70.0;
         const titleTopOffset = 24.0;
         const minWalletGap = 24.0;
         const keypadHeight = 380.0;
@@ -600,9 +600,14 @@ class _PinLockScreenState extends State<PinLockScreen>
   ) {
     final titleColor = _isDark ? _lockTitleDark : _lockTitleLight;
     final subtitleColor = _isDark ? _lockSubtitleDark : _lockSubtitleLight;
+    final eyebrowText =
+        _isCreating ? 'SECURITY SETUP' : 'AUTHENTICATION REQUIRED';
+    final headlineText = _isCreating
+        ? _statusMessage.toLowerCase()
+        : 'unlock wallet to access\nyour card vault';
 
     return SizedBox(
-      height: 42 * scale,
+      height: 70 * scale,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -618,22 +623,26 @@ class _PinLockScreenState extends State<PinLockScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Swallet',
+                eyebrowText,
                 style: GoogleFonts.poppins(
-                  fontSize: 20 * scale,
+                  fontSize: 9.5 * scale,
                   height: 1,
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
+                  letterSpacing: 2.6 * scale,
+                  fontWeight: FontWeight.w700,
+                  color: subtitleColor,
                 ),
               ),
-              SizedBox(height: 4 * scale),
+              SizedBox(height: 14 * scale),
               Text(
-                _isCreating ? _statusMessage : 'Your digital card storage',
+                headlineText,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
-                  fontSize: 14 * scale,
+                  fontSize: 18 * scale,
                   height: 1.25,
-                  fontWeight: FontWeight.w400,
-                  color: subtitleColor,
+                  fontWeight: FontWeight.w700,
+                  color: titleColor,
                 ),
               ),
             ],
@@ -1335,7 +1344,7 @@ class _PinLockScreenState extends State<PinLockScreen>
           Positioned(
             left: 24 * scale,
             right: 24 * scale,
-            top: 109 * scale,
+            top: 96 * scale,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: (!_isCreating && !_isError) ? _openResetPin : null,
