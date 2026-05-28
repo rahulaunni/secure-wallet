@@ -13,6 +13,8 @@ import '../../../../widgets/add_card/sections/bank_select_grid.dart';
 
 class BankSelectionSection extends StatefulWidget {
   final ValueChanged<String> onBankSelected;
+  final String selectedCountryId;
+  final ValueChanged<String> onCountryChanged;
 
   // 1. Accept optional controller
   final ScrollController? controller;
@@ -20,6 +22,8 @@ class BankSelectionSection extends StatefulWidget {
   const BankSelectionSection({
     super.key,
     required this.onBankSelected,
+    required this.selectedCountryId,
+    required this.onCountryChanged,
     this.controller,
   });
 
@@ -30,7 +34,6 @@ class BankSelectionSection extends StatefulWidget {
 class _BankSelectionSectionState extends State<BankSelectionSection> {
   final TextEditingController _bankSearchController = TextEditingController();
 
-  String _selectedCountryId = BankAssets.supportedCountries.first.id;
   String _bankSearchQuery = '';
 
   @override
@@ -82,13 +85,13 @@ class _BankSelectionSectionState extends State<BankSelectionSection> {
           const SizedBox(height: 14),
 
           _CountrySelector(
-            value: _selectedCountryId,
+            value: widget.selectedCountryId,
             countries: BankAssets.supportedCountries,
             isDark: isDark,
             maxMenuHeight: countryMenuMaxHeight,
             onChanged: (countryId) {
+              widget.onCountryChanged(countryId);
               setState(() {
-                _selectedCountryId = countryId;
                 _bankSearchQuery = '';
                 _bankSearchController.clear();
               });
@@ -118,7 +121,7 @@ class _BankSelectionSectionState extends State<BankSelectionSection> {
             child: BankSelectGrid(
               // 2. Pass the controller down
               controller: widget.controller ?? ScrollController(),
-              banks: BankAssets.banksForCountry(_selectedCountryId),
+              banks: BankAssets.banksForCountry(widget.selectedCountryId),
               searchQuery: _bankSearchQuery,
               onBankSelected: widget.onBankSelected,
             ),
@@ -208,6 +211,7 @@ class _CountrySelector extends StatefulWidget {
 class _CountrySelectorState extends State<_CountrySelector>
     with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
+  final Map<String, GlobalKey> _countryKeys = {};
 
   BankCountry get _selectedCountry {
     return widget.countries.firstWhere(
@@ -216,13 +220,37 @@ class _CountrySelectorState extends State<_CountrySelector>
     );
   }
 
+  GlobalKey _countryKey(String countryId) {
+    return _countryKeys.putIfAbsent(countryId, GlobalKey.new);
+  }
+
   void _toggle() {
-    setState(() => _isExpanded = !_isExpanded);
+    final shouldExpand = !_isExpanded;
+    setState(() => _isExpanded = shouldExpand);
+    if (shouldExpand) {
+      _scrollSelectedCountryIntoView();
+    }
   }
 
   void _select(BankCountry country) {
     widget.onChanged(country.id);
     setState(() => _isExpanded = false);
+  }
+
+  void _scrollSelectedCountryIntoView() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isExpanded) return;
+
+      final selectedContext = _countryKeys[widget.value]?.currentContext;
+      if (selectedContext == null) return;
+
+      Scrollable.ensureVisible(
+        selectedContext,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        alignment: 0.35,
+      );
+    });
   }
 
   @override
@@ -302,6 +330,7 @@ class _CountrySelectorState extends State<_CountrySelector>
                               final isSelected = country.id == widget.value;
 
                               return InkWell(
+                                key: _countryKey(country.id),
                                 onTap: () => _select(country),
                                 child: Container(
                                   width: double.infinity,

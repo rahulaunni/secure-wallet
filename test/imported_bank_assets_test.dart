@@ -122,11 +122,6 @@ void main() {
     expect(crediaBank.name, 'CrediaBank');
     expect(crediaBank.website, 'https://www.crediabank.com');
 
-    final aegeanBalticBank = BankAssets.importedBanks.firstWhere(
-      (bank) => bank.id == 'greece__aegean_baltic_bank',
-    );
-    expect(aegeanBalticBank.website, 'https://aegeanbalticbank.com');
-
     final optimaBank = BankAssets.importedBanks.firstWhere(
       (bank) => bank.id == 'greece__optima_bank',
     );
@@ -186,7 +181,6 @@ void main() {
     expect(israel.bankIds, contains('israel__bank_massad'));
     expect(israel.bankIds, contains('israel__esh_bank'));
     expect(israel.bankIds, contains('israel__mercantile'));
-    expect(israel.bankIds, contains('israel__bank_yahav'));
     expect(israel.bankIds, contains('israel__pepper'));
 
     final massad = BankAssets.importedBanks.firstWhere(
@@ -204,6 +198,66 @@ void main() {
     expect(importedBankGradients, contains('israel__pepper'));
   });
 
+  test('Norway list maps Eika alliance banks to local assets', () {
+    final norway = BankAssets.supportedCountries.firstWhere(
+      (country) => country.id == 'norway',
+    );
+
+    const eikaBankIds = [
+      'norway__agder_sparebank',
+      'norway__aurskog_sparebank',
+      'norway__berg_sparebank',
+      'norway__bien_sparebank',
+      'norway__bjugn_sparebank',
+      'norway__etnedal_sparebank',
+      'norway__evje_og_hornnes_sparebank',
+      'norway__gildeskal_sparebank',
+      'norway__grong_sparebank',
+      'norway__grue_sparebank',
+      'norway__haltdalen_sparebank',
+      'norway__haugesund_sparebank',
+      'norway__hegra_sparebank',
+      'norway__holand_og_setskog_sparebank',
+      'norway__jbf',
+      'norway__jaren_sparebank',
+      'norway__kvinesdal_sparebank',
+      'norway__marker_og_eidsberg_sparebank',
+      'norway__melhusbanken',
+      'norway__odal_sparebank',
+      'norway__oppdalsbanken',
+      'norway__orkla_sparebank',
+      'norway__penni',
+      'norway__rogaland_sparebank',
+      'norway__romerike_sparebank',
+      'norway__rorosbanken',
+      'norway__skagerrak_sparebank',
+      'norway__skudenes_aakra_sparebank',
+      'norway__skue_sparebank',
+      'norway__sogn_sparebank',
+      'norway__soknedal_sparebank',
+      'norway__sparebanken_narvik',
+      'norway__strommen_sparebank',
+      'norway__tinde_sparebank',
+      'norway__trogstad_sparebank',
+      'norway__trondelag_sparebank',
+      'norway__valdres_sparebank',
+      'norway__valle_sparebank',
+      'norway__vekselbanken',
+      'norway__orskog_sparebank',
+    ];
+
+    expect(norway.bankIds, isNot(contains('norway__eika')));
+    expect(norway.bankIds, containsAll(eikaBankIds));
+
+    for (final bankId in eikaBankIds) {
+      final logoPath = BankAssetResolver.logoPath(bankId);
+
+      expect(logoPath, isNotNull, reason: '$bankId needs a local logo path');
+      expect(File(logoPath!).existsSync(), isTrue, reason: logoPath);
+      expect(importedBankGradients, contains(bankId));
+    }
+  });
+
   test('imported bank gradients are unique per bank', () {
     final gradientKeys = <String>{};
 
@@ -219,15 +273,15 @@ void main() {
     }
   });
 
-  test('every imported bank resolves to a local svg logo asset', () {
+  test('every imported bank resolves to a local logo asset', () {
     for (final bank in BankAssets.importedBanks) {
       final logoPath = BankAssetResolver.logoPath(bank.id);
 
       expect(logoPath, isNotNull, reason: '${bank.id} needs a local logo path');
       expect(
         logoPath,
-        endsWith('.svg'),
-        reason: '${bank.id} should use a replaceable SVG asset',
+        anyOf(endsWith('.svg'), endsWith('.png')),
+        reason: '${bank.id} should use a local SVG or PNG asset',
       );
       expect(
         File(logoPath!).existsSync(),
@@ -247,7 +301,7 @@ void main() {
           'assets/icons/banks/spain/bbva.svg',
       'assets/icons/banks/peru/bbva_per.svg':
           'assets/icons/banks/spain/bbva.svg',
-      'assets/icons/banks/argentina/santander_r_o.svg':
+      'assets/icons/banks/argentina/santander_argentina.svg':
           'assets/icons/banks/spain/banco_santander.svg',
       'assets/icons/banks/brazil/banco_santander_brasil.svg':
           'assets/icons/banks/spain/banco_santander.svg',
@@ -255,9 +309,9 @@ void main() {
           'assets/icons/banks/spain/banco_santander.svg',
       'assets/icons/banks/mexico/santander_m_xico.svg':
           'assets/icons/banks/spain/banco_santander.svg',
-      'assets/icons/banks/poland/santander_bank_polska.svg':
-          'assets/icons/banks/spain/banco_santander.svg',
-      'assets/icons/banks/portugal/santander_totta.svg':
+      'assets/icons/banks/poland/erste_bank_polska.svg':
+          'assets/icons/banks/austria/erste_group.svg',
+      'assets/icons/banks/portugal/santander_portugal.svg':
           'assets/icons/banks/spain/banco_santander.svg',
       'assets/icons/banks/united_kingdom/santander_uk.svg':
           'assets/icons/banks/spain/banco_santander.svg',
@@ -317,7 +371,7 @@ void main() {
           'assets/icons/banks/china/bank_of_china.svg',
       'assets/icons/banks/singapore/bank_of_china_singapore.svg':
           'assets/icons/banks/china/bank_of_china.svg',
-      'assets/icons/banks/thailand/bank_of_china_thailand.svg':
+      'assets/icons/banks/thailand/bank_of_china_thai.svg':
           'assets/icons/banks/china/bank_of_china.svg',
       'assets/icons/banks/new_zealand/anz_nz.svg':
           'assets/icons/banks/australia/anz.svg',
@@ -351,11 +405,11 @@ void main() {
           'assets/icons/banks/italy/unicredit.svg',
       'assets/icons/banks/belgium/bnp_paribas_fortis.svg':
           'assets/icons/banks/france/bnp_paribas.svg',
-      'assets/icons/banks/poland/bnp_paribas_poland.svg':
+      'assets/icons/banks/poland/bnp_paribas_bank_polska.svg':
           'assets/icons/banks/france/bnp_paribas.svg',
       'assets/icons/banks/egypt/credit_agricole_egypt.svg':
           'assets/icons/banks/france/cr_dit_agricole.svg',
-      'assets/icons/banks/poland/credit_agricole_poland.svg':
+      'assets/icons/banks/poland/credit_agricole_bank_polska.svg':
           'assets/icons/banks/france/cr_dit_agricole.svg',
       'assets/icons/banks/morocco/cr_dit_agricole_du_maroc.svg':
           'assets/icons/banks/france/cr_dit_agricole.svg',
@@ -379,7 +433,7 @@ void main() {
           'assets/icons/banks/singapore/ocbc_bank.svg',
       'assets/icons/banks/indonesia/cimb_niaga.svg':
           'assets/icons/banks/malaysia/cimb.svg',
-      'assets/icons/banks/thailand/cimb_thai.svg':
+      'assets/icons/banks/thailand/cimb_thai_bank.svg':
           'assets/icons/banks/malaysia/cimb.svg',
       'assets/icons/banks/singapore/maybank_sg.svg':
           'assets/icons/banks/malaysia/maybank.svg',
@@ -413,16 +467,21 @@ void main() {
 
   testWidgets('generated svg logo assets can be loaded by the logo widget',
       (tester) async {
-    await tester.pumpWidget(
-      const BankLogo(
-        bankCid: 'argentina__bbva_argentina',
-        size: 28,
-        width: 120,
-      ),
-    );
+    for (final bankCid in [
+      'argentina__bbva_argentina',
+      'france__groupe_bpce',
+    ]) {
+      await tester.pumpWidget(
+        BankLogo(
+          bankCid: bankCid,
+          size: 28,
+          width: 120,
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
+      expect(tester.takeException(), isNull, reason: bankCid);
+    }
   });
 }

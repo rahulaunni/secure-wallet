@@ -66,6 +66,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   // ================= STATE VARIABLES =================
   String? _selectedBankCid;
   bool _isBankSelected = false;
+  String _selectedCountryId = BankAssets.supportedCountries.first.id;
 
   // -- Drag & Animation --
   double _dragOffset = 0.0;
@@ -766,6 +767,10 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                       onNotification: _handleScrollNotification,
                       child: BankSelectionSection(
                         controller: _scrollController,
+                        selectedCountryId: _selectedCountryId,
+                        onCountryChanged: (countryId) {
+                          setState(() => _selectedCountryId = countryId);
+                        },
                         onBankSelected: _onBankSelected,
                       ),
                     ),

@@ -88,7 +88,7 @@ class CardVisuals {
   }
 
   static String resolveVisualAssetPath(String assetPath) {
-    return _legacyVisualAssetPaths[assetPath] ?? assetPath;
+    return assetPath;
   }
 
   /* -------------------------------------------------------------------------- */
@@ -1040,54 +1040,27 @@ class CardVisuals {
       path: 'assets/card visuals/inset-waves.svg',
       name: 'Inset Waves',
     ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/pearl-rosettes.svg',
+      name: 'Pearl Rosettes',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/spark-grid.svg',
+      name: 'Spark Grid',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/floating-cells.svg',
+      name: 'Floating Cells',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/pinstripe-ribbons.svg',
+      name: 'Pinstripe Ribbons',
+    ),
+    _CardVisualAsset(
+      path: 'assets/card visuals/triangle-mesh.svg',
+      name: 'Triangle Mesh',
+    ),
   ];
-
-  static const Map<String, String> _legacyVisualAssetPaths = {
-    'assets/card visuals/Credit Card.svg':
-        'assets/card visuals/shadow-stripes.svg',
-    'assets/card visuals/Frame.svg': 'assets/card visuals/glass-panels.svg',
-    'assets/card visuals/Frame-1.svg': 'assets/card visuals/prism-cross.svg',
-    'assets/card visuals/Frame-2.svg': 'assets/card visuals/corner-cascade.svg',
-    'assets/card visuals/red.svg': 'assets/card visuals/rounded-blocks.svg',
-    'assets/card visuals/style1.svg': 'assets/card visuals/shadow-stripes.svg',
-    'assets/card visuals/style1-02.svg':
-        'assets/card visuals/diagonal-plates.svg',
-    'assets/card visuals/style1-02-1.svg':
-        'assets/card visuals/liquid-orbs.svg',
-    'assets/card visuals/style1-02-2.svg':
-        'assets/card visuals/corner-bubbles.svg',
-    'assets/card visuals/style1-02-3.svg':
-        'assets/card visuals/glass-ribbons.svg',
-    'assets/card visuals/style1-02-4.svg':
-        'assets/card visuals/neon-blocks.svg',
-    'assets/card visuals/style1-03.svg':
-        'assets/card visuals/capsule-slashes.svg',
-    'assets/card visuals/style1-06.svg':
-        'assets/card visuals/angular-bloom.svg',
-    'assets/card visuals/style1-06-1.svg':
-        'assets/card visuals/radial-sweep.svg',
-    'assets/card visuals/style1-07.svg': 'assets/card visuals/soft-columns.svg',
-    'assets/card visuals/style1-08.svg': 'assets/card visuals/liquid-glow.svg',
-    'assets/card visuals/style1-09.svg': 'assets/card visuals/orbit-rings.svg',
-    'assets/card visuals/style1-09-1.svg':
-        'assets/card visuals/nested-rings.svg',
-    'assets/card visuals/style1-10.svg': 'assets/card visuals/inset-waves.svg',
-    'assets/card visuals/style1-11.svg': 'assets/card visuals/inset-waves.svg',
-    'assets/card visuals/style2.svg': 'assets/card visuals/glass-panels.svg',
-    'assets/card visuals/style4.svg': 'assets/card visuals/prism-cross.svg',
-    'assets/card visuals/style5.svg': 'assets/card visuals/diagonal-plates.svg',
-    'assets/card visuals/style6.svg': 'assets/card visuals/corner-cascade.svg',
-    'assets/card visuals/style7.svg': 'assets/card visuals/capsule-slashes.svg',
-    'assets/card visuals/style8.svg': 'assets/card visuals/liquid-orbs.svg',
-    'assets/card visuals/style9.svg': 'assets/card visuals/corner-bubbles.svg',
-    'assets/card visuals/style10.svg': 'assets/card visuals/glass-ribbons.svg',
-    'assets/card visuals/style11.svg': 'assets/card visuals/neon-blocks.svg',
-    'assets/card visuals/style12.svg': 'assets/card visuals/angular-bloom.svg',
-    'assets/card visuals/style13.svg': 'assets/card visuals/radial-sweep.svg',
-    'assets/card visuals/style14.svg': 'assets/card visuals/orbit-rings.svg',
-    'assets/card visuals/style15.svg': 'assets/card visuals/nested-rings.svg',
-    'assets/card visuals/style16.svg': 'assets/card visuals/inset-waves.svg',
-  };
 
   static int _stableStyleHash(String value) {
     var hash = 0;

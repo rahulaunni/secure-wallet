@@ -771,11 +771,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF26CAFF),
     Color(0xFF03213F),
   ],
-  'greece__aegean_baltic_bank': [
-    Color(0xFF100DAF),
-    Color(0xFF00717A),
-    Color(0xFF07055F),
-  ],
   'greece__alpha_bank': [
     Color(0xFF0D3AAF),
     Color(0xFF00527A),
@@ -815,11 +810,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF41B5FF),
     Color(0xFFA0A8BA),
     Color(0xFF2F384C),
-  ],
-  'hungary__cetelem_hungary': [
-    Color(0xFF007E84),
-    Color(0xFFCD2A90),
-    Color(0xFF033E41),
   ],
   'hungary__cib_bank': [
     Color(0xFF0B4A35),
@@ -946,11 +936,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF19B6BD),
     Color(0xFF033340),
   ],
-  'ireland__ebs': [
-    Color(0xFFBB0036),
-    Color(0xFF357541),
-    Color(0xFF5F051F),
-  ],
   'ireland__n26_ireland': [
     Color(0xFF111111),
     Color(0xFF48AC98),
@@ -985,11 +970,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF12192E),
     Color(0xFF2C4284),
     Color(0xFF080B14),
-  ],
-  'israel__bank_yahav': [
-    Color(0xFF4CB245),
-    Color(0xFF2D5998),
-    Color(0xFF122642),
   ],
   'israel__discount_bank': [
     Color(0xFF36B455),
@@ -1145,11 +1125,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFFF6200),
     Color(0xFF07174A),
     Color(0xFF040F33),
-  ],
-  'kenya__family_bank': [
-    Color(0xFF007BFF),
-    Color(0xFF364AA7),
-    Color(0xFF17214E),
   ],
   'kenya__i_and_m_bank': [
     Color(0xFFE30613),
@@ -1321,20 +1296,10 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFE67E04),
     Color(0xFF053C64),
   ],
-  'morocco__bmci': [
-    Color(0xFFCCFFFF),
-    Color(0xFFFE7D15),
-    Color(0xFF743706),
-  ],
   'morocco__cfg_bank': [
     Color(0xFF00A8FF),
     Color(0xFF003388),
     Color(0xFF02112B),
-  ],
-  'morocco__cih_bank': [
-    Color(0xFFC16127),
-    Color(0xFF006210),
-    Color(0xFF022D09),
   ],
   'morocco__cr_dit_agricole_du_maroc': [
     Color(0xFF007732),
@@ -1496,11 +1461,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFA5E1D2),
     Color(0xFF01171B),
   ],
-  'norway__eika': [
-    Color(0xFF006A5B),
-    Color(0xFF07409B),
-    Color(0xFF041D45),
-  ],
   'norway__klp': [
     Color(0xFF3FA7FF),
     Color(0xFFE41B65),
@@ -1516,30 +1476,215 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFFC0385D),
     Color(0xFF052B68),
   ],
-  'norway__sbanken': [
-    Color(0xFF222163),
-    Color(0xFF18172A),
-    Color(0xFF11101E),
-  ],
   'norway__sparebank_1': [
     Color(0xFFBA0C29),
     Color(0xFF00235B),
     Color(0xFF021129),
   ],
-  'norway__sparebanken_s_r': [
-    Color(0xFF231464),
-    Color(0xFFD82A07),
-    Color(0xFF100931),
-  ],
-  'norway__sparebanken_vest': [
-    Color(0xFFFF4238),
-    Color(0xFF222F49),
-    Color(0xFF101624),
-  ],
   'norway__storebrand': [
     Color(0xFF310502),
     Color(0xFF0D6EFD),
     Color(0xFF1B0301),
+  ],
+  'norway__agder_sparebank': [
+    Color(0xFF006A5B),
+    Color(0xFF6CC7B4),
+    Color(0xFF063A34),
+  ],
+  'norway__aurskog_sparebank': [
+    Color(0xFF07409B),
+    Color(0xFF00A3E0),
+    Color(0xFF031F4D),
+  ],
+  'norway__berg_sparebank': [
+    Color(0xFF00856F),
+    Color(0xFFF4B223),
+    Color(0xFF063B33),
+  ],
+  'norway__bien_sparebank': [
+    Color(0xFF2B5C9E),
+    Color(0xFF73C5E8),
+    Color(0xFF102B52),
+  ],
+  'norway__bjugn_sparebank': [
+    Color(0xFF007A5E),
+    Color(0xFFD7422F),
+    Color(0xFF08372E),
+  ],
+  'norway__etnedal_sparebank': [
+    Color(0xFF0F766E),
+    Color(0xFFA7D676),
+    Color(0xFF073A35),
+  ],
+  'norway__evje_og_hornnes_sparebank': [
+    Color(0xFF005B96),
+    Color(0xFFF3A712),
+    Color(0xFF092E4A),
+  ],
+  'norway__gildeskal_sparebank': [
+    Color(0xFF1B4D3E),
+    Color(0xFF6EC6A6),
+    Color(0xFF091F1A),
+  ],
+  'norway__grong_sparebank': [
+    Color(0xFF0E5E6F),
+    Color(0xFFC0D72F),
+    Color(0xFF062E37),
+  ],
+  'norway__grue_sparebank': [
+    Color(0xFF264653),
+    Color(0xFF2A9D8F),
+    Color(0xFF0D1B22),
+  ],
+  'norway__haltdalen_sparebank': [
+    Color(0xFF006D77),
+    Color(0xFF83C5BE),
+    Color(0xFF072E33),
+  ],
+  'norway__haugesund_sparebank': [
+    Color(0xFF004B8D),
+    Color(0xFFE63946),
+    Color(0xFF061F3A),
+  ],
+  'norway__hegra_sparebank': [
+    Color(0xFF2F6690),
+    Color(0xFF3A7CA5),
+    Color(0xFF102A3D),
+  ],
+  'norway__holand_og_setskog_sparebank': [
+    Color(0xFF00695C),
+    Color(0xFFB9D531),
+    Color(0xFF07312B),
+  ],
+  'norway__jbf': [
+    Color(0xFF1F4E79),
+    Color(0xFFC8102E),
+    Color(0xFF0B2238),
+  ],
+  'norway__jaren_sparebank': [
+    Color(0xFF0B7285),
+    Color(0xFF74C0FC),
+    Color(0xFF052E36),
+  ],
+  'norway__kvinesdal_sparebank': [
+    Color(0xFF006B54),
+    Color(0xFFF59E0B),
+    Color(0xFF052C24),
+  ],
+  'norway__marker_og_eidsberg_sparebank': [
+    Color(0xFF004C6D),
+    Color(0xFFE76F51),
+    Color(0xFF052638),
+  ],
+  'norway__melhusbanken': [
+    Color(0xFF007C89),
+    Color(0xFF4DB6AC),
+    Color(0xFF063B41),
+  ],
+  'norway__odal_sparebank': [
+    Color(0xFF005F73),
+    Color(0xFF94D2BD),
+    Color(0xFF062D35),
+  ],
+  'norway__oppdalsbanken': [
+    Color(0xFF0A5C36),
+    Color(0xFF7BC950),
+    Color(0xFF062914),
+  ],
+  'norway__orkla_sparebank': [
+    Color(0xFF095256),
+    Color(0xFFF4A261),
+    Color(0xFF041F21),
+  ],
+  'norway__penni': [
+    Color(0xFF006A71),
+    Color(0xFFF6C85F),
+    Color(0xFF052A2D),
+  ],
+  'norway__rogaland_sparebank': [
+    Color(0xFF104E8B),
+    Color(0xFF7FB3D5),
+    Color(0xFF082442),
+  ],
+  'norway__romerike_sparebank': [
+    Color(0xFF005A87),
+    Color(0xFFC3D600),
+    Color(0xFF052B3F),
+  ],
+  'norway__rorosbanken': [
+    Color(0xFF006B6B),
+    Color(0xFFE9C46A),
+    Color(0xFF052828),
+  ],
+  'norway__skagerrak_sparebank': [
+    Color(0xFF114B5F),
+    Color(0xFF45B7A8),
+    Color(0xFF071F28),
+  ],
+  'norway__skudenes_aakra_sparebank': [
+    Color(0xFF1D5D9B),
+    Color(0xFFD1495B),
+    Color(0xFF092847),
+  ],
+  'norway__skue_sparebank': [
+    Color(0xFF0F5E5E),
+    Color(0xFF98D8C8),
+    Color(0xFF052929),
+  ],
+  'norway__sogn_sparebank': [
+    Color(0xFF005C53),
+    Color(0xFF9FD356),
+    Color(0xFF052823),
+  ],
+  'norway__soknedal_sparebank': [
+    Color(0xFF006D5B),
+    Color(0xFFE0A458),
+    Color(0xFF052D28),
+  ],
+  'norway__sparebanken_narvik': [
+    Color(0xFF0B4F6C),
+    Color(0xFF01BAEF),
+    Color(0xFF041F2B),
+  ],
+  'norway__strommen_sparebank': [
+    Color(0xFF005F6B),
+    Color(0xFFF07167),
+    Color(0xFF05282D),
+  ],
+  'norway__tinde_sparebank': [
+    Color(0xFF174A7C),
+    Color(0xFF7DD3FC),
+    Color(0xFF061E34),
+  ],
+  'norway__trogstad_sparebank': [
+    Color(0xFF006D77),
+    Color(0xFFE29578),
+    Color(0xFF072C30),
+  ],
+  'norway__trondelag_sparebank': [
+    Color(0xFF0A6B55),
+    Color(0xFF70C1B3),
+    Color(0xFF05281F),
+  ],
+  'norway__valdres_sparebank': [
+    Color(0xFF244C66),
+    Color(0xFFF6AE2D),
+    Color(0xFF0B1F2B),
+  ],
+  'norway__valle_sparebank': [
+    Color(0xFF00665E),
+    Color(0xFFC9DAEA),
+    Color(0xFF052B28),
+  ],
+  'norway__vekselbanken': [
+    Color(0xFF2E6075),
+    Color(0xFF85C7DE),
+    Color(0xFF102733),
+  ],
+  'norway__orskog_sparebank': [
+    Color(0xFF006B4F),
+    Color(0xFFF2C14E),
+    Color(0xFF052719),
   ],
   'oman__ahlibank_oman': [
     Color(0xFF00846C),
@@ -1807,9 +1952,9 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF031E3F),
   ],
   'poland__santander_bank_polska': [
-    Color(0xFFEC0000),
-    Color(0xFFFF3B30),
-    Color(0xFF800707),
+    Color(0xFF005CA9),
+    Color(0xFF00AEEF),
+    Color(0xFF002B5C),
   ],
   'poland__velobank': [
     Color(0xFF00B140),
@@ -1820,11 +1965,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF00B9FF),
     Color(0xFF002436),
     Color(0xFF01121B),
-  ],
-  'portugal__banco_bpi': [
-    Color(0xFFFF6600),
-    Color(0xFF0077BC),
-    Color(0xFF053856),
   ],
   'portugal__banco_ctt': [
     Color(0xFFEB3436),
@@ -1870,11 +2010,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF9DC2DD),
     Color(0xFF428FC7),
     Color(0xFF1A4360),
-  ],
-  'qatar__al_khaliji': [
-    Color(0xFF8A1D15),
-    Color(0xFF4C1042),
-    Color(0xFF250720),
   ],
   'qatar__commercial_bank': [
     Color(0xFF0D6EFD),
@@ -2042,9 +2177,9 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF72081E),
   ],
   'south_africa__african_bank': [
-    Color(0xFF007A5B),
-    Color(0xFFFF9F12),
-    Color(0xFF022E23),
+    Color(0xFF00A3E0),
+    Color(0xFF83D0F5),
+    Color(0xFF064A64),
   ],
   'south_africa__bidvest_bank': [
     Color(0xFF3B82F6),
@@ -2301,6 +2436,21 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF780000),
     Color(0xFF2D0202),
   ],
+  'thailand__citi_thailand': [
+    Color(0xFF004B93),
+    Color(0xFFED1B2E),
+    Color(0xFF062B57),
+  ],
+  'thailand__cardx': [
+    Color(0xFF111827),
+    Color(0xFF06B6D4),
+    Color(0xFF0F172A),
+  ],
+  'thailand__central_the_1_card': [
+    Color(0xFFB11226),
+    Color(0xFFD6A03D),
+    Color(0xFF3A0B12),
+  ],
   'thailand__kasikornbank': [
     Color(0xFF001F7D),
     Color(0xFFDA221C),
@@ -2320,6 +2470,11 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF17007D),
     Color(0xFFDA1C5C),
     Color(0xFF0E033E),
+  ],
+  'thailand__ktc': [
+    Color(0xFFE31B23),
+    Color(0xFF1E3A8A),
+    Color(0xFF150B2E),
   ],
   'thailand__scb': [
     Color(0xFF7A58BF),
@@ -2550,11 +2705,6 @@ const Map<String, List<Color>> importedBankGradients = {
     Color(0xFF056DAE),
     Color(0xFF002A54),
     Color(0xFF010E1B),
-  ],
-  'united_states__discover': [
-    Color(0xFFFF6000),
-    Color(0xFF2477AB),
-    Color(0xFF0C2E43),
   ],
   'united_states__jpmorgan_chase': [
     Color(0xFF005EB8),

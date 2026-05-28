@@ -153,7 +153,9 @@ class BankAssetResolver {
     if (extension != null) {
       final parts = resolved.split('__');
       if (parts.length == 2) {
-        return 'assets/icons/banks/${parts[0]}/${parts[1]}.$extension';
+        final assetName =
+            LocalBankLogoAssets.importedLogoAssetNames[resolved] ?? parts[1];
+        return 'assets/icons/banks/${parts[0]}/$assetName.$extension';
       }
     }
 

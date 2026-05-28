@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:swallet/constants/card_visuals.dart';
@@ -75,18 +77,31 @@ void main() {
     }
   });
 
-  test('Prism Tiles visual is removed from selectable card patterns', () {
+  test('custom visual asset list matches files in assets folder', () {
+    final listedAssets = CardVisuals.customVisualAssetPaths.toSet();
+    final fileAssets = Directory('assets/card visuals')
+        .listSync()
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.svg'))
+        .map((file) => file.path.replaceAll('\\', '/'))
+        .toSet();
+
+    expect(listedAssets, fileAssets);
+  });
+
+  test('removed visual paths stay removed from selectable card patterns', () {
     expect(
       CardVisuals.customVisualAssetPaths,
       isNot(contains('assets/card visuals/prism-tiles.svg')),
     );
     expect(
-      CardVisuals.resolveVisualAssetPath('assets/card visuals/style16.svg'),
-      isNot('assets/card visuals/prism-tiles.svg'),
+      CardVisuals.customVisualAssetPaths,
+      isNot(contains('assets/card visuals/style16.svg')),
     );
   });
 
-  test('legacy card visual asset paths resolve to renamed assets', () {
+  test('legacy card visual asset paths are not mapped into current patterns',
+      () {
     final assetPaths = CardVisuals.customVisualAssetPaths.toSet();
     const legacyPaths = [
       'assets/card visuals/Credit Card.svg',
@@ -98,15 +113,8 @@ void main() {
     for (final legacyPath in legacyPaths) {
       final resolvedPath = CardVisuals.resolveVisualAssetPath(legacyPath);
 
-      expect(
-        assetPaths,
-        contains(resolvedPath),
-        reason: '$legacyPath should map to one of the renamed visual assets',
-      );
-      expect(
-        CardVisuals.customVisualAssetName(legacyPath),
-        isNot(anyOf(isEmpty, startsWith('style'), contains('.svg'))),
-      );
+      expect(assetPaths, isNot(contains(resolvedPath)));
+      expect(CardVisuals.customVisualAssetName(legacyPath), 'Pattern');
     }
   });
 
