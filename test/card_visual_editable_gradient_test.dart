@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:swallet/constants/card_visuals.dart';
+import 'package:swallet/constants/imported_card_gradients.dart';
 
 void main() {
   test('editable bank gradients use all three brand stops', () {
@@ -17,14 +18,11 @@ void main() {
   });
 
   test('editable imported bank gradients use all three imported stops', () {
+    const bankId = 'argentina__bbva_argentina';
     final colors = CardVisuals.editableGradientColorsForBank(
-      'argentina__bbva_argentina',
+      bankId,
     );
 
-    expect(colors, const [
-      Color(0xFF004481),
-      Color(0xFF0045AF),
-      Color(0xFF02182C),
-    ]);
+    expect(colors, importedBankGradients[bankId]);
   });
 }
