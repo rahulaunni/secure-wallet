@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/rahul/.gradle/**)",
+      "Read(//c/Program Files/**)",
+      "PowerShell(Write-Output \"=== global gradle.properties ===\"; if \\(Test-Path \"$env:USERPROFILE\\\\.gradle\\\\gradle.properties\"\\) { Get-Content \"$env:USERPROFILE\\\\.gradle\\\\gradle.properties\" } else { Write-Output \"\\(none\\)\" }; Write-Output \"=== Adoptium dir ===\"; if \\(Test-Path \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\\"\\) { Get-ChildItem \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\\" -Name } else { Write-Output \"\\(no Adoptium dir\\)\" })",
+      "PowerShell(Write-Output \"=== JAVA_HOME ===\"; $env:JAVA_HOME; Write-Output \"=== Android Studio JBR ===\"; @\\(\"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\",\"C:\\\\Program Files\\\\Android\\\\Android Studio1\\\\jbr\",\"$env:LOCALAPPDATA\\\\Programs\\\\Android Studio\\\\jbr\"\\) | ForEach-Object { if \\(Test-Path \"$_\\\\bin\\\\java.exe\"\\) { Write-Output \"FOUND: $_\" } }; Write-Output \"=== java on PATH ===\"; $j = Get-Command java -ErrorAction SilentlyContinue; if \\($j\\) { $j.Source }; Write-Output \"=== Adoptium versions present ===\"; Get-ChildItem \"C:\\\\Program Files\\\\Eclipse Adoptium\" -ErrorAction SilentlyContinue -Name)",
+      "PowerShell(@\\(\"C:\\\\Program Files\\\\Java\\\\jdk-17\",\"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\"\\) | ForEach-Object { if \\(Test-Path \"$_\\\\bin\\\\java.exe\"\\) { Write-Output \"EXISTS: $_\"; & \"$_\\\\bin\\\\java.exe\" -version 2>&1 | Select-Object -First 1 } else { Write-Output \"MISSING: $_\" } })"
+    ]
+  }
+}
