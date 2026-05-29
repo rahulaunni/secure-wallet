@@ -1,5 +1,6 @@
 class BankAssets {
   static const String otherBankId = 'other_bank';
+  static const String defaultCountryId = 'in';
 
   static const List<String> supportedBanks = [
     'au_small_finance',
@@ -3969,7 +3970,7 @@ class BankAssets {
     ),
   ];
 
-  static const List<BankCountry> supportedCountries = [
+  static const List<BankCountry> _supportedCountries = [
     BankCountry(
       id: 'in',
       name: 'India',
@@ -4888,6 +4889,13 @@ class BankAssets {
       ],
     ),
   ];
+
+  static List<BankCountry> get supportedCountries {
+    final countries = [..._supportedCountries];
+    countries
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return List<BankCountry>.unmodifiable(countries);
+  }
 
   static List<String> banksForCountry(String countryId) {
     for (final country in supportedCountries) {

@@ -158,7 +158,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   }
 
   String _loadPersistedCountryId() {
-    final fallbackCountryId = BankAssets.supportedCountries.first.id;
+    const fallbackCountryId = BankAssets.defaultCountryId;
     if (!Hive.isBoxOpen(HiveBoxes.settings)) {
       return fallbackCountryId;
     }

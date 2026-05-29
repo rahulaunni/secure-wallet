@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../constants/layout_constants.dart';
 import '../../../constants/card_visuals.dart'; // ✅ Import Visual Engine
 import '../../../models/card_network.dart';
+import '../../../utils/adaptive_layout.dart';
 import '../../../utils/card_number_format.dart';
 import '../../bank/bank_logo.dart';
 import '../card_visual_asset_layer.dart';
@@ -122,8 +123,10 @@ class PreviewCard extends StatelessWidget {
       aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final bankLogoMaxWidth =
-              bankLogoMaxWidthForCard(constraints.maxWidth);
+          const designWidth = AdaptiveLayout.phoneCardWidth;
+          const designHeight =
+              designWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+          final bankLogoMaxWidth = bankLogoMaxWidthForCard(designWidth);
 
           return Container(
             padding: EdgeInsets.zero, // Padding is handled inside the Stack
@@ -151,87 +154,97 @@ class PreviewCard extends StatelessWidget {
                   ),
 
                 // ✅ 2. CONTENT PADDING CONTAINER
-                Padding(
-                  padding: const EdgeInsets.all(cardPadding),
-                  child: Stack(
-                    children: [
-                      if (hasBank)
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          child: Row(
-                            children: [
-                              BankLogo(
-                                bankCid: bankCid!,
-                                size: bankLogoHeight,
-                                width: bankLogoMaxWidth,
-                                customLogoPath: customBankLogoPath,
-                                customLabel: customBankName,
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (networkLogo != null)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Image.asset(
-                                networkLogo,
-                                height: networkLogoHeight,
-                              ),
-                              if (cardType.isNotEmpty) ...[
-                                const SizedBox(height: 5),
-                                Text(
-                                  cardType,
-                                  textAlign: TextAlign.right,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1,
-                                    color: Colors.white,
-                                  ),
+                Positioned.fill(
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: designWidth,
+                      height: designHeight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(cardPadding),
+                        child: Stack(
+                          children: [
+                            if (hasBank)
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                child: Row(
+                                  children: [
+                                    BankLogo(
+                                      bankCid: bankCid!,
+                                      size: bankLogoHeight,
+                                      width: bankLogoMaxWidth,
+                                      customLogoPath: customBankLogoPath,
+                                      customLabel: customBankName,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      Positioned(
-                        top: chipTopOffset,
-                        left: 0,
-                        child: SvgPicture.asset(
-                          'assets/images/chip.svg',
-                          width: chipWidth,
+                              ),
+                            if (networkLogo != null)
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Image.asset(
+                                      networkLogo,
+                                      height: networkLogoHeight,
+                                    ),
+                                    if (cardType.isNotEmpty) ...[
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        cardType,
+                                        textAlign: TextAlign.right,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            Positioned(
+                              top: chipTopOffset,
+                              left: 0,
+                              child: SvgPicture.asset(
+                                'assets/images/chip.svg',
+                                width: chipWidth,
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: detailsBottomOffset,
+                              child: CardDetailsBlock(
+                                cardNumber: displayNumber,
+                                rawCardNumber:
+                                    displayNumber, // ✅ Satisfy required param
+                                validThru: displayExpiry,
+                                holderName: displayName,
+                                cvv: '***',
+                                showCvvToggle: false,
+                                isCvvVisible: false,
+                                onToggleCvv: () {},
+                              ),
+                            ),
+                            if (onEditVisualTap != null)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: _PreviewCardActionButton(
+                                  onTap: onEditVisualTap!,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: detailsBottomOffset,
-                        child: CardDetailsBlock(
-                          cardNumber: displayNumber,
-                          rawCardNumber:
-                              displayNumber, // ✅ Satisfy required param
-                          validThru: displayExpiry,
-                          holderName: displayName,
-                          cvv: '***',
-                          showCvvToggle: false,
-                          isCvvVisible: false,
-                          onToggleCvv: () {},
-                        ),
-                      ),
-                      if (onEditVisualTap != null)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: _PreviewCardActionButton(
-                            onTap: onEditVisualTap!,
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ],

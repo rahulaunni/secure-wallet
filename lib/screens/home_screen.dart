@@ -1125,22 +1125,12 @@ class _UnlockEntryCardStage extends StatelessWidget {
       return child;
     }
 
-    return AnimatedBuilder(
-      animation: animation,
-      child: child,
-      builder: (context, child) {
-        final raw =
-            ((animation.value - 0.94) / 0.06).clamp(0.0, 1.0).toDouble();
-        final opacity = Curves.easeOutCubic.transform(raw);
-
-        return IgnorePointer(
-          ignoring: opacity < 1,
-          child: Opacity(
-            opacity: opacity,
-            child: child,
-          ),
-        );
-      },
+    return IgnorePointer(
+      ignoring: true,
+      child: Opacity(
+        opacity: 0,
+        child: child,
+      ),
     );
   }
 }
@@ -1232,7 +1222,10 @@ class _StackedCardListSection extends StatelessWidget {
     required int revealedIndex,
     required double progress,
   }) {
-    final collapsedTop = _collapsedTopForIndex(index);
+    final collapsedTop = _collapsedTopForIndex(
+      index,
+      totalCards: cards.length,
+    );
     final expandedTop = (index * slotHeight) +
         (revealedIndex != -1 && index > revealedIndex ? revealExtraHeight : 0);
 
@@ -1250,12 +1243,17 @@ class _StackedCardListSection extends StatelessWidget {
     return _lerp(collapsedScale, 1, progress);
   }
 
-  double _collapsedTopForIndex(int index) {
-    if (index < _collapsedTopOffsets.length) {
-      return _collapsedTopOffsets[index];
-    }
+  double _collapsedTopForIndex(
+    int index, {
+    required int totalCards,
+  }) {
+    final visibleCollapsedCount = totalCards.clamp(1, _collapsedTopOffsets.length);
+    final anchorTop = _collapsedTopOffsets[visibleCollapsedCount - 1];
+    final rawTop = index < _collapsedTopOffsets.length
+        ? _collapsedTopOffsets[index]
+        : _collapsedTopOffsets.last;
 
-    return _collapsedTopOffsets.last;
+    return rawTop - anchorTop;
   }
 
   double _opacityForIndex({

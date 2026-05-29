@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../constants/layout_constants.dart';
 import '../../theme/swallet_theme.dart';
+import '../../utils/adaptive_layout.dart';
 
 class BlackSecureCard extends StatelessWidget {
   final int remainingSeconds;
@@ -15,6 +16,9 @@ class BlackSecureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final palette = SwalletPalette(isDark);
+    const designWidth = AdaptiveLayout.phoneCardWidth;
+    const designHeight =
+        designWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
 
     return Container(
       decoration: BoxDecoration(
@@ -26,24 +30,38 @@ class BlackSecureCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SizedBox(
-              height: secureRevealBarHeight,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    'Securely locking in 00:${remainingSeconds.toString().padLeft(2, '0')}s',
-                    style: secureRevealTextStyle.copyWith(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12,
-                      color: palette.text,
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.fill,
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: designWidth,
+                height: designHeight,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: SizedBox(
+                        height: secureRevealBarHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Text(
+                              'Securely locking in 00:${remainingSeconds.toString().padLeft(2, '0')}s',
+                              style: secureRevealTextStyle.copyWith(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12,
+                                color: palette.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

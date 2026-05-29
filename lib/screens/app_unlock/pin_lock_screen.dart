@@ -465,13 +465,41 @@ class _PinLockScreenState extends State<PinLockScreen>
       builder: (context, cardsBox, _) {
         final savedCards = cardsBox.values.toList(growable: false);
         if (savedCards.isEmpty) {
-          return _buildClassicPinContent(tokens: tokens, isStep2: isStep2);
+          return _buildAnimatedClassicUnlockContent(
+            tokens: tokens,
+            isStep2: isStep2,
+          );
         }
 
         return _buildWalletPinContent(
           tokens: tokens,
           isStep2: isStep2,
           savedCards: savedCards,
+        );
+      },
+    );
+  }
+
+  Widget _buildAnimatedClassicUnlockContent({
+    required AddCardMaterialTokens tokens,
+    required bool isStep2,
+  }) {
+    return AnimatedBuilder(
+      animation: _unlockController,
+      child: _buildClassicPinContent(tokens: tokens, isStep2: isStep2),
+      builder: (context, child) {
+        final exit = _interval(_unlockController.value, 0.02, 0.28);
+        final opacity = 1 - exit;
+
+        return IgnorePointer(
+          ignoring: opacity < 1,
+          child: Opacity(
+            opacity: opacity,
+            child: Transform.translate(
+              offset: Offset(0, 42 * exit),
+              child: child,
+            ),
+          ),
         );
       },
     );
@@ -530,8 +558,9 @@ class _PinLockScreenState extends State<PinLockScreen>
         final canvasWidth = maxWidth;
         final canvasHeight = maxHeight;
         final walletLeft = (canvasWidth - walletWidth) / 2;
+        const homeHeaderHeight = 44.0;
         final homeFirstCardTop =
-            mediaPadding.top + 14 + 48 + 14 + topNavHeight + 12;
+            mediaPadding.top + 14 + homeHeaderHeight + 14 + topNavHeight + 12;
 
         return SizedBox(
           width: canvasWidth,
@@ -1172,11 +1201,14 @@ class _PinLockScreenState extends State<PinLockScreen>
     required int totalCardCount,
   }) {
     final stackIndex = index - 2;
-    if (stackIndex < _homeStackCollapsedTopOffsets.length) {
-      return _homeStackCollapsedTopOffsets[stackIndex];
-    }
+    final visibleCollapsedCount =
+        (totalCardCount - 2).clamp(1, _homeStackCollapsedTopOffsets.length);
+    final anchorTop = _homeStackCollapsedTopOffsets[visibleCollapsedCount - 1];
+    final rawTop = stackIndex < _homeStackCollapsedTopOffsets.length
+        ? _homeStackCollapsedTopOffsets[stackIndex]
+        : _homeStackCollapsedTopOffsets.last;
 
-    return _homeStackCollapsedTopOffsets.last;
+    return rawTop - anchorTop;
   }
 
   int _homeStackCollapsedDepth(
