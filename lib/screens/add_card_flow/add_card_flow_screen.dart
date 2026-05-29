@@ -501,6 +501,8 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   Future<void> _pickCustomBankLogo() async {
     final picked = await _imagePicker.pickImage(
       source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
       imageQuality: 90,
     );
     if (picked == null) return;
@@ -537,7 +539,9 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   Future<void> _pickCustomCardImage() async {
     final picked = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 90,
+      maxWidth: 1280,
+      maxHeight: 760,
+      imageQuality: 84,
     );
     if (picked == null) return;
 

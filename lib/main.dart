@@ -19,6 +19,8 @@ import 'utils/size_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PaintingBinding.instance.imageCache.maximumSize = 300;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 192 << 20;
 
   await Hive.initFlutter();
   registerHiveAdapters();

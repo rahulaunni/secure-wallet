@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -78,6 +80,7 @@ class HomeScreenState extends State<HomeScreen> {
   String? _activeSwipeCardId;
   bool _swipeTutorialQueued = false;
   bool _homeEntrySettled = false;
+  final Set<String> _precachedCustomImageKeys = {};
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
@@ -98,6 +101,7 @@ class HomeScreenState extends State<HomeScreen> {
       _cards
         ..clear()
         ..addAll(CardRepository.getAll());
+      _precachedCustomImageKeys.clear();
       _revealedCardId = null;
       _activeFilters.clear();
       _swipeResetToken++;
@@ -192,6 +196,49 @@ class HomeScreenState extends State<HomeScreen> {
       _editingCardId = null;
       _swipeResetToken++;
       _activeSwipeCardId = null;
+    });
+  }
+
+  void _scheduleCustomImagePrecache(
+    List<CardData> cards, {
+    required double cardWidth,
+  }) {
+    if (!mounted || cards.isEmpty || cardWidth <= 0) return;
+
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final targetImageWidth = (cardWidth * devicePixelRatio).round();
+    final imagePaths = <String>[];
+
+    for (final card in cards) {
+      if (card.customCardVisualMode != 1) continue;
+      final imagePath = card.customCardImagePath?.trim();
+      if (imagePath == null || imagePath.isEmpty) continue;
+
+      final key = '$imagePath@$targetImageWidth';
+      if (_precachedCustomImageKeys.contains(key)) continue;
+      _precachedCustomImageKeys.add(key);
+      imagePaths.add(imagePath);
+    }
+
+    if (imagePaths.isEmpty) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (var index = 0; index < imagePaths.length; index++) {
+        Future<void>.delayed(Duration(milliseconds: index * 28), () {
+          if (!mounted) return;
+          final file = File(imagePaths[index]);
+          if (!file.existsSync()) return;
+
+          precacheImage(
+            ResizeImage.resizeIfNeeded(
+              targetImageWidth,
+              null,
+              FileImage(file),
+            ),
+            context,
+          );
+        });
+      }
     });
   }
 
@@ -685,6 +732,7 @@ class HomeScreenState extends State<HomeScreen> {
 
         if (paneCount == 1) {
           final cardWidth = constraints.maxWidth - (horizontalPadding * 2);
+          _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
 
           return AnimatedBuilder(
             animation: _scrollController,
@@ -746,6 +794,7 @@ class HomeScreenState extends State<HomeScreen> {
         final contentWidth = (AdaptiveLayout.phoneCardWidth * paneCount) +
             (spacing * (paneCount - 1));
         const cardWidth = AdaptiveLayout.phoneCardWidth;
+        _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
 
         return SingleChildScrollView(
           controller: _scrollController,
@@ -1247,7 +1296,8 @@ class _StackedCardListSection extends StatelessWidget {
     int index, {
     required int totalCards,
   }) {
-    final visibleCollapsedCount = totalCards.clamp(1, _collapsedTopOffsets.length);
+    final visibleCollapsedCount =
+        totalCards.clamp(1, _collapsedTopOffsets.length);
     final anchorTop = _collapsedTopOffsets[visibleCollapsedCount - 1];
     final rawTop = index < _collapsedTopOffsets.length
         ? _collapsedTopOffsets[index]

@@ -88,13 +88,8 @@ class BankCard extends StatelessWidget {
         customImagePath != null && customImagePath.isNotEmpty
             ? File(customImagePath)
             : null;
-    final customImage = customImageFile != null && customImageFile.existsSync()
-        ? DecorationImage(
-            image: FileImage(customImageFile),
-            fit: BoxFit.cover,
-            alignment: customCardImageAlignment,
-          )
-        : null;
+    final hasCustomImage =
+        customImageFile != null && customImageFile.existsSync();
 
     // ================= SECURITY LOGIC (LOCKED) =================
     final bool showCvv = scope.revealed && scope.cvvVisible;
@@ -116,6 +111,21 @@ class BankCard extends StatelessWidget {
           const designHeight =
               designWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
           final bankLogoMaxWidth = bankLogoMaxWidthForCard(designWidth);
+          final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+          final targetImageWidth =
+              (constraints.maxWidth * devicePixelRatio).round();
+          final customImage = hasCustomImage
+              ? DecorationImage(
+                  image: ResizeImage.resizeIfNeeded(
+                    targetImageWidth,
+                    null,
+                    FileImage(customImageFile),
+                  ),
+                  fit: BoxFit.cover,
+                  alignment: customCardImageAlignment,
+                  filterQuality: FilterQuality.low,
+                )
+              : null;
 
           return Container(
             padding: EdgeInsets

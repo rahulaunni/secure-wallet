@@ -23,31 +23,15 @@ class CardVisualAssetLayer extends StatelessWidget {
     final resolvedPath = CardVisuals.resolveVisualAssetPath(assetPath);
     final profile = _CardTextureProfile.fromVisual(visual);
 
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: IgnorePointer(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Opacity(
-              opacity: profile.baseOpacity,
-              child: SvgPicture.asset(
-                resolvedPath,
-                fit: BoxFit.fill,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-            Opacity(
-              opacity: profile.tintOpacity,
-              child: ShaderMask(
-                blendMode: BlendMode.srcIn,
-                shaderCallback: (rect) => LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: profile.tintColors,
-                  stops: const [0, 0.52, 1],
-                ).createShader(rect),
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: IgnorePointer(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Opacity(
+                opacity: profile.baseOpacity,
                 child: SvgPicture.asset(
                   resolvedPath,
                   fit: BoxFit.fill,
@@ -55,41 +39,61 @@ class CardVisualAssetLayer extends StatelessWidget {
                   height: double.infinity,
                 ),
               ),
-            ),
-            Opacity(
-              opacity: profile.silhouetteOpacity,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  profile.silhouetteColor,
-                  BlendMode.srcIn,
-                ),
-                child: SvgPicture.asset(
-                  resolvedPath,
-                  fit: BoxFit.fill,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              ),
-            ),
-            Opacity(
-              opacity: profile.pressOpacity,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  profile.pressColor,
-                  profile.pressBlendMode,
-                ),
-                child: SvgPicture.asset(
-                  resolvedPath,
-                  fit: BoxFit.fill,
-                  width: double.infinity,
-                  height: double.infinity,
+              Opacity(
+                opacity: profile.tintOpacity,
+                child: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (rect) => LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: profile.tintColors,
+                    stops: const [0, 0.52, 1],
+                  ).createShader(rect),
+                  child: SvgPicture.asset(
+                    resolvedPath,
+                    fit: BoxFit.fill,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
-            ),
-            CustomPaint(
-              painter: _PremiumTexturePainter(profile),
-            ),
-          ],
+              Opacity(
+                opacity: profile.silhouetteOpacity,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    profile.silhouetteColor,
+                    BlendMode.srcIn,
+                  ),
+                  child: SvgPicture.asset(
+                    resolvedPath,
+                    fit: BoxFit.fill,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: profile.pressOpacity,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    profile.pressColor,
+                    profile.pressBlendMode,
+                  ),
+                  child: SvgPicture.asset(
+                    resolvedPath,
+                    fit: BoxFit.fill,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
+              ),
+              CustomPaint(
+                isComplex: true,
+                willChange: false,
+                painter: _PremiumTexturePainter(profile),
+              ),
+            ],
+          ),
         ),
       ),
     );
