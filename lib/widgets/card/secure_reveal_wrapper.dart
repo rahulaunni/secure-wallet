@@ -28,9 +28,11 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
   late final AnimationController _controller;
   late final Animation<double> _anim;
 
+  ScrollPosition? _scrollPosition;
   Timer? _timer;
   int _remainingSeconds = 60;
   bool _cvvVisible = false;
+  bool _visibilityCheckScheduled = false;
 
   @override
   void initState() {
@@ -46,6 +48,12 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _attachScrollPosition();
+  }
+
+  @override
   void didUpdateWidget(covariant SecureRevealWrapper oldWidget) {
     super.didUpdateWidget(oldWidget);
 
@@ -56,6 +64,17 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
     }
   }
 
+  void _attachScrollPosition() {
+    final nextPosition = Scrollable.maybeOf(context)?.position;
+    if (identical(_scrollPosition, nextPosition)) {
+      return;
+    }
+
+    _scrollPosition?.removeListener(_scheduleVisibilityCheck);
+    _scrollPosition = nextPosition;
+    _scrollPosition?.addListener(_scheduleVisibilityCheck);
+  }
+
   void _startReveal() {
     SwalletHaptics.bankSelected();
 
@@ -63,6 +82,7 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
     _cvvVisible = false;
     _controller.forward(from: 0);
     _timer?.cancel();
+    _scheduleVisibilityCheck();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_remainingSeconds <= 1) {
@@ -82,8 +102,55 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
     _controller.reverse();
   }
 
+  void _scheduleVisibilityCheck() {
+    if (_visibilityCheckScheduled || !mounted || !widget.revealed) {
+      return;
+    }
+
+    _visibilityCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _visibilityCheckScheduled = false;
+      if (!mounted || !widget.revealed) {
+        return;
+      }
+
+      if (_isOutsideViewport()) {
+        widget.onAutoLock();
+      }
+    });
+  }
+
+  bool _isOutsideViewport() {
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) {
+      return false;
+    }
+
+    final widgetTopLeft = renderObject.localToGlobal(Offset.zero);
+    final widgetRect = widgetTopLeft & renderObject.size;
+    final viewportRect = _viewportRect();
+
+    return widgetRect.bottom <= viewportRect.top + 1 ||
+        widgetRect.top >= viewportRect.bottom - 1 ||
+        widgetRect.right <= viewportRect.left + 1 ||
+        widgetRect.left >= viewportRect.right - 1;
+  }
+
+  Rect _viewportRect() {
+    final scrollContext = Scrollable.maybeOf(context)?.context;
+    final scrollRenderObject = scrollContext?.findRenderObject();
+
+    if (scrollRenderObject is RenderBox && scrollRenderObject.hasSize) {
+      return scrollRenderObject.localToGlobal(Offset.zero) &
+          scrollRenderObject.size;
+    }
+
+    return Offset.zero & MediaQuery.of(context).size;
+  }
+
   @override
   void dispose() {
+    _scrollPosition?.removeListener(_scheduleVisibilityCheck);
     if (widget.revealed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onAutoLock();

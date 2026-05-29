@@ -49,6 +49,8 @@ class _CardVaultAppState extends State<CardVaultApp>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const String _themeKey = 'is_dark';
   static const Duration _lockDelay = Duration(seconds: 10);
+  static const MethodChannel _screenshotBlockerChannel =
+      MethodChannel('com.secure.swallet/screenshot_blocker');
 
   bool _isDark = true;
   bool _isUnlocked = false;
@@ -58,12 +60,17 @@ class _CardVaultAppState extends State<CardVaultApp>
   Timer? _backgroundLockTimer;
   late final AnimationController _unlockController;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _screenshotBlockerChannel.setMethodCallHandler(
+      _handleScreenshotBlockerCall,
+    );
 
     final settingsBox = Hive.box(HiveBoxes.settings);
     if (!settingsBox.containsKey(_themeKey)) {
@@ -82,9 +89,29 @@ class _CardVaultAppState extends State<CardVaultApp>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _screenshotBlockerChannel.setMethodCallHandler(null);
     _backgroundLockTimer?.cancel();
     _unlockController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleScreenshotBlockerCall(MethodCall call) async {
+    if (call.method != 'screenshotBlocked') {
+      return;
+    }
+
+    final messenger = _scaffoldMessengerKey.currentState;
+    if (messenger == null) {
+      return;
+    }
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text("Screenshot can't be taken"),
+        ),
+      );
   }
 
   @override
@@ -189,6 +216,7 @@ class _CardVaultAppState extends State<CardVaultApp>
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         SizeConfig.init(context);

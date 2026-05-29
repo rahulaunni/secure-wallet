@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:swallet/constants/card_visuals.dart';
+import 'package:swallet/data/local/hive_boxes.dart';
 import 'package:swallet/data/bank_assets.dart';
 import 'package:swallet/models/card_data.dart';
 import 'package:swallet/models/card_network.dart';
@@ -63,10 +65,13 @@ class AddCardFlowScreen extends StatefulWidget {
 
 class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     with TickerProviderStateMixin {
+  static const String _selectedCountrySettingsKey =
+      'add_card_selected_country_id';
+
   // ================= STATE VARIABLES =================
   String? _selectedBankCid;
   bool _isBankSelected = false;
-  String _selectedCountryId = BankAssets.supportedCountries.first.id;
+  late String _selectedCountryId;
 
   // -- Drag & Animation --
   double _dragOffset = 0.0;
@@ -132,6 +137,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   void initState() {
     super.initState();
     widget.controller?._state = this;
+    _selectedCountryId = _loadPersistedCountryId();
     _dragAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -148,6 +154,36 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     final initialCard = widget.initialCard;
     if (initialCard != null) {
       _loadInitialCard(initialCard);
+    }
+  }
+
+  String _loadPersistedCountryId() {
+    final fallbackCountryId = BankAssets.supportedCountries.first.id;
+    if (!Hive.isBoxOpen(HiveBoxes.settings)) {
+      return fallbackCountryId;
+    }
+
+    final savedCountryId =
+        Hive.box(HiveBoxes.settings).get(_selectedCountrySettingsKey);
+    if (savedCountryId is! String) {
+      return fallbackCountryId;
+    }
+
+    return BankAssets.supportedCountries.any(
+      (country) => country.id == savedCountryId,
+    )
+        ? savedCountryId
+        : fallbackCountryId;
+  }
+
+  void _handleCountryChanged(String countryId) {
+    if (countryId == _selectedCountryId) {
+      return;
+    }
+
+    setState(() => _selectedCountryId = countryId);
+    if (Hive.isBoxOpen(HiveBoxes.settings)) {
+      Hive.box(HiveBoxes.settings).put(_selectedCountrySettingsKey, countryId);
     }
   }
 
@@ -768,9 +804,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                       child: BankSelectionSection(
                         controller: _scrollController,
                         selectedCountryId: _selectedCountryId,
-                        onCountryChanged: (countryId) {
-                          setState(() => _selectedCountryId = countryId);
-                        },
+                        onCountryChanged: _handleCountryChanged,
                         onBankSelected: _onBankSelected,
                       ),
                     ),

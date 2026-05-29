@@ -26,4 +26,43 @@ void main() {
 
     expect(autoLocked, isTrue);
   });
+
+  testWidgets('revealed card auto-locks after scrolling outside the viewport',
+      (tester) async {
+    var autoLockCount = 0;
+    var revealed = true;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return SizedBox(
+              height: 320,
+              child: ListView(
+                children: [
+                  const SizedBox(height: 24),
+                  SecureRevealWrapper(
+                    revealed: revealed,
+                    onAutoLock: () {
+                      autoLockCount++;
+                      setState(() => revealed = false);
+                    },
+                    child: const SizedBox(width: 280, height: 164),
+                  ),
+                  const SizedBox(height: 900),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.drag(find.byType(ListView), const Offset(0, -520));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(autoLockCount, 1);
+  });
 }

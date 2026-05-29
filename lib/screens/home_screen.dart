@@ -729,9 +729,11 @@ class HomeScreenState extends State<HomeScreen> {
                   _StackedCardListSection(
                     cards: visibleCards.sublist(2),
                     cardWidth: cardWidth,
+                    revealedCardId: _revealedCardId,
                     scrollOffset: _scrollController.hasClients
                         ? _scrollController.offset
                         : 0,
+                    cardIdBuilder: _cardId,
                     itemBuilder: _buildCardItem,
                   ),
                 ],
@@ -869,28 +871,10 @@ class HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: palette.surfaceLow,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: palette.primary.withValues(
-                                alpha: widget.isDark ? 0.12 : 0.06,
-                              ),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: SvgPicture.asset(
-                          'assets/images/logo_44.svg',
-                          width: 34,
-                          height: 34,
-                        ),
+                      SvgPicture.asset(
+                        'assets/images/logo_44.svg',
+                        width: 42,
+                        height: 42,
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -1176,13 +1160,17 @@ class _StackedCardListSection extends StatelessWidget {
 
   final List<CardData> cards;
   final double cardWidth;
+  final String? revealedCardId;
   final double scrollOffset;
+  final String Function(CardData card) cardIdBuilder;
   final Widget Function(CardData card) itemBuilder;
 
   const _StackedCardListSection({
     required this.cards,
     required this.cardWidth,
+    required this.revealedCardId,
     required this.scrollOffset,
+    required this.cardIdBuilder,
     required this.itemBuilder,
   });
 
@@ -1197,10 +1185,14 @@ class _StackedCardListSection extends StatelessWidget {
     final itemHeight = cardHeight + _cardTiltPadding;
     const itemGap = bankCardVerticalSpacing;
     final slotHeight = itemHeight + itemGap;
+    final revealedIndex = cards.indexWhere(
+      (card) => cardIdBuilder(card) == revealedCardId,
+    );
+    final revealExtraHeight = revealedIndex == -1 ? 0.0 : secureRevealBarHeight;
     final progress = _stackSettleCurve.transform(
       (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
     );
-    final sectionHeight = cards.length * slotHeight;
+    final sectionHeight = (cards.length * slotHeight) + revealExtraHeight;
     final maxDepth = (cards.length - 1).clamp(1, _maxCollapsedDepth);
 
     return SizedBox(
@@ -1214,6 +1206,8 @@ class _StackedCardListSection extends StatelessWidget {
                 index: index,
                 maxDepth: maxDepth,
                 slotHeight: slotHeight,
+                revealExtraHeight: revealExtraHeight,
+                revealedIndex: revealedIndex,
                 progress: progress,
               ),
               scale: _scaleForIndex(
@@ -1234,10 +1228,13 @@ class _StackedCardListSection extends StatelessWidget {
     required int index,
     required int maxDepth,
     required double slotHeight,
+    required double revealExtraHeight,
+    required int revealedIndex,
     required double progress,
   }) {
     final collapsedTop = _collapsedTopForIndex(index);
-    final expandedTop = index * slotHeight;
+    final expandedTop = (index * slotHeight) +
+        (revealedIndex != -1 && index > revealedIndex ? revealExtraHeight : 0);
 
     return _lerp(collapsedTop, expandedTop, progress);
   }
@@ -1287,7 +1284,9 @@ class _StackedCardPosition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
+    return AnimatedPositioned(
+      duration: secureRevealAnimDuration,
+      curve: Curves.easeOutCubic,
       top: top,
       left: 0,
       right: 0,
