@@ -463,7 +463,10 @@ class _PinLockScreenState extends State<PinLockScreen>
     return ValueListenableBuilder<Box<CardData>>(
       valueListenable: Hive.box<CardData>(HiveBoxes.cards).listenable(),
       builder: (context, cardsBox, _) {
-        final savedCards = cardsBox.values.toList(growable: false);
+        final savedCards = cardsBox.values
+            .toList(growable: false)
+            .reversed
+            .toList(growable: false);
         if (savedCards.isEmpty) {
           return _buildAnimatedClassicUnlockContent(
             tokens: tokens,

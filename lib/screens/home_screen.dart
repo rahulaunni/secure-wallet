@@ -213,7 +213,7 @@ class HomeScreenState extends State<HomeScreen> {
     await CardRepository.add(card);
     if (!mounted) return;
     setState(() {
-      _cards.add(card);
+      _cards.insert(0, card);
       _sidePane = null;
       _editingCard = null;
       _editingCardId = null;
@@ -374,7 +374,10 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   List<CardData> _cardsForDisplay(Box<CardData> cardsBox) {
-    final storedCards = cardsBox.values.toList(growable: false);
+    final storedCards = cardsBox.values
+        .toList(growable: false)
+        .reversed
+        .toList(growable: false);
     if (storedCards.isNotEmpty) {
       return storedCards;
     }
@@ -1250,6 +1253,7 @@ class _StackedCardListSection extends StatelessWidget {
   static const double _cardTiltPadding = 8;
   static const double _collapsedScaleStep = 0.045;
   static const double _interactionEnableProgress = 0.9;
+  static const double _fullyExpandedProgress = 0.999;
   static const int _maxCollapsedDepth = 4;
   static const int _visibleCollapsedCards = 4;
   static const List<double> _collapsedTopOffsets = <double>[
@@ -1292,18 +1296,33 @@ class _StackedCardListSection extends StatelessWidget {
     final sectionHeight = (cards.length * slotHeight) + revealExtraHeight;
     final maxDepth = (cards.length - 1).clamp(1, _maxCollapsedDepth);
 
-    return SizedBox(
-      height: sectionHeight,
-      child: AnimatedBuilder(
-        animation: scrollController,
-        builder: (context, _) {
-          final scrollOffset =
-              scrollController.hasClients ? scrollController.offset : 0.0;
-          final progress = _stackSettleCurve.transform(
-            (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
-          );
+    return AnimatedBuilder(
+      animation: scrollController,
+      builder: (context, _) {
+        final scrollOffset =
+            scrollController.hasClients ? scrollController.offset : 0.0;
+        final progress = _stackSettleCurve.transform(
+          (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
+        );
 
-          return Stack(
+        if (progress >= _fullyExpandedProgress) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final child in cardChildren)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: bankCardVerticalSpacing,
+                  ),
+                  child: child,
+                ),
+            ],
+          );
+        }
+
+        return SizedBox(
+          height: sectionHeight,
+          child: Stack(
             clipBehavior: Clip.none,
             children: [
               for (var index = cards.length - 1; index >= 0; index--)
@@ -1326,9 +1345,9 @@ class _StackedCardListSection extends StatelessWidget {
                   child: cardChildren[index],
                 ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

@@ -41,7 +41,7 @@ class CardSnapshotService {
 
   static String visualSignature(CardData card) {
     return [
-      'visual_snapshot_v2',
+      'visual_snapshot_v3',
       card.bankCid,
       card.cardNetwork.name,
       card.cardType.name,

@@ -19,7 +19,7 @@ class CardRepository {
   // ================= READ =================
 
   static List<CardData> getAll() {
-    return _box.values.toList(growable: false);
+    return _box.values.toList(growable: false).reversed.toList(growable: false);
   }
 
   static dynamic _findKey(CardData card) {

@@ -50,10 +50,18 @@ class CardVisuals {
         [start, middle ?? Color.lerp(start, end, 0.5)!, end],
         end,
       ),
-      visualOpacityBoost:
-          visualAssetPath == null ? 1 : (previewBoost ? 1.25 : 1.1),
-      visualMinOverlayOpacity:
-          visualAssetPath == null ? 0.18 : (previewBoost ? 0.22 : 0.18),
+      visualOpacityBoost: visualAssetPath == null
+          ? 1
+          : _visualOpacityBoostForAsset(
+              visualAssetPath,
+              base: previewBoost ? 1.25 : 1.1,
+            ),
+      visualMinOverlayOpacity: visualAssetPath == null
+          ? 0.18
+          : _visualMinOverlayOpacityForAsset(
+              visualAssetPath,
+              base: previewBoost ? 0.22 : 0.18,
+            ),
     );
   }
 
@@ -954,9 +962,55 @@ class CardVisuals {
       bankLogo: BankAssetResolver.logoPath(cid),
       visualAssetPath: _visualAssetForBank(shortId),
       visualColors: _visualColorsForBank(colors, h),
-      visualOpacityBoost: shortId == 'bank_of_baroda' ? 2.35 : 1,
-      visualMinOverlayOpacity: shortId == 'bank_of_baroda' ? 0.62 : 0.22,
+      visualOpacityBoost: _visualOpacityBoostForAsset(
+        _visualAssetForBank(shortId),
+        base: shortId == 'bank_of_baroda' ? 2.35 : 1,
+      ),
+      visualMinOverlayOpacity: _visualMinOverlayOpacityForAsset(
+        _visualAssetForBank(shortId),
+        base: shortId == 'bank_of_baroda' ? 0.62 : 0.22,
+      ),
     );
+  }
+
+  static double _visualOpacityBoostForAsset(
+    String? assetPath, {
+    required double base,
+  }) {
+    if (assetPath == null || assetPath.isEmpty) {
+      return base;
+    }
+
+    switch (resolveVisualAssetPath(assetPath)) {
+      case 'assets/card visuals/shadow-stripes.svg':
+        return base * 1.28;
+      case 'assets/card visuals/soft-columns.svg':
+        return base * 1.34;
+      case 'assets/card visuals/inset-waves.svg':
+        return base * 1.38;
+      default:
+        return base;
+    }
+  }
+
+  static double _visualMinOverlayOpacityForAsset(
+    String? assetPath, {
+    required double base,
+  }) {
+    if (assetPath == null || assetPath.isEmpty) {
+      return base;
+    }
+
+    switch (resolveVisualAssetPath(assetPath)) {
+      case 'assets/card visuals/shadow-stripes.svg':
+        return base < 0.28 ? 0.28 : base;
+      case 'assets/card visuals/soft-columns.svg':
+        return base < 0.30 ? 0.30 : base;
+      case 'assets/card visuals/inset-waves.svg':
+        return base < 0.32 ? 0.32 : base;
+      default:
+        return base;
+    }
   }
 
   static String _visualAssetForBank(String shortId) {
