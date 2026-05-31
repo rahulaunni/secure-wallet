@@ -2,16 +2,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../constants/layout_constants.dart';
+import '../../diagnostics/performance_runtime_diagnostics.dart';
 import 'black_secure_card.dart';
 import 'package:swallet/utils/haptics.dart';
 
 class SecureRevealWrapper extends StatefulWidget {
+  final String? diagnosticCardId;
   final Widget child;
   final bool revealed;
   final VoidCallback onAutoLock;
 
   const SecureRevealWrapper({
     super.key,
+    this.diagnosticCardId,
     required this.child,
     required this.revealed,
     required this.onAutoLock,
@@ -163,7 +166,8 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    final buildStopwatch = Stopwatch()..start();
+    final widgetTree = LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
@@ -226,6 +230,11 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
         );
       },
     );
+    buildStopwatch.stop();
+    PerformanceRuntimeDiagnostics.instance.recordSecureRevealBuild(
+      buildStopwatch.elapsedMicroseconds,
+    );
+    return widgetTree;
   }
 }
 

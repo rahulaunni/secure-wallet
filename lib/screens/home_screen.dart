@@ -32,6 +32,7 @@ import '../utils/device_auth.dart';
 
 import '../data/local/card_repository.dart';
 import '../data/local/hive_boxes.dart';
+import '../diagnostics/performance_runtime_diagnostics.dart';
 import '../theme/swallet_theme.dart';
 import '../utils/adaptive_layout.dart';
 import '../utils/card_share_helper.dart';
@@ -40,12 +41,14 @@ class HomeScreen extends StatefulWidget {
   final bool isDark;
   final ValueChanged<bool> onThemeChanged;
   final Animation<double>? unlockSettleAnimation;
+  final ScrollController? diagnosticsScrollController;
 
   const HomeScreen({
     super.key,
     required this.isDark,
     required this.onThemeChanged,
     this.unlockSettleAnimation,
+    this.diagnosticsScrollController,
   });
 
   @override
@@ -56,9 +59,10 @@ class HomeScreenState extends State<HomeScreen> {
   static const String _swipeActionsTutorialSeenKey =
       'swipe_actions_tutorial_v1_seen';
 
-  final ScrollController _scrollController = ScrollController();
+  late final ScrollController _scrollController;
   final AddCardFlowController _addCardFlowController = AddCardFlowController();
   GlobalKey<NavigatorState> _sidePaneNavigatorKey = GlobalKey();
+  late final bool _ownsScrollController;
 
   bool _fabCollapsed = false;
 
@@ -427,6 +431,9 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController =
+        widget.diagnosticsScrollController ?? ScrollController();
+    _ownsScrollController = widget.diagnosticsScrollController == null;
     _cards.addAll(CardRepository.getAll());
     _attachUnlockSettleAnimation();
 
@@ -452,7 +459,9 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _detachUnlockSettleAnimation(widget.unlockSettleAnimation);
-    _scrollController.dispose();
+    if (_ownsScrollController) {
+      _scrollController.dispose();
+    }
     super.dispose();
   }
 
@@ -559,67 +568,84 @@ class HomeScreenState extends State<HomeScreen> {
     final cardId = _cardId(card);
     final bool isDeleting = _deletingCardIds.contains(cardId);
 
-    return DeletingListItemWrapper(
-      key: ValueKey(cardId),
-      isDeleting: isDeleting,
-      child: _SwipeableCardActions(
-        isDark: widget.isDark,
-        cardId: cardId,
-        activeSwipeCardId: _activeSwipeCardId,
-        resetToken: _swipeResetToken,
-        onSwipeStarted: () {
-          if (_activeSwipeCardId == cardId) return;
-          setState(() => _activeSwipeCardId = cardId);
-        },
-        onSwipeClosed: () {
-          if (_activeSwipeCardId != cardId) return;
-          setState(() => _activeSwipeCardId = null);
-        },
-        onEdit: () => _openEditCard(card, cardId),
-        onDelete: () => _showDeleteSheet(card, cardId),
-        child: SecureRevealWrapper(
-          revealed: _revealedCardId == cardId,
-          onAutoLock: () => _autoLock(card),
-          child: BankCard(
-            bankLogo: card.bankCid,
-            networkLogo: card.cardNetwork.assetPath,
-            cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
-            cardNumber: card.cardNumber,
-            validThru: card.expiry,
-            holderName: card.holderName,
-            cvv: card.cvv,
-            customBankName: card.customBankName,
-            customBankLogoPath: card.customBankLogoPath,
-            customGradientStartColor: card.customGradientStartColor != null
-                ? Color(card.customGradientStartColor!)
-                : null,
-            customGradientMiddleColor: card.customGradientMiddleColor != null
-                ? Color(card.customGradientMiddleColor!)
-                : null,
-            customGradientEndColor: card.customGradientEndColor != null
-                ? Color(card.customGradientEndColor!)
-                : null,
-            customCardImagePath: card.customCardVisualMode == 1
-                ? card.customCardImagePath
-                : null,
-            customCardPatternAssetPath: card.customCardVisualMode == 0
-                ? card.customCardPatternAssetPath
-                : null,
-            customCardImageAlignment: Alignment(
-              card.customCardImageAlignmentX ?? 0,
-              card.customCardImageAlignmentY ?? 0,
+    return PerformanceCardMountTracker(
+      cardId: cardId,
+      child: DeletingListItemWrapper(
+        key: ValueKey(cardId),
+        isDeleting: isDeleting,
+        child: _SwipeableCardActions(
+          isDark: widget.isDark,
+          cardId: cardId,
+          activeSwipeCardId: _activeSwipeCardId,
+          resetToken: _swipeResetToken,
+          onSwipeStarted: () {
+            if (_activeSwipeCardId == cardId) return;
+            setState(() => _activeSwipeCardId = cardId);
+          },
+          onSwipeClosed: () {
+            if (_activeSwipeCardId != cardId) return;
+            setState(() => _activeSwipeCardId = null);
+          },
+          onEdit: () => _openEditCard(card, cardId),
+          onDelete: () => _showDeleteSheet(card, cardId),
+          child: SecureRevealWrapper(
+            diagnosticCardId: cardId,
+            revealed: _revealedCardId == cardId,
+            onAutoLock: () => _autoLock(card),
+            child: BankCard(
+              diagnosticCardId: cardId,
+              bankLogo: card.bankCid,
+              networkLogo: card.cardNetwork.assetPath,
+              cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
+              cardNumber: card.cardNumber,
+              validThru: card.expiry,
+              holderName: card.holderName,
+              cvv: card.cvv,
+              customBankName: card.customBankName,
+              customBankLogoPath: card.customBankLogoPath,
+              customGradientStartColor: card.customGradientStartColor != null
+                  ? Color(card.customGradientStartColor!)
+                  : null,
+              customGradientMiddleColor: card.customGradientMiddleColor != null
+                  ? Color(card.customGradientMiddleColor!)
+                  : null,
+              customGradientEndColor: card.customGradientEndColor != null
+                  ? Color(card.customGradientEndColor!)
+                  : null,
+              customCardImagePath: card.customCardVisualMode == 1
+                  ? card.customCardImagePath
+                  : null,
+              customCardPatternAssetPath: card.customCardVisualMode == 0
+                  ? card.customCardPatternAssetPath
+                  : null,
+              customCardImageAlignment: Alignment(
+                card.customCardImageAlignmentX ?? 0,
+                card.customCardImageAlignmentY ?? 0,
+              ),
+              showActions: _homeEntrySettled,
+              onEyeTap: () => _toggleReveal(card),
+              onShareTap: () {
+                if (_revealedCardId != cardId) {
+                  return;
+                }
+                CardShareHelper.shareCard(card);
+              },
             ),
-            showActions: _homeEntrySettled,
-            onEyeTap: () => _toggleReveal(card),
-            onShareTap: () {
-              if (_revealedCardId != cardId) {
-                return;
-              }
-              CardShareHelper.shareCard(card);
-            },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _withScrollDiagnostics(Widget child) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        PerformanceRuntimeDiagnostics.instance.handleScrollNotification(
+          notification,
+        );
+        return false;
+      },
+      child: child,
     );
   }
 
@@ -738,7 +764,30 @@ class HomeScreenState extends State<HomeScreen> {
             animation: _scrollController,
             builder: (context, _) {
               if (visibleCards.length <= 3) {
-                return ListView.builder(
+                return _withScrollDiagnostics(
+                  ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      120,
+                    ),
+                    itemCount: visibleCards.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: bankCardVerticalSpacing,
+                        ),
+                        child: _buildCardItem(visibleCards[index]),
+                      );
+                    },
+                  ),
+                );
+              }
+
+              return _withScrollDiagnostics(
+                ListView(
                   controller: _scrollController,
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -746,45 +795,26 @@ class HomeScreenState extends State<HomeScreen> {
                     horizontalPadding,
                     120,
                   ),
-                  itemCount: visibleCards.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: bankCardVerticalSpacing,
+                  children: [
+                    for (var index = 0; index < 2; index++)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: bankCardVerticalSpacing,
+                        ),
+                        child: _buildCardItem(visibleCards[index]),
                       ),
-                      child: _buildCardItem(visibleCards[index]),
-                    );
-                  },
-                );
-              }
-
-              return ListView(
-                controller: _scrollController,
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  0,
-                  horizontalPadding,
-                  120,
-                ),
-                children: [
-                  for (var index = 0; index < 2; index++)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: bankCardVerticalSpacing,
-                      ),
-                      child: _buildCardItem(visibleCards[index]),
+                    _StackedCardListSection(
+                      cards: visibleCards.sublist(2),
+                      cardWidth: cardWidth,
+                      revealedCardId: _revealedCardId,
+                      scrollOffset: _scrollController.hasClients
+                          ? _scrollController.offset
+                          : 0,
+                      cardIdBuilder: _cardId,
+                      itemBuilder: _buildCardItem,
                     ),
-                  _StackedCardListSection(
-                    cards: visibleCards.sublist(2),
-                    cardWidth: cardWidth,
-                    revealedCardId: _revealedCardId,
-                    scrollOffset: _scrollController.hasClients
-                        ? _scrollController.offset
-                        : 0,
-                    cardIdBuilder: _cardId,
-                    itemBuilder: _buildCardItem,
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           );
@@ -796,28 +826,30 @@ class HomeScreenState extends State<HomeScreen> {
         const cardWidth = AdaptiveLayout.phoneCardWidth;
         _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
 
-        return SingleChildScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            0,
-            horizontalPadding,
-            120,
-          ),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: contentWidth,
-              child: Wrap(
-                spacing: spacing,
-                runSpacing: bankCardVerticalSpacing,
-                children: visibleCards.map((card) {
-                  return SizedBox(
-                    width: cardWidth,
-                    child: _buildCardItem(card),
-                  );
-                }).toList(),
+        return _withScrollDiagnostics(
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              0,
+              horizontalPadding,
+              120,
+            ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: contentWidth,
+                child: Wrap(
+                  spacing: spacing,
+                  runSpacing: bankCardVerticalSpacing,
+                  children: visibleCards.map((card) {
+                    return SizedBox(
+                      width: cardWidth,
+                      child: _buildCardItem(card),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),
@@ -1025,6 +1057,7 @@ class HomeScreenState extends State<HomeScreen> {
     return ValueListenableBuilder<Box<CardData>>(
       valueListenable: Hive.box<CardData>(HiveBoxes.cards).listenable(),
       builder: (context, cardsBox, _) {
+        final buildStopwatch = Stopwatch()..start();
         final allCards = _cardsForDisplay(cardsBox);
         final visibleCards = _filteredCards(allCards);
         final bool isEmptyState = allCards.isEmpty;
@@ -1038,7 +1071,7 @@ class HomeScreenState extends State<HomeScreen> {
             ? AdaptiveLayout.formPaneMaxWidth + 16
             : AdaptiveLayout.outerGutterForWidth(screenWidth);
 
-        return PopScope(
+        final widgetTree = PopScope(
           canPop: _sidePane == null,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
@@ -1064,6 +1097,11 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
+        buildStopwatch.stop();
+        PerformanceRuntimeDiagnostics.instance.recordHomeScreenBuild(
+          buildStopwatch.elapsedMicroseconds,
+        );
+        return widgetTree;
       },
     );
   }
