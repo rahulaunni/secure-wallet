@@ -229,18 +229,20 @@ class PreviewCard extends StatelessWidget {
                             ),
                             Positioned(
                               left: 0,
-                              right: 0,
                               bottom: detailsBottomOffset,
-                              child: CardDetailsBlock(
-                                cardNumber: displayNumber,
-                                rawCardNumber:
-                                    displayNumber, // ✅ Satisfy required param
-                                validThru: displayExpiry,
-                                holderName: displayName,
-                                cvv: '***',
-                                showCvvToggle: false,
-                                isCvvVisible: false,
-                                onToggleCvv: () {},
+                              child: SizedBox(
+                                width: designWidth - (cardPadding * 2),
+                                child: CardDetailsBlock(
+                                  cardNumber: displayNumber,
+                                  rawCardNumber:
+                                      displayNumber, // ✅ Satisfy required param
+                                  validThru: displayExpiry,
+                                  holderName: displayName,
+                                  cvv: '***',
+                                  showCvvToggle: false,
+                                  isCvvVisible: false,
+                                  onToggleCvv: () {},
+                                ),
                               ),
                             ),
                             if (onEditVisualTap != null)

@@ -37,7 +37,7 @@ const double chipTopOffset = 44;
 const double chipWidth = 42;
 
 // ================= DETAILS POSITION =================
-const double detailsBottomOffset = 4;
+const double detailsBottomOffset = 2;
 
 // ================= CARD NUMBER =================
 const double cardNumberFontSize = 21;
@@ -61,8 +61,8 @@ const FontWeight holderNameFontWeight = FontWeight.w500;
 
 // ================= VERTICAL SPACING =================
 // 📉 TWEAKED: Reduced 12->8 to tighten the layout with smaller fonts
-const double numberToRowSpacing = 8;
-const double rowToNameSpacing = 8;
+const double numberToRowSpacing = 5;
+const double rowToNameSpacing = 5;
 
 // ================= SECURE REVEAL (FINAL) =================
 

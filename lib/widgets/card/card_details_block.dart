@@ -75,6 +75,7 @@ class CardDetailsBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ================= CARD NUMBER (Auto-Scaling) =================
@@ -112,7 +113,7 @@ class CardDetailsBlock extends StatelessWidget {
                 softWrap: false,
                 overflow: TextOverflow.visible,
 
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.jura(
                   fontSize: cardNumberFontSize, // Ideally ~22.0
                   letterSpacing: cardNumberLetterSpacing, // Ideally ~2.0-2.5
                   fontWeight: cardNumberFontWeight,

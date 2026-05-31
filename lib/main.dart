@@ -13,6 +13,7 @@ import 'screens/app_unlock/pin_lock_screen.dart';
 import 'screens/home_screen.dart';
 import 'theme/swallet_theme.dart';
 import 'utils/adaptive_layout.dart';
+import 'utils/app_startup_preloader.dart';
 import 'utils/hive_encryption.dart';
 import 'utils/security_store.dart';
 import 'utils/size_config.dart';
@@ -86,6 +87,8 @@ class _CardVaultAppState extends State<CardVaultApp>
       vsync: this,
       duration: const Duration(milliseconds: 1480),
     );
+
+    AppStartupPreloader.scheduleWarmUp(context);
   }
 
   @override

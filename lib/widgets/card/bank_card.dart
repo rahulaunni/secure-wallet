@@ -210,17 +210,19 @@ class BankCard extends StatelessWidget {
                             // ================= CARD DETAILS =================
                             Positioned(
                               left: 0,
-                              right: 0,
                               bottom: detailsBottomOffset,
-                              child: CardDetailsBlock(
-                                cardNumber: displayNumber,
-                                rawCardNumber: cardNumber,
-                                validThru: validThru,
-                                holderName: holderName,
-                                cvv: displayCvv,
-                                showCvvToggle: scope.revealed,
-                                isCvvVisible: scope.cvvVisible,
-                                onToggleCvv: scope.onToggleCvv,
+                              child: SizedBox(
+                                width: designWidth - (cardPadding * 2),
+                                child: CardDetailsBlock(
+                                  cardNumber: displayNumber,
+                                  rawCardNumber: cardNumber,
+                                  validThru: validThru,
+                                  holderName: holderName,
+                                  cvv: displayCvv,
+                                  showCvvToggle: scope.revealed,
+                                  isCvvVisible: scope.cvvVisible,
+                                  onToggleCvv: scope.onToggleCvv,
+                                ),
                               ),
                             ),
 

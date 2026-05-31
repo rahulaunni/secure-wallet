@@ -112,17 +112,19 @@ class PreviewCardVisual extends StatelessWidget {
                 // ================= CARD DETAILS =================
                 Positioned(
                   left: 0,
-                  right: 0,
                   bottom: detailsBottomOffset,
-                  child: CardDetailsBlock(
-                    cardNumber: _buildMaskedCardNumber(cardNumber),
-                    rawCardNumber: _buildMaskedCardNumber(cardNumber),
-                    validThru: 'MM/YY',
-                    holderName: 'CARD HOLDER',
-                    cvv: '***',
-                    showCvvToggle: false,
-                    isCvvVisible: false,
-                    onToggleCvv: () {},
+                  child: SizedBox(
+                    width: constraints.maxWidth - (cardPadding * 2),
+                    child: CardDetailsBlock(
+                      cardNumber: _buildMaskedCardNumber(cardNumber),
+                      rawCardNumber: _buildMaskedCardNumber(cardNumber),
+                      validThru: 'MM/YY',
+                      holderName: 'CARD HOLDER',
+                      cvv: '***',
+                      showCvvToggle: false,
+                      isCvvVisible: false,
+                      onToggleCvv: () {},
+                    ),
                   ),
                 ),
               ],
