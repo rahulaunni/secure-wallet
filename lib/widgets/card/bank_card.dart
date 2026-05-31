@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-
+import '../../constants/card_visuals.dart';
 import '../../constants/layout_constants.dart';
+import '../../debug/visual_cost_flags.dart';
+import '../../models/card_data.dart';
 import '../../utils/adaptive_layout.dart';
 import '../../utils/card_number_format.dart';
-import '../../constants/card_visuals.dart'; // ✅ Import Visual Engine
 import '../bank/bank_logo.dart';
 import 'card_custom_image_loader_stub.dart'
     if (dart.library.io) 'card_custom_image_loader_io.dart'
     as card_custom_image_loader;
-import 'card_visual_asset_layer.dart';
 import 'card_details_block.dart';
+import 'card_visual_asset_layer.dart';
+import 'card_visual_snapshot_layer.dart';
 import 'secure_reveal_wrapper.dart';
 
 class BankCard extends StatelessWidget {
-  final String bankLogo; // This acts as the Bank CID (e.g., 'hdfc', 'axis')
+  final String bankLogo;
   final String networkLogo;
   final String cardType;
   final String cardNumber;
@@ -31,7 +32,8 @@ class BankCard extends StatelessWidget {
   final Alignment customCardImageAlignment;
   final String? customCardPatternAssetPath;
   final bool showActions;
-
+  final bool enableVisualSnapshot;
+  final CardData? snapshotSourceCard;
   final VoidCallback onEyeTap;
   final VoidCallback? onShareTap;
 
@@ -53,17 +55,14 @@ class BankCard extends StatelessWidget {
     this.customCardImageAlignment = Alignment.center,
     this.customCardPatternAssetPath,
     this.showActions = true,
-    // Gradient is removed from constructor; it is now resolved internally.
+    this.enableVisualSnapshot = false,
+    this.snapshotSourceCard,
     required this.onEyeTap,
     this.onShareTap,
   });
 
-  /// ---------------- MASKED FORMAT ----------------
-  String get masked {
-    return CardNumberFormat.masked(cardNumber);
-  }
+  String get masked => CardNumberFormat.masked(cardNumber);
 
-  /// ---------------- REVEALED FORMAT ----------------
   String _formatCardNumber(String digits) {
     return CardNumberFormat.format(digits);
   }
@@ -71,8 +70,6 @@ class BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scope = BankCardScope.of(context);
-
-    // ✅ RESOLVE VISUALS (Gradient + Pattern)
     final customStart = customGradientStartColor;
     final customMiddle = customGradientMiddleColor;
     final customEnd = customGradientEndColor;
@@ -84,175 +81,243 @@ class BankCard extends StatelessWidget {
             visualAssetPath: customCardPatternAssetPath,
           )
         : CardVisuals.forBank(bankLogo);
-    // ================= SECURITY LOGIC (LOCKED) =================
-    final bool showCvv = scope.revealed && scope.cvvVisible;
-
-    final String displayNumber = showCvv
+    final showCvv = scope.revealed && scope.cvvVisible;
+    final displayNumber = showCvv
         ? masked
         : scope.revealed
             ? _formatCardNumber(cardNumber)
             : masked;
+    final displayCvv = showCvv ? cvv : '***';
 
-    final String displayCvv = showCvv ? cvv : '***';
-    // ===========================================================
+    return RepaintBoundary(
+      child: AspectRatio(
+        aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const designWidth = AdaptiveLayout.phoneCardWidth;
+            const designHeight =
+                designWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+            final bankLogoMaxWidth = bankLogoMaxWidthForCard(designWidth);
+            final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+            final targetImageWidth =
+                (constraints.maxWidth * devicePixelRatio).round();
+            final customImage =
+                card_custom_image_loader.buildCustomCardDecorationImage(
+              path: customCardImagePath,
+              targetImageWidth: targetImageWidth,
+              alignment: customCardImageAlignment,
+            );
+            final borderRadius = BorderRadius.circular(cardBorderRadius);
+            final liveVisual = _CardVisualShell(
+              visual: visual,
+              customImage: customImage,
+              borderRadius: borderRadius,
+              designWidth: designWidth,
+              designHeight: designHeight,
+              bankLogoMaxWidth: bankLogoMaxWidth,
+              bankLogo: bankLogo,
+              customBankLogoPath: customBankLogoPath,
+              customBankName: customBankName,
+              networkLogo: networkLogo,
+              cardType: cardType,
+            );
 
-    return AspectRatio(
-      aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const designWidth = AdaptiveLayout.phoneCardWidth;
-          const designHeight =
-              designWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
-          final bankLogoMaxWidth = bankLogoMaxWidthForCard(designWidth);
-          final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-          final targetImageWidth =
-              (constraints.maxWidth * devicePixelRatio).round();
-          final customImage =
-              card_custom_image_loader.buildCustomCardDecorationImage(
-            path: customCardImagePath,
-            targetImageWidth: targetImageWidth,
-            alignment: customCardImageAlignment,
-          );
-
-          return Container(
-            padding: EdgeInsets
-                .zero, // Padding is handled inside Stack for full-bleed background
-            decoration: BoxDecoration(
-              gradient: visual.gradient, // ✅ Use Brand Gradient
-              image: customImage,
-              borderRadius: BorderRadius.circular(cardBorderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  blurRadius: 16,
-                  offset: const Offset(0, 7),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // ✅ 1. BRAND SVG VISUAL LAYER (Behind everything)
-                if (customImage == null && visual.visualAssetPath != null)
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                boxShadow: kDisableCardShadow
+                    ? const []
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 16,
+                          offset: const Offset(0, 7),
+                        ),
+                      ],
+              ),
+              child: Stack(
+                children: [
                   Positioned.fill(
-                    child: CardVisualAssetLayer(
-                      visual: visual,
-                      borderRadius: BorderRadius.circular(cardBorderRadius),
-                    ),
+                    child: enableVisualSnapshot && snapshotSourceCard != null
+                        ? CardVisualSnapshotLayer(
+                            card: snapshotSourceCard!,
+                            logicalWidth: constraints.maxWidth,
+                            borderRadius: borderRadius,
+                            liveVisual: liveVisual,
+                          )
+                        : liveVisual,
                   ),
-
-                // ✅ 2. CONTENT PADDING CONTAINER
-                // (We re-add padding here so content doesn't touch edges)
-                Positioned.fill(
-                  child: FittedBox(
-                    fit: BoxFit.fill,
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: designWidth,
-                      height: designHeight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(cardPadding),
-                        child: Stack(
-                          children: [
-                            // ================= BANK HEADER =================
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              child: Row(
-                                children: [
-                                  BankLogo(
-                                    bankCid: bankLogo,
-                                    size: bankLogoHeight,
-                                    width: bankLogoMaxWidth,
-                                    customLogoPath: customBankLogoPath,
-                                    customLabel: customBankName,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // ================= NETWORK LOGO + TYPE =================
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  SvgPicture.asset(
-                                    networkLogo,
-                                    height: networkLogoHeight,
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    cardType,
-                                    textAlign: TextAlign.right,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      height: 1,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // ================= CHIP =================
-                            Positioned(
-                              top: chipTopOffset,
-                              left: 0,
-                              child: SvgPicture.asset(
-                                'assets/images/chip.svg',
-                                width: chipWidth,
-                              ),
-                            ),
-
-                            // ================= CARD DETAILS =================
-                            Positioned(
-                              left: 0,
-                              bottom: detailsBottomOffset,
-                              child: SizedBox(
-                                width: designWidth - (cardPadding * 2),
-                                child: CardDetailsBlock(
-                                  cardNumber: displayNumber,
-                                  rawCardNumber: cardNumber,
-                                  validThru: validThru,
-                                  holderName: holderName,
-                                  cvv: displayCvv,
-                                  showCvvToggle: scope.revealed,
-                                  isCvvVisible: scope.cvvVisible,
-                                  onToggleCvv: scope.onToggleCvv,
-                                ),
-                              ),
-                            ),
-
-                            if (showActions)
-                              // ================= CARD ACTIONS =================
+                  Positioned.fill(
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: designWidth,
+                        height: designHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.all(cardPadding),
+                          child: Stack(
+                            children: [
                               Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: _CardActions(
-                                  revealed: scope.revealed,
-                                  onEyeTap: onEyeTap,
-                                  onShareTap: onShareTap,
+                                left: 0,
+                                bottom: detailsBottomOffset,
+                                child: SizedBox(
+                                  width: designWidth - (cardPadding * 2),
+                                  child: CardDetailsBlock(
+                                    cardNumber: displayNumber,
+                                    rawCardNumber: cardNumber,
+                                    validThru: validThru,
+                                    holderName: holderName,
+                                    cvv: displayCvv,
+                                    showCvvToggle: scope.revealed,
+                                    isCvvVisible: scope.cvvVisible,
+                                    onToggleCvv: scope.onToggleCvv,
+                                  ),
                                 ),
                               ),
-                          ],
+                              if (showActions)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: _CardActions(
+                                    revealed: scope.revealed,
+                                    onEyeTap: onEyeTap,
+                                    onShareTap: onShareTap,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
-// ================= ACTION BUTTON =================
+class _CardVisualShell extends StatelessWidget {
+  final CardVisual visual;
+  final DecorationImage? customImage;
+  final BorderRadius borderRadius;
+  final double designWidth;
+  final double designHeight;
+  final double bankLogoMaxWidth;
+  final String bankLogo;
+  final String? customBankLogoPath;
+  final String? customBankName;
+  final String networkLogo;
+  final String cardType;
+
+  const _CardVisualShell({
+    required this.visual,
+    required this.customImage,
+    required this.borderRadius,
+    required this.designWidth,
+    required this.designHeight,
+    required this.bankLogoMaxWidth,
+    required this.bankLogo,
+    required this.customBankLogoPath,
+    required this.customBankName,
+    required this.networkLogo,
+    required this.cardType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: visual.gradient,
+          image: customImage,
+        ),
+        child: Stack(
+          children: [
+            if (customImage == null && visual.visualAssetPath != null)
+              Positioned.fill(
+                child: CardVisualAssetLayer(
+                  visual: visual,
+                  borderRadius: borderRadius,
+                ),
+              ),
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.fill,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: designWidth,
+                  height: designHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(cardPadding),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Row(
+                            children: [
+                              BankLogo(
+                                bankCid: bankLogo,
+                                size: bankLogoHeight,
+                                width: bankLogoMaxWidth,
+                                customLogoPath: customBankLogoPath,
+                                customLabel: customBankName,
+                                useRuntimeFonts: false,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SvgPicture.asset(
+                                networkLogo,
+                                height: networkLogoHeight,
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                cardType,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: chipTopOffset,
+                          left: 0,
+                          child: SvgPicture.asset(
+                            'assets/images/chip.svg',
+                            width: chipWidth,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _CardActions extends StatefulWidget {
   static const double _buttonSize = 44;

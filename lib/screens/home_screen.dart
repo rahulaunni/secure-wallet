@@ -34,9 +34,11 @@ import '../data/local/card_repository.dart';
 import '../data/local/hive_boxes.dart';
 import '../theme/swallet_theme.dart';
 import '../utils/adaptive_layout.dart';
+import '../utils/app_startup_preloader.dart';
 import '../utils/card_share_helper.dart';
 
 const int kStackPreviewCount = 5;
+const int kTailPrewarmCandidateCount = 5;
 
 class HomeScreen extends StatefulWidget {
   final bool isDark;
@@ -72,6 +74,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   // 🔒 SINGLE SOURCE OF TRUTH FOR REVEAL
   String? _revealedCardId;
+  String? _closingRevealCardId;
 
   // 🔒 ACTIVE TOP NAV FILTERS
   final Set<String> _activeFilters = {};
@@ -91,10 +94,22 @@ class HomeScreenState extends State<HomeScreen> {
 
   bool get isPrimarySurfaceVisible => _sidePane == null;
 
+  String? get _effectiveRevealedCardId => _revealedCardId ?? _closingRevealCardId;
+
+  void _beginRevealClose(String cardId) {
+    setState(() {
+      _closingRevealCardId = cardId;
+      _revealedCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
+  }
+
   void cancelAllReveals() {
     if (!mounted) return;
     setState(() {
       _revealedCardId = null;
+      _closingRevealCardId = null;
       _swipeResetToken++;
       _activeSwipeCardId = null;
     });
@@ -108,6 +123,7 @@ class HomeScreenState extends State<HomeScreen> {
         ..addAll(CardRepository.getAll());
       _precachedCustomImageKeys.clear();
       _revealedCardId = null;
+      _closingRevealCardId = null;
       _activeFilters.clear();
       _swipeResetToken++;
       _activeSwipeCardId = null;
@@ -267,6 +283,21 @@ class HomeScreenState extends State<HomeScreen> {
         _compactCacheExtent = _targetCompactCacheExtent;
       });
     });
+  }
+
+  void _scheduleTailCardPrewarm(
+    List<CardData> tailCards, {
+    required double cardWidth,
+  }) {
+    if (!mounted || tailCards.isEmpty || cardWidth <= 0) {
+      return;
+    }
+
+    AppStartupPreloader.scheduleCardWarmUp(
+      context,
+      tailCards.take(kTailPrewarmCandidateCount),
+      cardWidth: cardWidth,
+    );
   }
 
   void _handleSidePaneBack() {
@@ -500,11 +531,7 @@ class HomeScreenState extends State<HomeScreen> {
     final cardId = _cardId(card);
 
     if (_revealedCardId == cardId) {
-      setState(() {
-        _revealedCardId = null;
-        _swipeResetToken++;
-        _activeSwipeCardId = null;
-      });
+      _beginRevealClose(cardId);
       return;
     }
 
@@ -545,6 +572,7 @@ class HomeScreenState extends State<HomeScreen> {
     if (authenticated) {
       setState(() {
         _revealedCardId = cardId;
+        _closingRevealCardId = null;
         _swipeResetToken++;
         _activeSwipeCardId = null;
       });
@@ -553,13 +581,19 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _autoLock(CardData card) {
     if (!mounted) return;
-    if (_revealedCardId == _cardId(card)) {
-      setState(() {
-        _revealedCardId = null;
-        _swipeResetToken++;
-        _activeSwipeCardId = null;
-      });
+    final cardId = _cardId(card);
+    if (_revealedCardId == cardId) {
+      _beginRevealClose(cardId);
     }
+  }
+
+  void _handleRevealCollapseComplete(String cardId) {
+    if (!mounted || _closingRevealCardId != cardId) {
+      return;
+    }
+    setState(() {
+      _closingRevealCardId = null;
+    });
   }
 
   Widget _adaptiveContentShell(Widget child) {
@@ -605,7 +639,10 @@ class HomeScreenState extends State<HomeScreen> {
         child: SecureRevealWrapper(
           revealed: _revealedCardId == cardId,
           onAutoLock: () => _autoLock(card),
+          onCollapseComplete: () => _handleRevealCollapseComplete(cardId),
           child: BankCard(
+            snapshotSourceCard: card,
+            enableVisualSnapshot: true,
             bankLogo: card.bankCid,
             networkLogo: card.cardNetwork.assetPath,
             cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
@@ -764,59 +801,56 @@ class HomeScreenState extends State<HomeScreen> {
               .skip(2)
               .take(kStackPreviewCount)
               .toList(growable: false);
+          final stackPreviewChildren = stackPreviewCards
+              .map(_buildCardItem)
+              .toList(growable: false);
           final tailCards = visibleCards
               .skip(2 + kStackPreviewCount)
               .toList(growable: false);
+          _scheduleTailCardPrewarm(tailCards, cardWidth: cardWidth);
           final hasStackPreview = stackPreviewCards.isNotEmpty;
           final compactItemCount = leadingCards.length +
               (hasStackPreview ? 1 : 0) +
               tailCards.length;
 
-          return AnimatedBuilder(
-            animation: _scrollController,
-            builder: (context, _) {
-              return ListView.builder(
-                controller: _scrollController,
-                cacheExtent: _compactCacheExtent,
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  0,
-                  horizontalPadding,
-                  120,
+          return ListView.builder(
+            controller: _scrollController,
+            cacheExtent: _compactCacheExtent,
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              0,
+              horizontalPadding,
+              120,
+            ),
+            itemCount: compactItemCount,
+            itemBuilder: (context, index) {
+              if (index < leadingCards.length) {
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: bankCardVerticalSpacing,
+                  ),
+                  child: _buildCardItem(leadingCards[index]),
+                );
+              }
+
+              if (hasStackPreview && index == leadingCards.length) {
+                return _StackedCardListSection(
+                  cards: stackPreviewCards,
+                  cardChildren: stackPreviewChildren,
+                  cardWidth: cardWidth,
+                  revealedCardId: _effectiveRevealedCardId,
+                  scrollController: _scrollController,
+                  cardIdBuilder: _cardId,
+                );
+              }
+
+              final tailIndex =
+                  index - leadingCards.length - (hasStackPreview ? 1 : 0);
+              return Padding(
+                padding: const EdgeInsets.only(
+                  bottom: bankCardVerticalSpacing,
                 ),
-                itemCount: compactItemCount,
-                itemBuilder: (context, index) {
-                  if (index < leadingCards.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: bankCardVerticalSpacing,
-                      ),
-                      child: _buildCardItem(leadingCards[index]),
-                    );
-                  }
-
-                  if (hasStackPreview && index == leadingCards.length) {
-                    return _StackedCardListSection(
-                      cards: stackPreviewCards,
-                      cardWidth: cardWidth,
-                      revealedCardId: _revealedCardId,
-                      scrollOffset: _scrollController.hasClients
-                          ? _scrollController.offset
-                          : 0,
-                      cardIdBuilder: _cardId,
-                      itemBuilder: _buildCardItem,
-                    );
-                  }
-
-                  final tailIndex =
-                      index - leadingCards.length - (hasStackPreview ? 1 : 0);
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: bankCardVerticalSpacing,
-                    ),
-                    child: _buildCardItem(tailCards[tailIndex]),
-                  );
-                },
+                child: _buildCardItem(tailCards[tailIndex]),
               );
             },
           );
@@ -1215,6 +1249,7 @@ class _StackedCardListSection extends StatelessWidget {
   static const Curve _stackSettleCurve = Cubic(0.22, 1, 0.36, 1);
   static const double _cardTiltPadding = 8;
   static const double _collapsedScaleStep = 0.045;
+  static const double _interactionEnableProgress = 0.9;
   static const int _maxCollapsedDepth = 4;
   static const int _visibleCollapsedCards = 4;
   static const List<double> _collapsedTopOffsets = <double>[
@@ -1225,19 +1260,19 @@ class _StackedCardListSection extends StatelessWidget {
   ];
 
   final List<CardData> cards;
+  final List<Widget> cardChildren;
   final double cardWidth;
   final String? revealedCardId;
-  final double scrollOffset;
+  final ScrollController scrollController;
   final String Function(CardData card) cardIdBuilder;
-  final Widget Function(CardData card) itemBuilder;
 
   const _StackedCardListSection({
     required this.cards,
+    required this.cardChildren,
     required this.cardWidth,
     required this.revealedCardId,
-    required this.scrollOffset,
+    required this.scrollController,
     required this.cardIdBuilder,
-    required this.itemBuilder,
   });
 
   double _lerp(double from, double to, double progress) {
@@ -1246,8 +1281,7 @@ class _StackedCardListSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardHeight =
-        cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    final cardHeight = cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
     final itemHeight = cardHeight + _cardTiltPadding;
     const itemGap = bankCardVerticalSpacing;
     final slotHeight = itemHeight + itemGap;
@@ -1255,37 +1289,45 @@ class _StackedCardListSection extends StatelessWidget {
       (card) => cardIdBuilder(card) == revealedCardId,
     );
     final revealExtraHeight = revealedIndex == -1 ? 0.0 : secureRevealBarHeight;
-    final progress = _stackSettleCurve.transform(
-      (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
-    );
     final sectionHeight = (cards.length * slotHeight) + revealExtraHeight;
     final maxDepth = (cards.length - 1).clamp(1, _maxCollapsedDepth);
 
     return SizedBox(
       height: sectionHeight,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (var index = cards.length - 1; index >= 0; index--)
-            _StackedCardPosition(
-              top: _topForIndex(
-                index: index,
-                maxDepth: maxDepth,
-                slotHeight: slotHeight,
-                revealExtraHeight: revealExtraHeight,
-                revealedIndex: revealedIndex,
-                progress: progress,
-              ),
-              scale: _scaleForIndex(
-                index: index,
-                maxDepth: maxDepth,
-                progress: progress,
-              ),
-              opacity: _opacityForIndex(index: index, progress: progress),
-              interactionsEnabled: progress >= 0.995,
-              child: itemBuilder(cards[index]),
-            ),
-        ],
+      child: AnimatedBuilder(
+        animation: scrollController,
+        builder: (context, _) {
+          final scrollOffset =
+              scrollController.hasClients ? scrollController.offset : 0.0;
+          final progress = _stackSettleCurve.transform(
+            (scrollOffset / (cardHeight * 0.84)).clamp(0.0, 1.0).toDouble(),
+          );
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (var index = cards.length - 1; index >= 0; index--)
+                _StackedCardPosition(
+                  top: _topForIndex(
+                    index: index,
+                    maxDepth: maxDepth,
+                    slotHeight: slotHeight,
+                    revealExtraHeight: revealExtraHeight,
+                    revealedIndex: revealedIndex,
+                    progress: progress,
+                  ),
+                  scale: _scaleForIndex(
+                    index: index,
+                    maxDepth: maxDepth,
+                    progress: progress,
+                  ),
+                  opacity: _opacityForIndex(index: index, progress: progress),
+                  interactionsEnabled: progress >= _interactionEnableProgress,
+                  child: cardChildren[index],
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1359,9 +1401,7 @@ class _StackedCardPosition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPositioned(
-      duration: secureRevealAnimDuration,
-      curve: Curves.easeOutCubic,
+    return Positioned(
       top: top,
       left: 0,
       right: 0,

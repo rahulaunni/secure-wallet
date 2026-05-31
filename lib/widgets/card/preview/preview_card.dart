@@ -2,21 +2,20 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../constants/card_visuals.dart';
 import '../../../constants/layout_constants.dart';
-import '../../../constants/card_visuals.dart'; // ✅ Import Visual Engine
 import '../../../models/card_network.dart';
 import '../../../utils/adaptive_layout.dart';
 import '../../../utils/card_number_format.dart';
 import '../../bank/bank_logo.dart';
-import '../card_visual_asset_layer.dart';
 import '../card_details_block.dart';
+import '../card_visual_asset_layer.dart';
 
 class PreviewCard extends StatelessWidget {
+  final GlobalKey? visualBoundaryKey;
   final String? bankCid;
   final bool isDark;
-
   final String cardNumber;
   final String expiry;
   final String holderName;
@@ -30,11 +29,11 @@ class PreviewCard extends StatelessWidget {
   final Alignment customCardImageAlignment;
   final String? customCardPatternAssetPath;
   final VoidCallback? onEditVisualTap;
-
   final String cardType;
 
   const PreviewCard({
     super.key,
+    this.visualBoundaryKey,
     required this.bankCid,
     required this.isDark,
     required this.cardNumber,
@@ -54,35 +53,24 @@ class PreviewCard extends StatelessWidget {
   });
 
   String? _networkAsset(CardNetwork? network) {
-    switch (network) {
-      case CardNetwork.visa:
-        return 'assets/images/networks/visa.png';
-      case CardNetwork.mastercard:
-        return 'assets/images/networks/mastercard.png';
-      case CardNetwork.rupay:
-        return 'assets/images/networks/rupay.png';
-      case CardNetwork.amex:
-        return 'assets/images/networks/amex.png';
-      default:
-        return null;
+    final assetPath = network?.assetPath;
+    if (assetPath == null || assetPath.isEmpty) {
+      return null;
     }
+    return assetPath;
   }
 
-  // 🔒 Progressive star replacement
   String _progressiveMaskedNumber(String digits) {
     return CardNumberFormat.progressiveMask(digits);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool hasBank = bankCid != null;
-
-    // ✅ RESOLVE VISUALS (Gradient + Pattern)
-    // Matches the logic used in BankCard
+    final hasBank = bankCid != null;
     final customStart = customGradientStartColor;
     final customMiddle = customGradientMiddleColor;
     final customEnd = customGradientEndColor;
-    final CardVisual visual = customStart != null && customEnd != null
+    final visual = customStart != null && customEnd != null
         ? CardVisuals.customGradient(
             customStart,
             customEnd,
@@ -99,18 +87,12 @@ class PreviewCard extends StatelessWidget {
             : null;
     final hasCustomImage =
         customImageFile != null && customImageFile.existsSync();
-
-    final String? networkLogo = hasBank ? _networkAsset(cardNetwork) : null;
-
-    // 🔒 ALWAYS SHOW STARS ON BANK SELECTION
-    final String displayNumber = hasBank
+    final networkLogo = hasBank ? _networkAsset(cardNetwork) : null;
+    final displayNumber = hasBank
         ? _progressiveMaskedNumber(cardNumber)
         : CardNumberFormat.standardTemplate;
-
-    final String displayExpiry =
-        hasBank && expiry.isNotEmpty ? expiry : 'MM/YY';
-
-    final String displayName = hasBank && holderName.isNotEmpty
+    final displayExpiry = hasBank && expiry.isNotEmpty ? expiry : 'MM/YY';
+    final displayName = hasBank && holderName.isNotEmpty
         ? holderName.toUpperCase()
         : 'CARD HOLDER';
 
@@ -137,13 +119,11 @@ class PreviewCard extends StatelessWidget {
                   filterQuality: FilterQuality.low,
                 )
               : null;
+          final borderRadius = BorderRadius.circular(cardBorderRadius);
 
           return Container(
-            padding: EdgeInsets.zero, // Padding is handled inside the Stack
             decoration: BoxDecoration(
-              gradient: visual.gradient, // ✅ Use Brand Gradient
-              image: customImage,
-              borderRadius: BorderRadius.circular(cardBorderRadius),
+              borderRadius: borderRadius,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.16),
@@ -154,16 +134,105 @@ class PreviewCard extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // ✅ 1. BRAND SVG VISUAL LAYER (Behind everything)
-                if (customImage == null && visual.visualAssetPath != null)
-                  Positioned.fill(
-                    child: CardVisualAssetLayer(
-                      visual: visual,
-                      borderRadius: BorderRadius.circular(cardBorderRadius),
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    key: visualBoundaryKey,
+                    child: ClipRRect(
+                      borderRadius: borderRadius,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: visual.gradient,
+                          image: customImage,
+                        ),
+                        child: Stack(
+                          children: [
+                            if (customImage == null &&
+                                visual.visualAssetPath != null)
+                              Positioned.fill(
+                                child: CardVisualAssetLayer(
+                                  visual: visual,
+                                  borderRadius: borderRadius,
+                                ),
+                              ),
+                            Positioned.fill(
+                              child: FittedBox(
+                                fit: BoxFit.fill,
+                                alignment: Alignment.topLeft,
+                                child: SizedBox(
+                                  width: designWidth,
+                                  height: designHeight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(cardPadding),
+                                    child: Stack(
+                                      children: [
+                                        if (hasBank)
+                                          Positioned(
+                                            top: 0,
+                                            left: 0,
+                                            child: Row(
+                                              children: [
+                                                BankLogo(
+                                                  bankCid: bankCid!,
+                                                  size: bankLogoHeight,
+                                                  width: bankLogoMaxWidth,
+                                                  customLogoPath:
+                                                      customBankLogoPath,
+                                                  customLabel: customBankName,
+                                                  useRuntimeFonts: false,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        if (networkLogo != null)
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                SvgPicture.asset(
+                                                  networkLogo,
+                                                  height: networkLogoHeight,
+                                                ),
+                                                if (cardType.isNotEmpty) ...[
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    cardType,
+                                                    textAlign: TextAlign.right,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      height: 1,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        Positioned(
+                                          top: chipTopOffset,
+                                          left: 0,
+                                          child: SvgPicture.asset(
+                                            'assets/images/chip.svg',
+                                            width: chipWidth,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-
-                // ✅ 2. CONTENT PADDING CONTAINER
+                ),
                 Positioned.fill(
                   child: FittedBox(
                     fit: BoxFit.fill,
@@ -175,58 +244,6 @@ class PreviewCard extends StatelessWidget {
                         padding: const EdgeInsets.all(cardPadding),
                         child: Stack(
                           children: [
-                            if (hasBank)
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                child: Row(
-                                  children: [
-                                    BankLogo(
-                                      bankCid: bankCid!,
-                                      size: bankLogoHeight,
-                                      width: bankLogoMaxWidth,
-                                      customLogoPath: customBankLogoPath,
-                                      customLabel: customBankName,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            if (networkLogo != null)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Image.asset(
-                                      networkLogo,
-                                      height: networkLogoHeight,
-                                    ),
-                                    if (cardType.isNotEmpty) ...[
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        cardType,
-                                        textAlign: TextAlign.right,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            Positioned(
-                              top: chipTopOffset,
-                              left: 0,
-                              child: SvgPicture.asset(
-                                'assets/images/chip.svg',
-                                width: chipWidth,
-                              ),
-                            ),
                             Positioned(
                               left: 0,
                               bottom: detailsBottomOffset,
@@ -234,8 +251,7 @@ class PreviewCard extends StatelessWidget {
                                 width: designWidth - (cardPadding * 2),
                                 child: CardDetailsBlock(
                                   cardNumber: displayNumber,
-                                  rawCardNumber:
-                                      displayNumber, // ✅ Satisfy required param
+                                  rawCardNumber: displayNumber,
                                   validThru: displayExpiry,
                                   holderName: displayName,
                                   cvv: '***',

@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:swallet/data/local/card_repository.dart';
 import 'package:swallet/data/local/hive_boxes.dart';
 import 'package:swallet/screens/app_unlock/pin_lock_screen.dart';
 import 'package:swallet/screens/app_unlock/security_verification_screen.dart';
 import 'package:swallet/screens/home_screen.dart';
+import 'package:swallet/screens/settings/privacy_policy_screen.dart';
 import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/size_config.dart';
 import 'package:swallet/utils/security_store.dart';
@@ -31,12 +33,22 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late Box _settingsBox;
   bool _useBiometrics = false;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _settingsBox = Hive.box(HiveBoxes.settings);
     _useBiometrics = _settingsBox.get('use_biometrics', defaultValue: false);
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _appVersion = info.version;
+    });
   }
 
   Future<void> _toggleBiometrics(bool value) async {
@@ -169,6 +181,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _openPrivacyPolicy() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PrivacyPolicyScreen(
+          isDark: widget.isDark,
+          appVersion: _appVersion.isEmpty ? '...' : _appVersion,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = AddCardMaterialTokens(widget.isDark);
@@ -177,81 +201,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: palette.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: w(24),
-            vertical: w(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTopBar(palette),
-              SizedBox(height: w(20)),
-              _buildSectionHeader('Security', tokens),
-              SizedBox(height: w(8)),
-              _buildGroup(
-                tokens,
-                children: [
-                  _buildSwitchTile(
-                    title: 'Biometric unlock',
-                    icon: CupertinoIcons.person_crop_circle_fill,
-                    value: _useBiometrics,
-                    onChanged: _toggleBiometrics,
-                    tokens: tokens,
-                  ),
-                  _buildDivider(tokens),
-                  _buildNavTile(
-                    title: 'Change PIN',
-                    icon: CupertinoIcons.lock_shield_fill,
-                    tokens: tokens,
-                    onTap: _handleChangePin,
-                  ),
-                ],
-              ),
-              SizedBox(height: w(24)),
-              _buildSectionHeader('Appearance', tokens),
-              SizedBox(height: w(8)),
-              _buildGroup(
-                tokens,
-                children: [
-                  _buildSwitchTile(
-                    title: 'Dark mode',
-                    icon: widget.isDark
-                        ? CupertinoIcons.moon_fill
-                        : CupertinoIcons.sun_max_fill,
-                    value: widget.isDark,
-                    onChanged: widget.onThemeChanged,
-                    tokens: tokens,
-                  ),
-                ],
-              ),
-              SizedBox(height: w(24)),
-              _buildSectionHeader('Data', tokens),
-              SizedBox(height: w(8)),
-              _buildGroup(
-                tokens,
-                children: [
-                  _buildNavTile(
-                    title: 'Clear all data',
-                    icon: CupertinoIcons.xmark_circle_fill,
-                    tokens: tokens,
-                    onTap: _handleClearData,
-                    destructive: true,
-                    hideArrow: true,
-                  ),
-                ],
-              ),
-              SizedBox(height: w(32)),
-              Center(
-                child: Text(
-                  'Version 1.0.0',
-                  style: SwalletText.caption.copyWith(
-                    color: tokens.onSurfaceVariant,
-                  ),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(w(24), w(16), w(24), 0),
+              child: _buildTopBar(palette),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(w(24), w(20), w(24), 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader('Security', tokens),
+                    SizedBox(height: w(8)),
+                    _buildGroup(
+                      tokens,
+                      children: [
+                        _buildSwitchTile(
+                          title: 'Biometric unlock',
+                          icon: CupertinoIcons.person_crop_circle_fill,
+                          value: _useBiometrics,
+                          onChanged: _toggleBiometrics,
+                          tokens: tokens,
+                        ),
+                        _buildDivider(tokens),
+                        _buildNavTile(
+                          title: 'Change PIN',
+                          icon: CupertinoIcons.lock_shield_fill,
+                          tokens: tokens,
+                          onTap: _handleChangePin,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: w(24)),
+                    _buildSectionHeader('Appearance', tokens),
+                    SizedBox(height: w(8)),
+                    _buildGroup(
+                      tokens,
+                      children: [
+                        _buildSwitchTile(
+                          title: 'Dark mode',
+                          icon: widget.isDark
+                              ? CupertinoIcons.moon_fill
+                              : CupertinoIcons.sun_max_fill,
+                          value: widget.isDark,
+                          onChanged: widget.onThemeChanged,
+                          tokens: tokens,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: w(24)),
+                    _buildSectionHeader('Data', tokens),
+                    SizedBox(height: w(8)),
+                    _buildGroup(
+                      tokens,
+                      children: [
+                        _buildNavTile(
+                          title: 'Clear all data',
+                          icon: CupertinoIcons.xmark_circle_fill,
+                          tokens: tokens,
+                          onTap: _handleClearData,
+                          destructive: true,
+                          hideArrow: true,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: w(24)),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(w(24), w(12), w(24), w(20)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: _openPrivacyPolicy,
+                    style: TextButton.styleFrom(
+                      foregroundColor: tokens.primary,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: w(12),
+                        vertical: w(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Privacy Policy',
+                      style: SwalletText.bodyMedium.copyWith(
+                        color: tokens.primary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: w(4)),
+                  Text(
+                    _appVersion.isEmpty ? 'Version ...' : 'Version $_appVersion',
+                    style: SwalletText.caption.copyWith(
+                      color: tokens.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

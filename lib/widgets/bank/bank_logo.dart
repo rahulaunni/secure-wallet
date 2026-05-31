@@ -14,6 +14,7 @@ class BankLogo extends StatelessWidget {
   final String? customLogoPath;
   final String? customLabel;
   final double? customLabelMaxWidth;
+  final bool useRuntimeFonts;
 
   const BankLogo({
     super.key,
@@ -23,6 +24,7 @@ class BankLogo extends StatelessWidget {
     this.customLogoPath,
     this.customLabel,
     this.customLabelMaxWidth,
+    this.useRuntimeFonts = true,
   });
 
   @override
@@ -90,13 +92,21 @@ class BankLogo extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: size,
-                height: 1,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0,
-              ),
+              style: useRuntimeFonts
+                  ? GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: size,
+                      height: 1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    )
+                  : TextStyle(
+                      color: Colors.white,
+                      fontSize: size,
+                      height: 1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
             ),
           ),
         ),
@@ -123,12 +133,19 @@ class BankLogo extends StatelessWidget {
         child: Text(
           _initialsFromLabel(customLabel),
           maxLines: 1,
-          style: GoogleFonts.poppins(
-            color: const Color(0xFF111827),
-            fontSize: (size * 0.34).clamp(9, 14),
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0,
-          ),
+          style: useRuntimeFonts
+              ? GoogleFonts.poppins(
+                  color: const Color(0xFF111827),
+                  fontSize: (size * 0.34).clamp(9, 14),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                )
+              : TextStyle(
+                  color: const Color(0xFF111827),
+                  fontSize: (size * 0.34).clamp(9, 14),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                ),
         ),
       ),
     );

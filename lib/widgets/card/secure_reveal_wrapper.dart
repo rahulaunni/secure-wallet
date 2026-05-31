@@ -9,12 +9,14 @@ class SecureRevealWrapper extends StatefulWidget {
   final Widget child;
   final bool revealed;
   final VoidCallback onAutoLock;
+  final VoidCallback? onCollapseComplete;
 
   const SecureRevealWrapper({
     super.key,
     required this.child,
     required this.revealed,
     required this.onAutoLock,
+    this.onCollapseComplete,
   });
 
   @override
@@ -33,18 +35,31 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
   int _remainingSeconds = 60;
   bool _cvvVisible = false;
   bool _visibilityCheckScheduled = false;
+  bool _scopeRevealed = false;
 
   @override
   void initState() {
     super.initState();
+    _scopeRevealed = widget.revealed;
     _controller = AnimationController(
       vsync: this,
       duration: secureRevealAnimDuration,
+      value: widget.revealed ? 1 : 0,
     );
     _anim = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutCubic,
     );
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.dismissed && mounted && !widget.revealed) {
+        setState(() {
+          _scopeRevealed = false;
+          _cvvVisible = false;
+          _remainingSeconds = 60;
+        });
+        widget.onCollapseComplete?.call();
+      }
+    });
   }
 
   @override
@@ -78,8 +93,11 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
   void _startReveal() {
     SwalletHaptics.bankSelected();
 
-    _remainingSeconds = 60;
-    _cvvVisible = false;
+    setState(() {
+      _remainingSeconds = 60;
+      _cvvVisible = false;
+      _scopeRevealed = true;
+    });
     _controller.forward(from: 0);
     _timer?.cancel();
     _scheduleVisibilityCheck();
@@ -97,8 +115,6 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
   void _lock() {
     SwalletHaptics.changeBank();
     _timer?.cancel();
-    _remainingSeconds = 60;
-    _cvvVisible = false;
     _controller.reverse();
   }
 
@@ -207,7 +223,7 @@ class _SecureRevealWrapperState extends State<SecureRevealWrapper>
                       alignment: Alignment.topCenter,
                       transform: Matrix4.identity()..rotateZ(tilt),
                       child: BankCardScope(
-                        revealed: widget.revealed,
+                        revealed: _scopeRevealed,
                         cvvVisible: _cvvVisible,
                         onToggleCvv: () {
                           SwalletHaptics.secureRevealToggled();

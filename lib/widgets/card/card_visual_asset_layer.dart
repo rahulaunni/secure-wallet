@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../constants/card_visuals.dart';
+import '../../debug/visual_cost_flags.dart';
 
 class CardVisualAssetLayer extends StatelessWidget {
   final CardVisual visual;
@@ -23,6 +24,27 @@ class CardVisualAssetLayer extends StatelessWidget {
     final resolvedPath = CardVisuals.resolveVisualAssetPath(assetPath);
     final profile = _CardTextureProfile.fromVisual(visual);
 
+    if (kDisablePatternLayers) {
+      return RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: IgnorePointer(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (!kDisableGrainPainter)
+                  CustomPaint(
+                    isComplex: true,
+                    willChange: false,
+                    painter: _PremiumTexturePainter(profile),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return RepaintBoundary(
       child: ClipRRect(
         borderRadius: borderRadius,
@@ -39,24 +61,25 @@ class CardVisualAssetLayer extends StatelessWidget {
                   height: double.infinity,
                 ),
               ),
-              Opacity(
-                opacity: profile.tintOpacity,
-                child: ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (rect) => LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: profile.tintColors,
-                    stops: const [0, 0.52, 1],
-                  ).createShader(rect),
-                  child: SvgPicture.asset(
-                    resolvedPath,
-                    fit: BoxFit.fill,
-                    width: double.infinity,
-                    height: double.infinity,
+              if (!kDisableShaderMask)
+                Opacity(
+                  opacity: profile.tintOpacity,
+                  child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (rect) => LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: profile.tintColors,
+                      stops: const [0, 0.52, 1],
+                    ).createShader(rect),
+                    child: SvgPicture.asset(
+                      resolvedPath,
+                      fit: BoxFit.fill,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
                   ),
                 ),
-              ),
               Opacity(
                 opacity: profile.silhouetteOpacity,
                 child: ColorFiltered(
@@ -87,11 +110,12 @@ class CardVisualAssetLayer extends StatelessWidget {
                   ),
                 ),
               ),
-              CustomPaint(
-                isComplex: true,
-                willChange: false,
-                painter: _PremiumTexturePainter(profile),
-              ),
+              if (!kDisableGrainPainter)
+                CustomPaint(
+                  isComplex: true,
+                  willChange: false,
+                  painter: _PremiumTexturePainter(profile),
+                ),
             ],
           ),
         ),

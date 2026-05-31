@@ -57,6 +57,15 @@ class CardData {
   @HiveField(15)
   final String? customCardPatternAssetPath;
 
+  @HiveField(17)
+  final String? cardId;
+
+  @HiveField(18)
+  final String? normalSnapshotPath;
+
+  @HiveField(19)
+  final String? normalSnapshotSignature;
+
   const CardData({
     required this.bankCid,
     required this.cardNetwork,
@@ -75,6 +84,9 @@ class CardData {
     this.customCardImageAlignmentX,
     this.customCardImageAlignmentY,
     this.customCardPatternAssetPath,
+    this.cardId,
+    this.normalSnapshotPath,
+    this.normalSnapshotSignature,
   });
 
   CardData copyWith({
@@ -95,11 +107,15 @@ class CardData {
     double? customCardImageAlignmentX,
     double? customCardImageAlignmentY,
     String? customCardPatternAssetPath,
+    String? cardId,
+    String? normalSnapshotPath,
+    String? normalSnapshotSignature,
     bool clearCustomGradient = false,
     bool clearCustomCardImage = false,
     bool clearCustomCardVisualMode = false,
     bool clearCustomCardImageAlignment = false,
     bool clearCustomCardPattern = false,
+    bool clearNormalSnapshot = false,
   }) {
     return CardData(
       bankCid: bankCid ?? this.bankCid,
@@ -135,6 +151,13 @@ class CardData {
       customCardPatternAssetPath: clearCustomCardPattern
           ? null
           : customCardPatternAssetPath ?? this.customCardPatternAssetPath,
+      cardId: cardId ?? this.cardId,
+      normalSnapshotPath: clearNormalSnapshot
+          ? null
+          : normalSnapshotPath ?? this.normalSnapshotPath,
+      normalSnapshotSignature: clearNormalSnapshot
+          ? null
+          : normalSnapshotSignature ?? this.normalSnapshotSignature,
     );
   }
 }

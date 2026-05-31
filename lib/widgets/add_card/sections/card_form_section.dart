@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
@@ -21,7 +23,7 @@ class CardFormSection extends StatefulWidget {
   final ValueChanged<String> onExpiryChanged;
   final ValueChanged<String> onCvvChanged;
   final ValueChanged<String> onNameChanged;
-  final VoidCallback onSubmit;
+  final FutureOr<void> Function() onSubmit;
   final String initialCardNumber;
   final String initialExpiry;
   final String initialCvv;
@@ -29,6 +31,7 @@ class CardFormSection extends StatefulWidget {
   final CardType initialCardType;
   final String title;
   final String submitLabel;
+  final bool isSubmitting;
 
   const CardFormSection({
     super.key,
@@ -47,6 +50,7 @@ class CardFormSection extends StatefulWidget {
     this.initialCardType = CardType.credit,
     this.title = 'Add payment card',
     this.submitLabel = 'Add Card',
+    this.isSubmitting = false,
   });
 
   @override
@@ -202,6 +206,7 @@ class _CardFormSectionState extends State<CardFormSection> {
         const SizedBox(height: 24),
         AddCardCTAButton(
           label: widget.submitLabel,
+          isLoading: widget.isSubmitting,
           onPressed: widget.onSubmit,
         ),
       ],

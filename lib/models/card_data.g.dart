@@ -34,13 +34,16 @@ class CardDataAdapter extends TypeAdapter<CardData> {
       customCardImageAlignmentX: fields[13] as double?,
       customCardImageAlignmentY: fields[14] as double?,
       customCardPatternAssetPath: fields[15] as String?,
+      cardId: fields[17] as String?,
+      normalSnapshotPath: fields[18] as String?,
+      normalSnapshotSignature: fields[19] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CardData obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.bankCid)
       ..writeByte(1)
@@ -74,7 +77,13 @@ class CardDataAdapter extends TypeAdapter<CardData> {
       ..writeByte(14)
       ..write(obj.customCardImageAlignmentY)
       ..writeByte(15)
-      ..write(obj.customCardPatternAssetPath);
+      ..write(obj.customCardPatternAssetPath)
+      ..writeByte(17)
+      ..write(obj.cardId)
+      ..writeByte(18)
+      ..write(obj.normalSnapshotPath)
+      ..writeByte(19)
+      ..write(obj.normalSnapshotSignature);
   }
 
   @override

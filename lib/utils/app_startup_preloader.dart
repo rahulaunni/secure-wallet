@@ -18,6 +18,11 @@ import 'bank_asset_resolver.dart';
 class AppStartupPreloader {
   static bool _scheduled = false;
   static Future<void>? _warmUpFuture;
+  static final Set<String> _warmedSvgAssetPaths = <String>{};
+  static final Set<String> _warmedImageAssetPaths = <String>{};
+  static final Set<String> _warmedLottieAssetPaths = <String>{};
+  static final Set<String> _warmedFileAssetKeys = <String>{};
+  static final Set<String> _warmedCardKeys = <String>{};
 
   static const Duration _batchGap = Duration(milliseconds: 12);
   static const int _batchSize = 4;
@@ -64,6 +69,37 @@ class AppStartupPreloader {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _warmUpFuture ??= _runWarmUp(context);
+    });
+  }
+
+  static void scheduleCardWarmUp(
+    BuildContext context,
+    Iterable<CardData> cards, {
+    required double cardWidth,
+  }) {
+    final cardList = cards.toList(growable: false);
+    if (cardList.isEmpty) {
+      return;
+    }
+
+    final pendingCards = <CardData>[];
+    for (final card in cardList) {
+      final cardKey = _cardWarmKey(card);
+      if (_warmedCardKeys.add(cardKey)) {
+        pendingCards.add(card);
+      }
+    }
+
+    if (pendingCards.isEmpty) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _warmSpecificCards(
+        context,
+        pendingCards,
+        cardWidth: cardWidth,
+      );
     });
   }
 
@@ -119,35 +155,10 @@ class AppStartupPreloader {
       return;
     }
 
-    final cardImageWidth =
-        (MediaQuery.devicePixelRatioOf(context) * AdaptiveLayout.phoneCardWidth)
-            .round();
-
-    final svgAssets = <String>{};
-    final imageAssets = <String>{};
-    final fileAssets = <String>{};
-
-    for (final card in savedCards) {
-      _collectBankCardAssets(
-        card,
-        svgAssets: svgAssets,
-        imageAssets: imageAssets,
-        fileAssets: fileAssets,
-      );
-    }
-
-    await _warmSvgAssets(context, svgAssets);
-    if (!context.mounted) {
-      return;
-    }
-    await _warmImageAssets(context, imageAssets);
-    if (!context.mounted) {
-      return;
-    }
-    await _warmFileAssets(
+    await _warmSpecificCards(
       context,
-      fileAssets,
-      cacheWidth: cardImageWidth,
+      savedCards,
+      cardWidth: AdaptiveLayout.phoneCardWidth,
     );
   }
 
@@ -224,15 +235,72 @@ class AppStartupPreloader {
     return CardVisuals.forBank(card.bankCid).visualAssetPath;
   }
 
+  static void _resolveVisualConfiguration(CardData card) {
+    final customStart = card.customGradientStartColor;
+    final customEnd = card.customGradientEndColor;
+    if (customStart != null && customEnd != null) {
+      CardVisuals.customGradient(
+        Color(customStart),
+        Color(customEnd),
+        middle: card.customGradientMiddleColor != null
+            ? Color(card.customGradientMiddleColor!)
+            : null,
+        visualAssetPath: card.customCardPatternAssetPath,
+      );
+      return;
+    }
+
+    CardVisuals.forBank(card.bankCid);
+  }
+
+  static Future<void> _warmSpecificCards(
+    BuildContext context,
+    Iterable<CardData> cards, {
+    required double cardWidth,
+  }) async {
+    if (!context.mounted) {
+      return;
+    }
+
+    final cardImageWidth =
+        (MediaQuery.devicePixelRatioOf(context) * cardWidth).round();
+    final svgAssets = <String>{};
+    final imageAssets = <String>{};
+    final fileAssets = <String>{};
+
+    for (final card in cards) {
+      _resolveVisualConfiguration(card);
+      _collectBankCardAssets(
+        card,
+        svgAssets: svgAssets,
+        imageAssets: imageAssets,
+        fileAssets: fileAssets,
+      );
+    }
+
+    await _warmSvgAssets(context, svgAssets);
+    if (!context.mounted) {
+      return;
+    }
+    await _warmImageAssets(context, imageAssets);
+    if (!context.mounted) {
+      return;
+    }
+    await _warmFileAssets(
+      context,
+      fileAssets,
+      cacheWidth: cardImageWidth,
+    );
+  }
+
   static Future<void> _warmSvgAssets(
     BuildContext context,
     Iterable<String> assetPaths,
   ) async {
-    final uniquePaths = assetPaths
-        .map((path) => path.trim())
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
+    final uniquePaths = _consumeUnseenPaths(
+      assetPaths,
+      _warmedSvgAssetPaths,
+    );
 
     await _runBatches(
       uniquePaths,
@@ -244,11 +312,10 @@ class AppStartupPreloader {
     BuildContext context,
     Iterable<String> assetPaths,
   ) async {
-    final uniquePaths = assetPaths
-        .map((path) => path.trim())
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
+    final uniquePaths = _consumeUnseenPaths(
+      assetPaths,
+      _warmedImageAssetPaths,
+    );
 
     await _runBatches(
       uniquePaths,
@@ -266,11 +333,17 @@ class AppStartupPreloader {
     Iterable<String> filePaths, {
     int? cacheWidth,
   }) async {
-    final uniquePaths = filePaths
-        .map((path) => path.trim())
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
+    final uniquePaths = <String>[];
+    for (final rawPath in filePaths) {
+      final path = rawPath.trim();
+      if (path.isEmpty) {
+        continue;
+      }
+      final key = '$path@${cacheWidth ?? 'full'}';
+      if (_warmedFileAssetKeys.add(key)) {
+        uniquePaths.add(path);
+      }
+    }
 
     await _runBatches(
       uniquePaths,
@@ -288,11 +361,10 @@ class AppStartupPreloader {
   }
 
   static Future<void> _warmLottieAssets(Iterable<String> assetPaths) async {
-    final uniquePaths = assetPaths
-        .map((path) => path.trim())
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList(growable: false);
+    final uniquePaths = _consumeUnseenPaths(
+      assetPaths,
+      _warmedLottieAssetPaths,
+    );
 
     await _runBatches(
       uniquePaths,
@@ -325,5 +397,27 @@ class AppStartupPreloader {
 
   static Future<void> _yieldToNextFrame() {
     return Future<void>.delayed(_batchGap);
+  }
+
+  static List<String> _consumeUnseenPaths(
+    Iterable<String> assetPaths,
+    Set<String> seenPaths,
+  ) {
+    final uniquePaths = <String>[];
+    for (final rawPath in assetPaths) {
+      final path = rawPath.trim();
+      if (path.isEmpty || !seenPaths.add(path)) {
+        continue;
+      }
+      uniquePaths.add(path);
+    }
+    return uniquePaths;
+  }
+
+  static String _cardWarmKey(CardData card) {
+    return '${card.bankCid}|${card.cardNetwork.name}|${card.customBankLogoPath ?? ''}|'
+        '${card.customCardImagePath ?? ''}|${card.customCardPatternAssetPath ?? ''}|'
+        '${card.customGradientStartColor ?? ''}|${card.customGradientMiddleColor ?? ''}|'
+        '${card.customGradientEndColor ?? ''}|${card.customCardVisualMode ?? ''}';
   }
 }

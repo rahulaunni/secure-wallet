@@ -155,7 +155,7 @@ class CardDetailsBlock extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               validThru,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.jura(
                 fontSize: valueFontSize,
                 letterSpacing: valueLetterSpacing,
                 fontWeight: valueFontWeight,
@@ -164,15 +164,16 @@ class CardDetailsBlock extends StatelessWidget {
             ),
             const SizedBox(width: detailsGroupSpacing),
             Text(
-              'CVV ',
+              'CVV',
               style: GoogleFonts.poppins(
                 fontSize: labelFontSize,
                 color: Colors.white70,
               ),
             ),
+            const SizedBox(width: 4),
             Text(
               cvv,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.jura(
                 fontSize: valueFontSize,
                 letterSpacing: valueLetterSpacing,
                 fontWeight: valueFontWeight,
@@ -213,7 +214,7 @@ class CardDetailsBlock extends StatelessWidget {
         // ================= HOLDER NAME =================
         Text(
           holderName.toUpperCase(),
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.jura(
             fontSize: holderNameFontSize,
             letterSpacing: holderNameLetterSpacing,
             fontWeight: holderNameFontWeight,

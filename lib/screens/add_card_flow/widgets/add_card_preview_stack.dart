@@ -5,6 +5,7 @@ import '../../../models/card_type.dart';
 import '../../../models/card_network.dart';
 
 class AddCardPreviewStack extends StatelessWidget {
+  final GlobalKey? visualBoundaryKey;
   final double top;
   final EdgeInsets horizontalInsets;
   final bool isDark;
@@ -34,6 +35,7 @@ class AddCardPreviewStack extends StatelessWidget {
 
   const AddCardPreviewStack({
     super.key,
+    this.visualBoundaryKey,
     required this.top,
     this.horizontalInsets = const EdgeInsets.symmetric(horizontal: 16),
     required this.isDark,
@@ -77,6 +79,7 @@ class AddCardPreviewStack extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             PreviewCard(
+              visualBoundaryKey: visualBoundaryKey,
               bankCid: bankCid,
               isDark: isDark,
               cardNumber: cardNumber,

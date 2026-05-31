@@ -46,6 +46,8 @@ class DeleteCardPreview extends StatelessWidget {
                   cvvVisible: false,
                   onToggleCvv: () {},
                   child: BankCard(
+                    snapshotSourceCard: card,
+                    enableVisualSnapshot: true,
                     bankLogo: card.bankCid,
                     networkLogo: card.cardNetwork.assetPath,
                     cardType:

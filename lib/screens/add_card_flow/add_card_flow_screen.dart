@@ -25,6 +25,8 @@ import 'package:swallet/widgets/add_card/sections/card_form_section.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'package:swallet/widgets/add_card/widgets/add_card_cta_button.dart';
 import 'package:swallet/utils/adaptive_layout.dart';
+import 'package:swallet/utils/card_network_detector.dart';
+import 'package:swallet/utils/card_snapshot_service.dart';
 import 'package:swallet/utils/card_number_format.dart';
 import 'package:swallet/utils/haptics.dart';
 
@@ -80,6 +82,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
 
   // -- Scroll Control --
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _previewVisualBoundaryKey = GlobalKey();
 
   // -- Card Data --
   String _cardNumber = '';
@@ -111,6 +114,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   static const Curve _transitionCurve = Curves.easeOutCubic;
 
   bool _keyboardHapticFired = false;
+  bool _isSaving = false;
 
   bool get _isEditMode => widget.initialCard != null;
 
@@ -597,68 +601,194 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     });
   }
 
-  void _onAddCardPressed() {
-    final isOtherBank = _selectedBankCid == BankAssets.otherBankId;
-    final hasCustomOtherBank =
-        _customBankName.trim().isNotEmpty || _customBankLogoPath != null;
-    final requiredCvvLength =
-        CardNumberFormat.cvvLengthForNetwork(_cardNetwork);
-    final hasValidCardNumberLength = CardNumberFormat.isValidLengthForNetwork(
-      network: _cardNetwork,
-      length: _cardNumber.length,
-    );
+  Future<CardData> _prepareCardForHome(CardData card) async {
+    final initialCard = widget.initialCard;
+    final initialSignature = initialCard == null
+        ? null
+        : CardSnapshotService.visualSignature(initialCard);
+    final currentSignature = CardSnapshotService.visualSignature(card);
 
-    if (_selectedBankCid == null ||
-        _cardNetwork == null ||
-        !hasValidCardNumberLength ||
-        _expiry.length != 5 ||
-        _cvv.length != requiredCvvLength ||
-        _holderName.isEmpty ||
-        (isOtherBank && !hasCustomOtherBank)) {
+    if (initialCard != null &&
+        initialSignature == currentSignature &&
+        initialCard.normalSnapshotPath != null &&
+        initialCard.normalSnapshotSignature == initialSignature) {
+      return card.copyWith(
+        cardId: initialCard.cardId,
+        normalSnapshotPath: initialCard.normalSnapshotPath,
+        normalSnapshotSignature: initialCard.normalSnapshotSignature,
+      );
+    }
+
+    try {
+      final snapshotCard = await CardSnapshotService.captureSnapshotForCard(
+        context: context,
+        card: card,
+        boundaryKey: _previewVisualBoundaryKey,
+      );
+      return snapshotCard ?? card;
+    } catch (error, stackTrace) {
+      debugPrint('Card snapshot preparation failed; saving live card instead.');
+      debugPrint('$error');
+      debugPrint('$stackTrace');
+      return card;
+    }
+  }
+
+  void _showSaveValidationMessage(String message) {
+    if (!mounted) {
       return;
     }
 
-    SwalletHaptics.cardAdded();
-    final usesGradient = _customCardVisualMode == CustomCardVisualMode.gradient;
-    final usesImage = _customCardVisualMode == CustomCardVisualMode.image &&
-        _customCardImagePath != null;
-    final hasCustomGradient =
-        usesGradient && (isOtherBank || _hasCustomVisualOverride);
-    final hasCustomVisual = hasCustomGradient || usesImage;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
 
-    final card = CardData(
-      bankCid: _selectedBankCid!,
-      cardNetwork: _cardNetwork!,
-      cardType: _cardType,
-      cardNumber: _cardNumber,
-      expiry: _expiry,
-      holderName: _holderName,
-      cvv: _cvv,
-      customBankName: isOtherBank && _customBankName.trim().isNotEmpty
-          ? _customBankName.trim()
-          : null,
-      customBankLogoPath: isOtherBank ? _customBankLogoPath : null,
-      customGradientStartColor:
-          hasCustomGradient ? _customGradientStartColor.toARGB32() : null,
-      customGradientMiddleColor:
-          hasCustomGradient ? _customGradientMiddleColor.toARGB32() : null,
-      customGradientEndColor:
-          hasCustomGradient ? _customGradientEndColor.toARGB32() : null,
-      customCardImagePath: usesImage ? _customCardImagePath : null,
-      customCardVisualMode:
-          hasCustomVisual ? _customCardVisualMode.index : null,
-      customCardImageAlignmentX: usesImage ? _customCardImageAlignment.x : null,
-      customCardImageAlignmentY: usesImage ? _customCardImageAlignment.y : null,
-      customCardPatternAssetPath:
-          hasCustomGradient ? _customCardPatternAssetPath : null,
+  Future<void> _onAddCardPressed() async {
+    if (_isSaving) {
+      return;
+    }
+
+    final initialCard = widget.initialCard;
+    final selectedBankCid = _selectedBankCid ?? initialCard?.bankCid;
+    final cardNumber = CardNumberFormat.digitsOnly(
+      _cardNumber.isNotEmpty ? _cardNumber : (initialCard?.cardNumber ?? ''),
+    );
+    final resolvedNetwork = _cardNetwork ??
+        initialCard?.cardNetwork ??
+        CardNetworkDetector.detect(cardNumber);
+    final expiry = _expiry.isNotEmpty ? _expiry : (initialCard?.expiry ?? '');
+    final cvv = _cvv.isNotEmpty ? _cvv : (initialCard?.cvv ?? '');
+    final holderName = _holderName.trim().isNotEmpty
+        ? _holderName.trim()
+        : (initialCard?.holderName.trim() ?? '');
+    final customBankName = _customBankName.trim();
+    final isOtherBank = selectedBankCid == BankAssets.otherBankId;
+    final hasCustomOtherBank =
+        customBankName.isNotEmpty || _customBankLogoPath != null;
+    final requiredCvvLength =
+        CardNumberFormat.cvvLengthForNetwork(resolvedNetwork);
+    final hasValidCardNumberLength = CardNumberFormat.isValidLengthForNetwork(
+      network: resolvedNetwork,
+      length: cardNumber.length,
     );
 
-    if (_isEditMode) {
-      widget.onCardUpdated?.call(card);
-    } else {
-      widget.onCardAdded(card);
+    if (selectedBankCid == null) {
+      _showSaveValidationMessage('Choose a bank before saving the card.');
+      return;
     }
-    _close();
+    if (resolvedNetwork == null || !hasValidCardNumberLength) {
+      _showSaveValidationMessage('Enter a valid card number to continue.');
+      return;
+    }
+    if (expiry.length != 5) {
+      _showSaveValidationMessage('Enter a valid expiry date.');
+      return;
+    }
+    if (cvv.length != requiredCvvLength) {
+      _showSaveValidationMessage(
+        requiredCvvLength == 4
+            ? 'Enter the 4-digit CID to continue.'
+            : 'Enter the 3-digit CVV to continue.',
+      );
+      return;
+    }
+    if (holderName.isEmpty) {
+      _showSaveValidationMessage('Enter the card holder name to continue.');
+      return;
+    }
+    if (isOtherBank && !hasCustomOtherBank) {
+      _showSaveValidationMessage(
+        'Add the custom bank details before saving this card.',
+      );
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isSaving = true;
+      _cardNetwork ??= resolvedNetwork;
+      _cardNumber = cardNumber;
+      _expiry = expiry;
+      _cvv = cvv;
+      _holderName = holderName;
+    });
+    final saveStopwatch = Stopwatch()..start();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) {
+      return;
+    }
+
+    try {
+      SwalletHaptics.cardAdded();
+      final usesGradient =
+          _customCardVisualMode == CustomCardVisualMode.gradient;
+      final usesImage = _customCardVisualMode == CustomCardVisualMode.image &&
+          _customCardImagePath != null;
+      final hasCustomGradient =
+          usesGradient && (isOtherBank || _hasCustomVisualOverride);
+      final hasCustomVisual = hasCustomGradient || usesImage;
+
+      final card = CardData(
+        cardId: widget.initialCard?.cardId,
+        bankCid: selectedBankCid,
+        cardNetwork: resolvedNetwork,
+        cardType: _cardType,
+        cardNumber: cardNumber,
+        expiry: expiry,
+        holderName: holderName,
+        cvv: cvv,
+        customBankName: isOtherBank && customBankName.isNotEmpty
+            ? customBankName
+            : null,
+        customBankLogoPath: isOtherBank ? _customBankLogoPath : null,
+        customGradientStartColor:
+            hasCustomGradient ? _customGradientStartColor.toARGB32() : null,
+        customGradientMiddleColor:
+            hasCustomGradient ? _customGradientMiddleColor.toARGB32() : null,
+        customGradientEndColor:
+            hasCustomGradient ? _customGradientEndColor.toARGB32() : null,
+        customCardImagePath: usesImage ? _customCardImagePath : null,
+        customCardVisualMode:
+            hasCustomVisual ? _customCardVisualMode.index : null,
+        customCardImageAlignmentX:
+            usesImage ? _customCardImageAlignment.x : null,
+        customCardImageAlignmentY:
+            usesImage ? _customCardImageAlignment.y : null,
+        customCardPatternAssetPath:
+            hasCustomGradient ? _customCardPatternAssetPath : null,
+      );
+
+      final preparedCard = await _prepareCardForHome(card);
+      if (!mounted) {
+        return;
+      }
+
+      const minimumLoadingDuration = Duration(seconds: 2);
+      final remainingLoading = minimumLoadingDuration - saveStopwatch.elapsed;
+      if (remainingLoading > Duration.zero) {
+        await Future<void>.delayed(remainingLoading);
+      }
+      if (!mounted) {
+        return;
+      }
+
+      if (_isEditMode) {
+        widget.onCardUpdated?.call(preparedCard);
+      } else {
+        widget.onCardAdded(preparedCard);
+      }
+      _close();
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   // ================= UI =================
@@ -737,6 +867,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
 
             // ================= PREVIEW CARD =================
             AddCardPreviewStack(
+              visualBoundaryKey: _previewVisualBoundaryKey,
               top: effectivePreviewTop,
               horizontalInsets: surfaceInsets,
               scale: previewScale,
@@ -991,6 +1122,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                       child: CardFormSection(
                         key: ValueKey('card_form_$_selectedBankCid'),
                         isDark: widget.isDark,
+                        isSubmitting: _isSaving,
                         initialCardNumber: _cardNumber,
                         initialExpiry: _expiry,
                         initialCvv: _cvv,

@@ -9,11 +9,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'data/local/card_box_migration.dart';
 import 'data/local/hive_adapters.dart';
 import 'data/local/hive_boxes.dart';
+import 'models/card_data.dart';
 import 'screens/app_unlock/pin_lock_screen.dart';
 import 'screens/home_screen.dart';
 import 'theme/swallet_theme.dart';
 import 'utils/adaptive_layout.dart';
 import 'utils/app_startup_preloader.dart';
+import 'utils/card_snapshot_cache_manager.dart';
 import 'utils/hive_encryption.dart';
 import 'utils/security_store.dart';
 import 'utils/size_config.dart';
@@ -37,6 +39,11 @@ Future<void> main() async {
   }
 
   await SecurityStore.migrateFromSettings(Hive.box(HiveBoxes.settings));
+  unawaited(
+    CardSnapshotCacheManager.cleanupOrphanedSnapshots(
+      Hive.box<CardData>(HiveBoxes.cards).values,
+    ),
+  );
 
   runApp(const CardVaultApp());
 }
