@@ -8,7 +8,7 @@ import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/card_number_format.dart';
 import 'package:swallet/utils/card_network_detector.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
-import 'package:swallet/models/card_network.dart';
+import '../../../../models/card_network.dart';
 
 class CardNumberSlotField extends StatefulWidget {
   final ValueChanged<String> onChanged;

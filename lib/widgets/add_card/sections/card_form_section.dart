@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
-import 'package:swallet/models/card_network.dart';
-import 'package:swallet/models/card_type.dart';
+import '../../../models/card_network.dart';
+import '../../../models/card_type.dart';
 import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/utils/card_network_detector.dart';
 import 'package:swallet/utils/card_number_format.dart';

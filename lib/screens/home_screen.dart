@@ -32,23 +32,22 @@ import '../utils/device_auth.dart';
 
 import '../data/local/card_repository.dart';
 import '../data/local/hive_boxes.dart';
-import '../diagnostics/performance_runtime_diagnostics.dart';
 import '../theme/swallet_theme.dart';
 import '../utils/adaptive_layout.dart';
 import '../utils/card_share_helper.dart';
+
+const int kStackPreviewCount = 5;
 
 class HomeScreen extends StatefulWidget {
   final bool isDark;
   final ValueChanged<bool> onThemeChanged;
   final Animation<double>? unlockSettleAnimation;
-  final ScrollController? diagnosticsScrollController;
 
   const HomeScreen({
     super.key,
     required this.isDark,
     required this.onThemeChanged,
     this.unlockSettleAnimation,
-    this.diagnosticsScrollController,
   });
 
   @override
@@ -58,11 +57,11 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   static const String _swipeActionsTutorialSeenKey =
       'swipe_actions_tutorial_v1_seen';
+  static const double _targetCompactCacheExtent = 2500;
 
   late final ScrollController _scrollController;
   final AddCardFlowController _addCardFlowController = AddCardFlowController();
   GlobalKey<NavigatorState> _sidePaneNavigatorKey = GlobalKey();
-  late final bool _ownsScrollController;
 
   bool _fabCollapsed = false;
 
@@ -84,6 +83,8 @@ class HomeScreenState extends State<HomeScreen> {
   String? _activeSwipeCardId;
   bool _swipeTutorialQueued = false;
   bool _homeEntrySettled = false;
+  bool _compactCacheExtentPrimed = false;
+  double? _compactCacheExtent;
   final Set<String> _precachedCustomImageKeys = {};
 
   // ================= EXTERNAL REVEAL CANCEL =================
@@ -150,7 +151,9 @@ class HomeScreenState extends State<HomeScreen> {
         barrierColor: Colors.transparent,
         pageBuilder: (_, __, ___) => AddCardFlowScreen(
           isDark: widget.isDark,
-          onCardAdded: _addCard,
+          onCardAdded: (card) {
+            _addCard(card);
+          },
         ),
       ),
     );
@@ -248,6 +251,22 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _refreshCardsAfterSettings() {
     refreshCardsFromStorage();
+  }
+
+  void _primeCompactCacheExtent() {
+    if (_compactCacheExtentPrimed || _compactCacheExtent == _targetCompactCacheExtent) {
+      return;
+    }
+
+    _compactCacheExtentPrimed = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _compactCacheExtent == _targetCompactCacheExtent) {
+        return;
+      }
+      setState(() {
+        _compactCacheExtent = _targetCompactCacheExtent;
+      });
+    });
   }
 
   void _handleSidePaneBack() {
@@ -431,9 +450,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _scrollController =
-        widget.diagnosticsScrollController ?? ScrollController();
-    _ownsScrollController = widget.diagnosticsScrollController == null;
+    _scrollController = ScrollController();
     _cards.addAll(CardRepository.getAll());
     _attachUnlockSettleAnimation();
 
@@ -459,9 +476,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _detachUnlockSettleAnimation(widget.unlockSettleAnimation);
-    if (_ownsScrollController) {
-      _scrollController.dispose();
-    }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -554,8 +569,9 @@ class HomeScreenState extends State<HomeScreen> {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth:
-                  AdaptiveLayout.contentMaxWidthForWidth(constraints.maxWidth),
+              maxWidth: AdaptiveLayout.contentMaxWidthForWidth(
+                constraints.maxWidth,
+              ),
             ),
             child: child,
           ),
@@ -568,84 +584,67 @@ class HomeScreenState extends State<HomeScreen> {
     final cardId = _cardId(card);
     final bool isDeleting = _deletingCardIds.contains(cardId);
 
-    return PerformanceCardMountTracker(
-      cardId: cardId,
-      child: DeletingListItemWrapper(
-        key: ValueKey(cardId),
-        isDeleting: isDeleting,
-        child: _SwipeableCardActions(
-          isDark: widget.isDark,
-          cardId: cardId,
-          activeSwipeCardId: _activeSwipeCardId,
-          resetToken: _swipeResetToken,
-          onSwipeStarted: () {
-            if (_activeSwipeCardId == cardId) return;
-            setState(() => _activeSwipeCardId = cardId);
-          },
-          onSwipeClosed: () {
-            if (_activeSwipeCardId != cardId) return;
-            setState(() => _activeSwipeCardId = null);
-          },
-          onEdit: () => _openEditCard(card, cardId),
-          onDelete: () => _showDeleteSheet(card, cardId),
-          child: SecureRevealWrapper(
-            diagnosticCardId: cardId,
-            revealed: _revealedCardId == cardId,
-            onAutoLock: () => _autoLock(card),
-            child: BankCard(
-              diagnosticCardId: cardId,
-              bankLogo: card.bankCid,
-              networkLogo: card.cardNetwork.assetPath,
-              cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
-              cardNumber: card.cardNumber,
-              validThru: card.expiry,
-              holderName: card.holderName,
-              cvv: card.cvv,
-              customBankName: card.customBankName,
-              customBankLogoPath: card.customBankLogoPath,
-              customGradientStartColor: card.customGradientStartColor != null
-                  ? Color(card.customGradientStartColor!)
-                  : null,
-              customGradientMiddleColor: card.customGradientMiddleColor != null
-                  ? Color(card.customGradientMiddleColor!)
-                  : null,
-              customGradientEndColor: card.customGradientEndColor != null
-                  ? Color(card.customGradientEndColor!)
-                  : null,
-              customCardImagePath: card.customCardVisualMode == 1
-                  ? card.customCardImagePath
-                  : null,
-              customCardPatternAssetPath: card.customCardVisualMode == 0
-                  ? card.customCardPatternAssetPath
-                  : null,
-              customCardImageAlignment: Alignment(
-                card.customCardImageAlignmentX ?? 0,
-                card.customCardImageAlignmentY ?? 0,
-              ),
-              showActions: _homeEntrySettled,
-              onEyeTap: () => _toggleReveal(card),
-              onShareTap: () {
-                if (_revealedCardId != cardId) {
-                  return;
-                }
-                CardShareHelper.shareCard(card);
-              },
+    return DeletingListItemWrapper(
+      key: ValueKey(cardId),
+      isDeleting: isDeleting,
+      child: _SwipeableCardActions(
+        isDark: widget.isDark,
+        cardId: cardId,
+        activeSwipeCardId: _activeSwipeCardId,
+        resetToken: _swipeResetToken,
+        onSwipeStarted: () {
+          if (_activeSwipeCardId == cardId) return;
+          setState(() => _activeSwipeCardId = cardId);
+        },
+        onSwipeClosed: () {
+          if (_activeSwipeCardId != cardId) return;
+          setState(() => _activeSwipeCardId = null);
+        },
+        onEdit: () => _openEditCard(card, cardId),
+        onDelete: () => _showDeleteSheet(card, cardId),
+        child: SecureRevealWrapper(
+          revealed: _revealedCardId == cardId,
+          onAutoLock: () => _autoLock(card),
+          child: BankCard(
+            bankLogo: card.bankCid,
+            networkLogo: card.cardNetwork.assetPath,
+            cardType: card.cardType == CardType.credit ? 'Credit' : 'Debit',
+            cardNumber: card.cardNumber,
+            validThru: card.expiry,
+            holderName: card.holderName,
+            cvv: card.cvv,
+            customBankName: card.customBankName,
+            customBankLogoPath: card.customBankLogoPath,
+            customGradientStartColor: card.customGradientStartColor != null
+                ? Color(card.customGradientStartColor!)
+                : null,
+            customGradientMiddleColor: card.customGradientMiddleColor != null
+                ? Color(card.customGradientMiddleColor!)
+                : null,
+            customGradientEndColor: card.customGradientEndColor != null
+                ? Color(card.customGradientEndColor!)
+                : null,
+            customCardImagePath: card.customCardVisualMode == 1
+                ? card.customCardImagePath
+                : null,
+            customCardPatternAssetPath: card.customCardVisualMode == 0
+                ? card.customCardPatternAssetPath
+                : null,
+            customCardImageAlignment: Alignment(
+              card.customCardImageAlignmentX ?? 0,
+              card.customCardImageAlignmentY ?? 0,
             ),
+            showActions: _homeEntrySettled,
+            onEyeTap: () => _toggleReveal(card),
+            onShareTap: () {
+              if (_revealedCardId != cardId) {
+                return;
+              }
+              CardShareHelper.shareCard(card);
+            },
           ),
         ),
       ),
-    );
-  }
-
-  Widget _withScrollDiagnostics(Widget child) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        PerformanceRuntimeDiagnostics.instance.handleScrollNotification(
-          notification,
-        );
-        return false;
-      },
-      child: child,
     );
   }
 
@@ -757,54 +756,48 @@ class HomeScreenState extends State<HomeScreen> {
             AdaptiveLayout.horizontalPaddingForWidth(constraints.maxWidth);
 
         if (paneCount == 1) {
+          _primeCompactCacheExtent();
           final cardWidth = constraints.maxWidth - (horizontalPadding * 2);
           _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
+          final leadingCards = visibleCards.take(2).toList(growable: false);
+          final stackPreviewCards = visibleCards
+              .skip(2)
+              .take(kStackPreviewCount)
+              .toList(growable: false);
+          final tailCards = visibleCards
+              .skip(2 + kStackPreviewCount)
+              .toList(growable: false);
+          final hasStackPreview = stackPreviewCards.isNotEmpty;
+          final compactItemCount = leadingCards.length +
+              (hasStackPreview ? 1 : 0) +
+              tailCards.length;
 
           return AnimatedBuilder(
             animation: _scrollController,
             builder: (context, _) {
-              if (visibleCards.length <= 3) {
-                return _withScrollDiagnostics(
-                  ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      0,
-                      horizontalPadding,
-                      120,
-                    ),
-                    itemCount: visibleCards.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: bankCardVerticalSpacing,
-                        ),
-                        child: _buildCardItem(visibleCards[index]),
-                      );
-                    },
-                  ),
-                );
-              }
-
-              return _withScrollDiagnostics(
-                ListView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    0,
-                    horizontalPadding,
-                    120,
-                  ),
-                  children: [
-                    for (var index = 0; index < 2; index++)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: bankCardVerticalSpacing,
-                        ),
-                        child: _buildCardItem(visibleCards[index]),
+              return ListView.builder(
+                controller: _scrollController,
+                cacheExtent: _compactCacheExtent,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  0,
+                  horizontalPadding,
+                  120,
+                ),
+                itemCount: compactItemCount,
+                itemBuilder: (context, index) {
+                  if (index < leadingCards.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: bankCardVerticalSpacing,
                       ),
-                    _StackedCardListSection(
-                      cards: visibleCards.sublist(2),
+                      child: _buildCardItem(leadingCards[index]),
+                    );
+                  }
+
+                  if (hasStackPreview && index == leadingCards.length) {
+                    return _StackedCardListSection(
+                      cards: stackPreviewCards,
                       cardWidth: cardWidth,
                       revealedCardId: _revealedCardId,
                       scrollOffset: _scrollController.hasClients
@@ -812,9 +805,18 @@ class HomeScreenState extends State<HomeScreen> {
                           : 0,
                       cardIdBuilder: _cardId,
                       itemBuilder: _buildCardItem,
+                    );
+                  }
+
+                  final tailIndex =
+                      index - leadingCards.length - (hasStackPreview ? 1 : 0);
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: bankCardVerticalSpacing,
                     ),
-                  ],
-                ),
+                    child: _buildCardItem(tailCards[tailIndex]),
+                  );
+                },
               );
             },
           );
@@ -826,30 +828,28 @@ class HomeScreenState extends State<HomeScreen> {
         const cardWidth = AdaptiveLayout.phoneCardWidth;
         _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
 
-        return _withScrollDiagnostics(
-          SingleChildScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              0,
-              horizontalPadding,
-              120,
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: contentWidth,
-                child: Wrap(
-                  spacing: spacing,
-                  runSpacing: bankCardVerticalSpacing,
-                  children: visibleCards.map((card) {
-                    return SizedBox(
-                      width: cardWidth,
-                      child: _buildCardItem(card),
-                    );
-                  }).toList(),
-                ),
+        return SingleChildScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            0,
+            horizontalPadding,
+            120,
+          ),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: contentWidth,
+              child: Wrap(
+                spacing: spacing,
+                runSpacing: bankCardVerticalSpacing,
+                children: visibleCards.map((card) {
+                  return SizedBox(
+                    width: cardWidth,
+                    child: _buildCardItem(card),
+                  );
+                }).toList(),
               ),
             ),
           ),
@@ -1057,7 +1057,6 @@ class HomeScreenState extends State<HomeScreen> {
     return ValueListenableBuilder<Box<CardData>>(
       valueListenable: Hive.box<CardData>(HiveBoxes.cards).listenable(),
       builder: (context, cardsBox, _) {
-        final buildStopwatch = Stopwatch()..start();
         final allCards = _cardsForDisplay(cardsBox);
         final visibleCards = _filteredCards(allCards);
         final bool isEmptyState = allCards.isEmpty;
@@ -1071,7 +1070,7 @@ class HomeScreenState extends State<HomeScreen> {
             ? AdaptiveLayout.formPaneMaxWidth + 16
             : AdaptiveLayout.outerGutterForWidth(screenWidth);
 
-        final widgetTree = PopScope(
+        return PopScope(
           canPop: _sidePane == null,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
@@ -1088,7 +1087,8 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.endFloat,
             body: _buildAdaptiveBody(
               isEmptyState: isEmptyState,
               allCards: allCards,
@@ -1097,11 +1097,6 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-        buildStopwatch.stop();
-        PerformanceRuntimeDiagnostics.instance.recordHomeScreenBuild(
-          buildStopwatch.elapsedMicroseconds,
-        );
-        return widgetTree;
       },
     );
   }
@@ -1212,13 +1207,7 @@ class _UnlockEntryCardStage extends StatelessWidget {
       return child;
     }
 
-    return IgnorePointer(
-      ignoring: true,
-      child: Opacity(
-        opacity: 0,
-        child: child,
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
 

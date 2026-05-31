@@ -9,7 +9,7 @@ import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import 'bank_selection_container.dart';
 
 // ✅ CORRECTED IMPORT: Points to widgets/add_card/sections/bank_select_grid.dart
-import '../../../../widgets/add_card/sections/bank_select_grid.dart';
+import '../../../widgets/add_card/sections/bank_select_grid.dart';
 
 class BankSelectionSection extends StatefulWidget {
   final ValueChanged<String> onBankSelected;

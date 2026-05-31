@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:swallet/widgets/card/preview/preview_card.dart';
-import 'package:swallet/models/card_type.dart';
-import 'package:swallet/models/card_network.dart';
+import '../../../models/card_type.dart';
+import '../../../models/card_network.dart';
 
 class AddCardPreviewStack extends StatelessWidget {
   final double top;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../../data/bank_assets.dart';
-import '../../../../../utils/bank_asset_resolver.dart';
+import '../../../data/bank_assets.dart';
+import '../../../utils/bank_asset_resolver.dart';
 import 'package:swallet/theme/swallet_theme.dart';
 import 'package:swallet/widgets/add_card/add_card_material_tokens.dart';
 import '../widgets/bank_grid_item.dart';

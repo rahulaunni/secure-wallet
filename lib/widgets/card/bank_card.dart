@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../constants/layout_constants.dart';
-import '../../diagnostics/performance_runtime_diagnostics.dart';
 import '../../utils/adaptive_layout.dart';
 import '../../utils/card_number_format.dart';
 import '../../constants/card_visuals.dart'; // ✅ Import Visual Engine
@@ -16,7 +15,6 @@ import 'card_details_block.dart';
 import 'secure_reveal_wrapper.dart';
 
 class BankCard extends StatelessWidget {
-  final String? diagnosticCardId;
   final String bankLogo; // This acts as the Bank CID (e.g., 'hdfc', 'axis')
   final String networkLogo;
   final String cardType;
@@ -39,7 +37,6 @@ class BankCard extends StatelessWidget {
 
   const BankCard({
     super.key,
-    this.diagnosticCardId,
     required this.bankLogo,
     required this.networkLogo,
     required this.cardType,
@@ -73,7 +70,6 @@ class BankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buildStopwatch = Stopwatch()..start();
     final scope = BankCardScope.of(context);
 
     // ✅ RESOLVE VISUALS (Gradient + Pattern)
@@ -100,7 +96,7 @@ class BankCard extends StatelessWidget {
     final String displayCvv = showCvv ? cvv : '***';
     // ===========================================================
 
-    final widgetTree = AspectRatio(
+    return AspectRatio(
       aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -251,13 +247,6 @@ class BankCard extends StatelessWidget {
         },
       ),
     );
-    buildStopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordBankCardBuild(
-      diagnosticCardId ??
-          '$bankLogo|${cardNumber.length >= 4 ? cardNumber.substring(cardNumber.length - 4) : cardNumber}',
-      buildStopwatch.elapsedMicroseconds,
-    );
-    return widgetTree;
   }
 }
 

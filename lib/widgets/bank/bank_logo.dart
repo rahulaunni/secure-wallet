@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../diagnostics/performance_runtime_diagnostics.dart';
 import '../../utils/bank_asset_resolver.dart';
 import 'bank_logo_file_widget_stub.dart'
     if (dart.library.io) 'bank_logo_file_widget_io.dart'
@@ -28,7 +27,6 @@ class BankLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buildStopwatch = Stopwatch()..start();
     final customPath = customLogoPath?.trim();
     if (customPath != null && customPath.isNotEmpty) {
       final customLogoWidget = bank_logo_file_widget.buildCustomBankLogoWidget(
@@ -37,28 +35,17 @@ class BankLogo extends StatelessWidget {
         fallbackBuilder: (_) => _fallbackLogo(),
       );
       if (customLogoWidget != null) {
-        final widgetTree = _logoFrame(
+        return _logoFrame(
           customLogoWidget,
         );
-        buildStopwatch.stop();
-        PerformanceRuntimeDiagnostics.instance.recordBankLogoBuild(
-          buildStopwatch.elapsedMicroseconds,
-        );
-        return widgetTree;
       }
     }
 
-    final resolveStopwatch = Stopwatch()..start();
     final logoPath = BankAssetResolver.logoPath(bankCid);
-    resolveStopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordSvgResolve(
-      'BankLogo',
-      resolveStopwatch.elapsedMicroseconds,
-    );
 
     if (logoPath != null) {
       if (logoPath.toLowerCase().endsWith('.svg')) {
-        final widgetTree = _logoFrame(
+        return _logoFrame(
           SvgPicture.asset(
             logoPath,
             height: size,
@@ -67,14 +54,9 @@ class BankLogo extends StatelessWidget {
             errorBuilder: (_, __, ___) => _fallbackLogo(),
           ),
         );
-        buildStopwatch.stop();
-        PerformanceRuntimeDiagnostics.instance.recordBankLogoBuild(
-          buildStopwatch.elapsedMicroseconds,
-        );
-        return widgetTree;
       }
 
-      final widgetTree = _logoFrame(
+      return _logoFrame(
         Image.asset(
           logoPath,
           height: size,
@@ -83,11 +65,6 @@ class BankLogo extends StatelessWidget {
           errorBuilder: (_, __, ___) => _fallbackLogo(),
         ),
       );
-      buildStopwatch.stop();
-      PerformanceRuntimeDiagnostics.instance.recordBankLogoBuild(
-        buildStopwatch.elapsedMicroseconds,
-      );
-      return widgetTree;
     }
 
     final label = customLabel?.trim();
@@ -98,7 +75,7 @@ class BankLogo extends StatelessWidget {
               .clamp(size, 180.0)
               .toDouble();
 
-      final widgetTree = ConstrainedBox(
+      return ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: maxLabelWidth,
           minHeight: size,
@@ -124,19 +101,9 @@ class BankLogo extends StatelessWidget {
           ),
         ),
       );
-      buildStopwatch.stop();
-      PerformanceRuntimeDiagnostics.instance.recordBankLogoBuild(
-        buildStopwatch.elapsedMicroseconds,
-      );
-      return widgetTree;
     }
 
-    final widgetTree = _fallbackLogo();
-    buildStopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordBankLogoBuild(
-      buildStopwatch.elapsedMicroseconds,
-    );
-    return widgetTree;
+    return _fallbackLogo();
   }
 
   Widget _logoFrame(Widget child) {

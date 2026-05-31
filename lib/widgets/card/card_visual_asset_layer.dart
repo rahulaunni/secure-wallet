@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../constants/card_visuals.dart';
-import '../../diagnostics/performance_runtime_diagnostics.dart';
 
 class CardVisualAssetLayer extends StatelessWidget {
   final CardVisual visual;
@@ -16,26 +15,15 @@ class CardVisualAssetLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buildStopwatch = Stopwatch()..start();
     final assetPath = visual.visualAssetPath;
     if (assetPath == null) {
-      buildStopwatch.stop();
-      PerformanceRuntimeDiagnostics.instance.recordCardVisualBuild(
-        buildStopwatch.elapsedMicroseconds,
-      );
       return const SizedBox.shrink();
     }
 
-    final resolveStopwatch = Stopwatch()..start();
     final resolvedPath = CardVisuals.resolveVisualAssetPath(assetPath);
-    resolveStopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordSvgResolve(
-      'CardVisualAssetLayer',
-      resolveStopwatch.elapsedMicroseconds,
-    );
     final profile = _CardTextureProfile.fromVisual(visual);
 
-    final widgetTree = RepaintBoundary(
+    return RepaintBoundary(
       child: ClipRRect(
         borderRadius: borderRadius,
         child: IgnorePointer(
@@ -108,14 +96,6 @@ class CardVisualAssetLayer extends StatelessWidget {
           ),
         ),
       ),
-    );
-    buildStopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordCardVisualBuild(
-      buildStopwatch.elapsedMicroseconds,
-    );
-    return PerformancePaintProbe(
-      label: 'CardVisualAssetLayer',
-      child: widgetTree,
     );
   }
 }
@@ -242,7 +222,6 @@ class _PremiumTexturePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final stopwatch = Stopwatch()..start();
     final rect = Offset.zero & size;
 
     canvas.drawRect(
@@ -274,11 +253,6 @@ class _PremiumTexturePainter extends CustomPainter {
     );
 
     _paintGrain(canvas, size);
-    stopwatch.stop();
-    PerformanceRuntimeDiagnostics.instance.recordPaint(
-      'PremiumTexturePainter',
-      stopwatch.elapsedMicroseconds,
-    );
   }
 
   void _paintGrain(Canvas canvas, Size size) {
