@@ -95,14 +95,14 @@ class BankLogo extends StatelessWidget {
               style: useRuntimeFonts
                   ? GoogleFonts.poppins(
                       color: Colors.white,
-                      fontSize: size,
+                      fontSize: size * 0.9,
                       height: 1,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0,
                     )
                   : TextStyle(
                       color: Colors.white,
-                      fontSize: size,
+                      fontSize: size * 0.9,
                       height: 1,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0,
