@@ -29,7 +29,6 @@ import 'package:swallet/utils/card_network_detector.dart';
 import 'package:swallet/utils/card_snapshot_service.dart';
 import 'package:swallet/utils/card_number_format.dart';
 import 'package:swallet/utils/haptics.dart';
-
 class AddCardFlowController {
   _AddCardFlowScreenState? _state;
 
@@ -112,9 +111,11 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   static const Duration _bankExitDuration = Duration(milliseconds: 320);
   static const Duration _formEnterDuration = Duration(milliseconds: 360);
   static const Curve _transitionCurve = Curves.easeOutCubic;
+  static const Duration _saveExitDuration = Duration(milliseconds: 980);
 
   bool _keyboardHapticFired = false;
   bool _isSaving = false;
+  bool _isSaveExiting = false;
 
   bool get _isEditMode => widget.initialCard != null;
 
@@ -154,7 +155,6 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
         });
       }
     });
-
     final initialCard = widget.initialCard;
     if (initialCard != null) {
       _loadInitialCard(initialCard);
@@ -194,7 +194,7 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
   @override
   void dispose() {
     if (widget.controller?._state == this) {
-      widget.controller?._state = null;
+    widget.controller?._state = null;
     }
     _dragAnimationController.dispose();
     _scrollController.dispose();
@@ -780,10 +780,20 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
 
       if (_isEditMode) {
         widget.onCardUpdated?.call(preparedCard);
+        _close();
       } else {
-        widget.onCardAdded(preparedCard);
+        if (widget.embedded) {
+          widget.onCardAdded(preparedCard);
+          _close();
+        } else {
+          setState(() => _isSaveExiting = true);
+          await Future<void>.delayed(_saveExitDuration);
+          if (!mounted) {
+            return;
+          }
+          Navigator.of(context).pop(preparedCard);
+        }
       }
-      _close();
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -813,14 +823,19 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
         (keyboardHeight / maxKeyboardHeight).clamp(0.0, 1.0);
     final double previewScale =
         lerpDouble(1.0, _previewMinScale, keyboardProgress)!;
+    const double surfaceExitOpacity = 1;
+    const double surfaceExitOffset = 0;
+    final saveExitOpacity = _isSaveExiting ? 0.0 : 1.0;
 
     final double effectivePreviewTop = previewTop - _dragOffset;
-
-    // Calculate Dynamic Blur & Dimming
+    final saveExitPreviewOffset = _isSaveExiting
+        ? -(effectivePreviewTop + AddCardLayoutConstants.previewCardHeight + 96)
+        : 0.0;
+    final saveExitFormOffset = _isSaveExiting ? mediaSize.height : 0.0;
     final double dragProgress = (_dragOffset / 150.0).clamp(0.0, 1.0);
     final double inverseProgress = 1.0 - dragProgress;
-    final double currentBlur = 15.0 * inverseProgress;
-    final double currentDimOpacity = 0.6 * inverseProgress;
+    final double currentBlur = 15.0 * inverseProgress * saveExitOpacity;
+    final double currentDimOpacity = 0.6 * inverseProgress * saveExitOpacity;
     final bool isOtherBank = _selectedBankCid == BankAssets.otherBankId;
     final bool showOtherBankSetup =
         _isBankSelected && isOtherBank && !_otherBankDetailsReady;
@@ -830,12 +845,11 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
         !showBuiltInVisualEditor &&
         (!isOtherBank || _otherBankDetailsReady);
     final palette = SwalletPalette(widget.isDark);
-
     return PopScope(
-      canPop: !widget.embedded && !_isBankSelected,
+      canPop: !widget.embedded && !_isBankSelected && !_isSaving,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (widget.embedded) return;
+        if (widget.embedded || _isSaving) return;
         if (_isBankSelected) {
           _onBackFromSelectedBank();
           return;
@@ -847,7 +861,6 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
             widget.embedded ? palette.background : Colors.transparent,
         body: Stack(
           children: [
-            // ================= BLUR BACKGROUND =================
             if (widget.embedded)
               Positioned.fill(
                 child: ColoredBox(color: palette.background),
@@ -864,13 +877,12 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                   ),
                 ),
               ),
-
-            // ================= PREVIEW CARD =================
             AddCardPreviewStack(
               visualBoundaryKey: _previewVisualBoundaryKey,
               top: effectivePreviewTop,
               horizontalInsets: surfaceInsets,
               scale: previewScale,
+              offsetY: saveExitPreviewOffset,
               isDark: widget.isDark,
               bankCid: _selectedBankCid,
               isBankSelected: _isBankSelected,
@@ -909,20 +921,16 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                           (isOtherBank || _hasCustomVisualOverride)
                       ? _customGradientEndColor
                       : null,
-              onEditVisualTap: _isBankSelected && (!isOtherBank || _isEditMode)
-                  ? _showCardVisualEditor
-                  : null,
-              // ❌ REMOVED: onChangeBank: _onChangeBankPressed,
-              // This removes the button trigger from the UI component.
+              onEditVisualTap: _isSaving
+                  ? null
+                  : _isBankSelected && (!isOtherBank || _isEditMode)
+                      ? _showCardVisualEditor
+                      : null,
+              showSavingOverlay: _isSaving,
             ),
-
-            // ================= BANK SELECTION (DRAWER) =================
             Positioned(
               left: surfaceInsets.left,
               right: surfaceInsets.right,
-              // 🔧 REFINED SPACING:
-              // Changed the gap logic to be tight (24.0) since the button is gone.
-              // Previously: AddCardLayoutConstants.previewToSectionGap
               top: previewTop + AddCardLayoutConstants.previewCardHeight + 24.0,
               bottom: AddCardLayoutConstants.sectionBottomInset,
               child: AnimatedSlide(
@@ -930,31 +938,35 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                 duration: _bankExitDuration,
                 curve: _transitionCurve,
                 child: AnimatedOpacity(
-                  opacity: _isBankSelected ? 0 : 1,
-                  duration: const Duration(milliseconds: 220),
-                  child: Transform.translate(
-                    offset: Offset(0, _dragOffset),
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: _handleScrollNotification,
-                      child: BankSelectionSection(
-                        controller: _scrollController,
-                        selectedCountryId: _selectedCountryId,
-                        onCountryChanged: _handleCountryChanged,
-                        onBankSelected: _onBankSelected,
+                    opacity: _isBankSelected ? 0 : 1,
+                    duration: const Duration(milliseconds: 220),
+                  child: _SaveExitStage(
+                    exiting: _isSaveExiting,
+                    duration: _saveExitDuration,
+                    offsetY: saveExitFormOffset,
+                    child: _AddFlowExitSurface(
+                      opacity: surfaceExitOpacity,
+                      offsetY: _dragOffset + surfaceExitOffset,
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _handleScrollNotification,
+                        child: BankSelectionSection(
+                          controller: _scrollController,
+                          selectedCountryId: _selectedCountryId,
+                          onCountryChanged: _handleCountryChanged,
+                          onBankSelected: _onBankSelected,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-
-            // ================= OTHER BANK SETUP SECTION =================
             Positioned(
               left: surfaceInsets.left,
               right: surfaceInsets.right,
               bottom: AddCardLayoutConstants.sectionBottomInset + formLift,
               child: IgnorePointer(
-                ignoring: !showOtherBankSetup,
+                ignoring: !showOtherBankSetup || _isSaving,
                 child: AnimatedSlide(
                   offset: showOtherBankSetup
                       ? Offset.zero
@@ -965,61 +977,68 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                   curve: _transitionCurve,
                   child: AnimatedOpacity(
                     opacity: showOtherBankSetup ? 1 : 0,
-                    duration: const Duration(milliseconds: 260),
-                    child: CardFormSectionHost(
-                      isDark: widget.isDark,
-                      child: OtherBankSetupSection(
-                        isDark: widget.isDark,
-                        customBankName: _customBankName,
-                        customBankLogoPath: _customBankLogoPath,
-                        customCardImagePath: _customCardImagePath,
-                        customCardPatternAssetPath: _customCardPatternAssetPath,
-                        gradientStartColor: _customGradientStartColor,
-                        gradientMiddleColor: _customGradientMiddleColor,
-                        gradientEndColor: _customGradientEndColor,
-                        visualMode: _customCardVisualMode,
-                        imageAlignment: _customCardImageAlignment,
-                        onCustomBankNameChanged: (v) =>
-                            setState(() => _customBankName = v),
-                        onGradientStartColorChanged: (color) => setState(() {
-                          _customGradientStartColor = color;
-                          _customCardVisualMode = CustomCardVisualMode.gradient;
-                        }),
-                        onGradientMiddleColorChanged: (color) => setState(() {
-                          _customGradientMiddleColor = color;
-                          _customCardVisualMode = CustomCardVisualMode.gradient;
-                        }),
-                        onGradientEndColorChanged: (color) => setState(() {
-                          _customGradientEndColor = color;
-                          _customCardVisualMode = CustomCardVisualMode.gradient;
-                        }),
-                        onVisualModeChanged: (mode) =>
-                            setState(() => _customCardVisualMode = mode),
-                        onPatternChanged: (assetPath) => setState(() {
-                          _customCardPatternAssetPath = assetPath;
-                          _customCardVisualMode = CustomCardVisualMode.gradient;
-                        }),
-                        onImageAlignmentChanged: (alignment) => setState(
-                            () => _customCardImageAlignment = alignment),
-                        onPickCustomBankLogo: _pickCustomBankLogo,
-                        onRemoveCustomBankLogo: _removeCustomBankLogo,
-                        onPickCustomCardImage: _pickCustomCardImage,
-                        onRemoveCustomCardImage: _removeCustomCardImage,
-                        onNext: _onOtherBankNextPressed,
+                  duration: const Duration(milliseconds: 260),
+                    child: _SaveExitStage(
+                      exiting: _isSaveExiting,
+                      duration: _saveExitDuration,
+                      offsetY: saveExitFormOffset,
+                      child: _AddFlowExitSurface(
+                        opacity: surfaceExitOpacity,
+                        offsetY: surfaceExitOffset,
+                        child: CardFormSectionHost(
+                          isDark: widget.isDark,
+                          child: OtherBankSetupSection(
+                          isDark: widget.isDark,
+                          customBankName: _customBankName,
+                          customBankLogoPath: _customBankLogoPath,
+                          customCardImagePath: _customCardImagePath,
+                          customCardPatternAssetPath: _customCardPatternAssetPath,
+                          gradientStartColor: _customGradientStartColor,
+                          gradientMiddleColor: _customGradientMiddleColor,
+                          gradientEndColor: _customGradientEndColor,
+                          visualMode: _customCardVisualMode,
+                          imageAlignment: _customCardImageAlignment,
+                          onCustomBankNameChanged: (v) =>
+                              setState(() => _customBankName = v),
+                          onGradientStartColorChanged: (color) => setState(() {
+                            _customGradientStartColor = color;
+                            _customCardVisualMode = CustomCardVisualMode.gradient;
+                          }),
+                          onGradientMiddleColorChanged: (color) => setState(() {
+                            _customGradientMiddleColor = color;
+                            _customCardVisualMode = CustomCardVisualMode.gradient;
+                          }),
+                          onGradientEndColorChanged: (color) => setState(() {
+                            _customGradientEndColor = color;
+                            _customCardVisualMode = CustomCardVisualMode.gradient;
+                          }),
+                          onVisualModeChanged: (mode) =>
+                              setState(() => _customCardVisualMode = mode),
+                          onPatternChanged: (assetPath) => setState(() {
+                            _customCardPatternAssetPath = assetPath;
+                            _customCardVisualMode = CustomCardVisualMode.gradient;
+                          }),
+                          onImageAlignmentChanged: (alignment) =>
+                              setState(() => _customCardImageAlignment = alignment),
+                          onPickCustomBankLogo: _pickCustomBankLogo,
+                          onRemoveCustomBankLogo: _removeCustomBankLogo,
+                          onPickCustomCardImage: _pickCustomCardImage,
+                          onRemoveCustomCardImage: _removeCustomCardImage,
+                          onNext: _onOtherBankNextPressed,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-
-            // ================= BUILT-IN BANK VISUAL SECTION =================
             Positioned(
               left: surfaceInsets.left,
               right: surfaceInsets.right,
               bottom: AddCardLayoutConstants.sectionBottomInset + formLift,
               child: IgnorePointer(
-                ignoring: !showBuiltInVisualEditor,
+                ignoring: !showBuiltInVisualEditor || _isSaving,
                 child: AnimatedSlide(
                   offset: showBuiltInVisualEditor
                       ? Offset.zero
@@ -1028,81 +1047,89 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                   curve: _transitionCurve,
                   child: AnimatedOpacity(
                     opacity: showBuiltInVisualEditor ? 1 : 0,
-                    duration: const Duration(milliseconds: 260),
-                    child: CardFormSectionHost(
-                      isDark: widget.isDark,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Edit card visual',
-                              style: SwalletText.bodyMedium.copyWith(
-                                color: AddCardMaterialTokens(widget.isDark)
-                                    .onSurface,
+                  duration: const Duration(milliseconds: 260),
+                    child: _SaveExitStage(
+                      exiting: _isSaveExiting,
+                      duration: _saveExitDuration,
+                      offsetY: saveExitFormOffset,
+                      child: _AddFlowExitSurface(
+                        opacity: surfaceExitOpacity,
+                        offsetY: surfaceExitOffset,
+                        child: CardFormSectionHost(
+                          isDark: widget.isDark,
+                          child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: Text(
+                                'Edit card visual',
+                                style: SwalletText.bodyMedium.copyWith(
+                                  color: AddCardMaterialTokens(widget.isDark)
+                                      .onSurface,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          CardVisualCustomizationSection(
-                            isDark: widget.isDark,
-                            startColor: _customGradientStartColor,
-                            middleColor: _customGradientMiddleColor,
-                            endColor: _customGradientEndColor,
-                            imagePath: _customCardImagePath,
-                            patternAssetPath: _customCardPatternAssetPath,
-                            visualMode: _customCardVisualMode,
-                            imageAlignment: _customCardImageAlignment,
-                            onStartChanged: (color) => setState(() {
-                              _customGradientStartColor = color;
-                              _customCardVisualMode =
-                                  CustomCardVisualMode.gradient;
-                              _hasCustomVisualOverride = true;
-                            }),
-                            onMiddleChanged: (color) => setState(() {
-                              _customGradientMiddleColor = color;
-                              _customCardVisualMode =
-                                  CustomCardVisualMode.gradient;
-                              _hasCustomVisualOverride = true;
-                            }),
-                            onEndChanged: (color) => setState(() {
-                              _customGradientEndColor = color;
-                              _customCardVisualMode =
-                                  CustomCardVisualMode.gradient;
-                              _hasCustomVisualOverride = true;
-                            }),
-                            onVisualModeChanged: (mode) => setState(() {
-                              _customCardVisualMode = mode;
-                              if (mode == CustomCardVisualMode.gradient) {
+                            const SizedBox(height: 24),
+                            CardVisualCustomizationSection(
+                              isDark: widget.isDark,
+                              startColor: _customGradientStartColor,
+                              middleColor: _customGradientMiddleColor,
+                              endColor: _customGradientEndColor,
+                              imagePath: _customCardImagePath,
+                              patternAssetPath: _customCardPatternAssetPath,
+                              visualMode: _customCardVisualMode,
+                              imageAlignment: _customCardImageAlignment,
+                              onStartChanged: (color) => setState(() {
+                                _customGradientStartColor = color;
+                                _customCardVisualMode =
+                                    CustomCardVisualMode.gradient;
                                 _hasCustomVisualOverride = true;
-                              }
-                            }),
-                            onPatternChanged: (assetPath) => setState(() {
-                              _customCardPatternAssetPath = assetPath;
-                              _customCardVisualMode =
-                                  CustomCardVisualMode.gradient;
-                              _hasCustomVisualOverride = true;
-                            }),
-                            onImageAlignmentChanged: (alignment) => setState(
-                                () => _customCardImageAlignment = alignment),
-                            onPickImage: _pickCustomCardImage,
-                            onRemoveImage: _removeCustomCardImage,
+                              }),
+                              onMiddleChanged: (color) => setState(() {
+                                _customGradientMiddleColor = color;
+                                _customCardVisualMode =
+                                    CustomCardVisualMode.gradient;
+                                _hasCustomVisualOverride = true;
+                              }),
+                              onEndChanged: (color) => setState(() {
+                                _customGradientEndColor = color;
+                                _customCardVisualMode =
+                                    CustomCardVisualMode.gradient;
+                                _hasCustomVisualOverride = true;
+                              }),
+                              onVisualModeChanged: (mode) => setState(() {
+                                _customCardVisualMode = mode;
+                                if (mode == CustomCardVisualMode.gradient) {
+                                  _hasCustomVisualOverride = true;
+                                }
+                              }),
+                              onPatternChanged: (assetPath) => setState(() {
+                                _customCardPatternAssetPath = assetPath;
+                                _customCardVisualMode =
+                                    CustomCardVisualMode.gradient;
+                                _hasCustomVisualOverride = true;
+                              }),
+                              onImageAlignmentChanged: (alignment) => setState(
+                                  () => _customCardImageAlignment = alignment),
+                              onPickImage: _pickCustomCardImage,
+                              onRemoveImage: _removeCustomCardImage,
+                            ),
+                            const SizedBox(height: 24),
+                            AddCardCTAButton(
+                              label: 'Done',
+                              onPressed: () => setState(
+                                () => _showBuiltInVisualEditor = false,
+                              ),
+                            ),
+                          ],
                           ),
-                          const SizedBox(height: 24),
-                          AddCardCTAButton(
-                            label: 'Done',
-                            onPressed: () => setState(
-                                () => _showBuiltInVisualEditor = false),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-
-            // ================= CARD DETAILS FORM SECTION =================
             Positioned(
               left: surfaceInsets.left,
               right: surfaceInsets.right,
@@ -1116,31 +1143,42 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
                   curve: _transitionCurve,
                   child: AnimatedOpacity(
                     opacity: showCardDetailsForm ? 1 : 0,
-                    duration: const Duration(milliseconds: 260),
-                    child: CardFormSectionHost(
-                      isDark: widget.isDark,
-                      child: CardFormSection(
-                        key: ValueKey('card_form_$_selectedBankCid'),
-                        isDark: widget.isDark,
-                        isSubmitting: _isSaving,
-                        initialCardNumber: _cardNumber,
-                        initialExpiry: _expiry,
-                        initialCvv: _cvv,
-                        initialHolderName: _holderName,
-                        initialCardType: _cardType,
+                  duration: const Duration(milliseconds: 260),
+                    child: _SaveExitStage(
+                      exiting: _isSaveExiting,
+                      duration: _saveExitDuration,
+                      offsetY: saveExitFormOffset,
+                      child: _AddFlowExitSurface(
+                        opacity: surfaceExitOpacity,
+                        offsetY: surfaceExitOffset,
+                        child: CardFormSectionHost(
+                          isDark: widget.isDark,
+                          child: CardFormSection(
+                          key: ValueKey('card_form_$_selectedBankCid'),
+                          isDark: widget.isDark,
+                          isSubmitting: _isSaving,
+                          initialCardNumber: _cardNumber,
+                          initialExpiry: _expiry,
+                          initialCvv: _cvv,
+                          initialHolderName: _holderName,
+                          initialCardType: _cardType,
                         title: _isEditMode
                             ? 'Edit payment card'
                             : 'Add payment card',
                         submitLabel: _isEditMode ? 'Save Card' : 'Add Card',
+                        showInlineLoadingIndicator: _isEditMode,
                         onCardNumberChanged: (v) =>
                             setState(() => _cardNumber = v),
-                        onNetworkChanged: (n) =>
-                            setState(() => _cardNetwork = n),
-                        onCardTypeChanged: (t) => setState(() => _cardType = t),
-                        onExpiryChanged: (v) => setState(() => _expiry = v),
-                        onCvvChanged: (v) => setState(() => _cvv = v),
-                        onNameChanged: (v) => setState(() => _holderName = v),
-                        onSubmit: _onAddCardPressed,
+                          onNetworkChanged: (n) =>
+                              setState(() => _cardNetwork = n),
+                          onCardTypeChanged: (t) =>
+                              setState(() => _cardType = t),
+                          onExpiryChanged: (v) => setState(() => _expiry = v),
+                          onCvvChanged: (v) => setState(() => _cvv = v),
+                          onNameChanged: (v) => setState(() => _holderName = v),
+                          onSubmit: _onAddCardPressed,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1153,3 +1191,51 @@ class _AddCardFlowScreenState extends State<AddCardFlowScreen>
     );
   }
 }
+
+class _AddFlowExitSurface extends StatelessWidget {
+  final double opacity;
+  final double offsetY;
+  final Widget child;
+
+  const _AddFlowExitSurface({
+    required this.opacity,
+    required this.offsetY,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: opacity,
+      child: Transform.translate(
+        offset: Offset(0, offsetY),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SaveExitStage extends StatelessWidget {
+  final bool exiting;
+  final Duration duration;
+  final double offsetY;
+  final Widget child;
+
+  const _SaveExitStage({
+    required this.exiting,
+    required this.duration,
+    required this.offsetY,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      transform: Matrix4.translationValues(0, exiting ? offsetY : 0, 0),
+      child: child,
+    );
+  }
+}
+

@@ -10,12 +10,14 @@ class AddCardCTAButton extends StatelessWidget {
   final FutureOr<void> Function()? onPressed;
   final String label;
   final bool isLoading;
+  final bool showLoadingIndicator;
 
   const AddCardCTAButton({
     super.key,
     required this.onPressed,
     this.label = 'Add Card',
     this.isLoading = false,
+    this.showLoadingIndicator = true,
   });
 
   @override
@@ -58,7 +60,7 @@ class AddCardCTAButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isLoading) ...[
+            if (isLoading && showLoadingIndicator) ...[
               SizedBox(
                 width: 18,
                 height: 18,
@@ -69,7 +71,7 @@ class AddCardCTAButton extends StatelessWidget {
               ),
               const SizedBox(width: 10),
             ],
-            Text(isLoading ? 'Saving...' : label),
+            Text(isLoading && showLoadingIndicator ? 'Saving...' : label),
             if (!isLoading) ...[
               const SizedBox(width: 8),
               const Icon(CupertinoIcons.arrow_right, size: 19),

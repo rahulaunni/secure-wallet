@@ -97,8 +97,8 @@ class PreviewCard extends StatelessWidget {
         : 'CARD HOLDER';
 
     return AspectRatio(
-      aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
-      child: LayoutBuilder(
+        aspectRatio: cardAspectRatioWidth / cardAspectRatioHeight,
+        child: LayoutBuilder(
         builder: (context, constraints) {
           const designWidth = AdaptiveLayout.phoneCardWidth;
           const designHeight =
@@ -279,8 +279,8 @@ class PreviewCard extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+        ),
+      );
   }
 }
 

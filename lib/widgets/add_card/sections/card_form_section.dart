@@ -32,6 +32,7 @@ class CardFormSection extends StatefulWidget {
   final String title;
   final String submitLabel;
   final bool isSubmitting;
+  final bool showInlineLoadingIndicator;
 
   const CardFormSection({
     super.key,
@@ -51,6 +52,7 @@ class CardFormSection extends StatefulWidget {
     this.title = 'Add payment card',
     this.submitLabel = 'Add Card',
     this.isSubmitting = false,
+    this.showInlineLoadingIndicator = true,
   });
 
   @override
@@ -207,6 +209,7 @@ class _CardFormSectionState extends State<CardFormSection> {
         AddCardCTAButton(
           label: widget.submitLabel,
           isLoading: widget.isSubmitting,
+          showLoadingIndicator: widget.showInlineLoadingIndicator,
           onPressed: widget.onSubmit,
         ),
       ],

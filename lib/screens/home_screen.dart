@@ -37,7 +37,7 @@ import '../utils/adaptive_layout.dart';
 import '../utils/app_startup_preloader.dart';
 import '../utils/card_share_helper.dart';
 
-const int kStackPreviewCount = 5;
+const int kStackPreviewCount = 4;
 const int kTailPrewarmCandidateCount = 5;
 
 class HomeScreen extends StatefulWidget {
@@ -56,14 +56,18 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   static const String _swipeActionsTutorialSeenKey =
       'swipe_actions_tutorial_v1_seen';
   static const double _targetCompactCacheExtent = 2500;
+  static const Duration _incomingCardSlotDuration = Duration(milliseconds: 2000);
 
   late final ScrollController _scrollController;
+  late final AnimationController _incomingCardPrepController;
   final AddCardFlowController _addCardFlowController = AddCardFlowController();
   GlobalKey<NavigatorState> _sidePaneNavigatorKey = GlobalKey();
+  final GlobalKey _incomingCardSlotKey = GlobalKey();
 
   bool _fabCollapsed = false;
 
@@ -89,6 +93,9 @@ class HomeScreenState extends State<HomeScreen> {
   bool _compactCacheExtentPrimed = false;
   double? _compactCacheExtent;
   final Set<String> _precachedCustomImageKeys = {};
+  CardData? _pendingIncomingCard;
+
+  double get _incomingCardPrepProgress => _incomingCardPrepController.value;
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
@@ -161,18 +168,20 @@ class HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    await Navigator.of(context).push(
+    final addedCard = await Navigator.of(context).push<CardData>(
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.transparent,
         pageBuilder: (_, __, ___) => AddCardFlowScreen(
           isDark: widget.isDark,
-          onCardAdded: (card) {
-            _addCard(card);
-          },
+          onCardAdded: (_) {},
         ),
       ),
     );
+
+    if (addedCard != null) {
+      await _animateIncomingCardAdd(addedCard);
+    }
 
     if (mounted) {
       setState(() {
@@ -212,7 +221,9 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> _addCard(CardData card) async {
     await CardRepository.add(card);
     if (!mounted) return;
+    _incomingCardPrepController.reset();
     setState(() {
+      _pendingIncomingCard = null;
       _cards.insert(0, card);
       _sidePane = null;
       _editingCard = null;
@@ -267,6 +278,38 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _refreshCardsAfterSettings() {
     refreshCardsFromStorage();
+  }
+
+  Future<void> _animateIncomingCardAdd(CardData card) async {
+    if (!mounted) return;
+    cancelAllReveals();
+    _incomingCardPrepController.stop();
+    _incomingCardPrepController.value = 0;
+    setState(() {
+      _pendingIncomingCard = card;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
+
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      try {
+        await _scrollController.animateTo(
+          0,
+          duration: _incomingCardSlotDuration,
+          curve: Curves.easeOutCubic,
+        );
+      } catch (_) {}
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _incomingCardPrepController.forward();
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    if (!mounted) return;
+    await _addCard(card);
   }
 
   void _primeCompactCacheExtent() {
@@ -485,6 +528,14 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _incomingCardPrepController = AnimationController(
+      vsync: this,
+      duration: _incomingCardSlotDuration,
+    )..addListener(() {
+        if (mounted && _pendingIncomingCard != null) {
+          setState(() {});
+        }
+      });
     _cards.addAll(CardRepository.getAll());
     _attachUnlockSettleAnimation();
 
@@ -510,6 +561,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _detachUnlockSettleAnimation(widget.unlockSettleAnimation);
+    _incomingCardPrepController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -621,7 +673,7 @@ class HomeScreenState extends State<HomeScreen> {
     final cardId = _cardId(card);
     final bool isDeleting = _deletingCardIds.contains(cardId);
 
-    return DeletingListItemWrapper(
+    final cardItem = DeletingListItemWrapper(
       key: ValueKey(cardId),
       isDeleting: isDeleting,
       child: _SwipeableCardActions(
@@ -686,7 +738,9 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+    return cardItem;
   }
+
 
   Future<void> _openEditCard(CardData card, String cardId) async {
     cancelAllReveals();
@@ -798,7 +852,13 @@ class HomeScreenState extends State<HomeScreen> {
         if (paneCount == 1) {
           _primeCompactCacheExtent();
           final cardWidth = constraints.maxWidth - (horizontalPadding * 2);
+          final cardHeight =
+              cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
           _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
+          final incomingPreparationProgress = _incomingCardPrepProgress;
+          final preparingIncomingStack =
+              _pendingIncomingCard != null &&
+              visibleCards.length >= (kStackPreviewCount + 2);
           final leadingCards = visibleCards.take(2).toList(growable: false);
           final stackPreviewCards = visibleCards
               .skip(2)
@@ -807,14 +867,20 @@ class HomeScreenState extends State<HomeScreen> {
           final stackPreviewChildren = stackPreviewCards
               .map(_buildCardItem)
               .toList(growable: false);
-          final tailCards = visibleCards
-              .skip(2 + kStackPreviewCount)
-              .toList(growable: false);
+          final reflowCards = preparingIncomingStack
+              ? visibleCards.take(2 + kStackPreviewCount).toList(growable: false)
+              : const <CardData>[];
+          final reflowChildren = preparingIncomingStack
+              ? reflowCards.map(_buildCardItem).toList(growable: false)
+              : const <Widget>[];
+          final tailCards = preparingIncomingStack
+              ? visibleCards.skip(2 + kStackPreviewCount).toList(growable: false)
+              : visibleCards.skip(2 + kStackPreviewCount).toList(growable: false);
           _scheduleTailCardPrewarm(tailCards, cardWidth: cardWidth);
           final hasStackPreview = stackPreviewCards.isNotEmpty;
-          final compactItemCount = leadingCards.length +
-              (hasStackPreview ? 1 : 0) +
-              tailCards.length;
+          final compactItemCount = preparingIncomingStack
+              ? 2 + tailCards.length
+              : 1 + leadingCards.length + (hasStackPreview ? 1 : 0) + tailCards.length;
 
           return ListView.builder(
             controller: _scrollController,
@@ -827,16 +893,47 @@ class HomeScreenState extends State<HomeScreen> {
             ),
             itemCount: compactItemCount,
             itemBuilder: (context, index) {
-              if (index < leadingCards.length) {
+              if (index == 0) {
+                return _IncomingCardPlaceholder(
+                  slotKey: _incomingCardSlotKey,
+                  progress: incomingPreparationProgress,
+                  cardHeight: cardHeight,
+                  child: _pendingIncomingCard == null
+                      ? null
+                      : _buildCardItem(_pendingIncomingCard!),
+                );
+              }
+
+              if (preparingIncomingStack) {
+                if (index == 1) {
+                  return _IncomingTopReflowSection(
+                    cardChildren: reflowChildren,
+                    cardWidth: cardWidth,
+                    progress: incomingPreparationProgress,
+                  );
+                }
+
+                final tailIndex = index - 2;
                 return Padding(
                   padding: const EdgeInsets.only(
                     bottom: bankCardVerticalSpacing,
                   ),
-                  child: _buildCardItem(leadingCards[index]),
+                  child: _buildCardItem(tailCards[tailIndex]),
                 );
               }
 
-              if (hasStackPreview && index == leadingCards.length) {
+              final contentIndex = index - 1;
+
+              if (contentIndex < leadingCards.length) {
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: bankCardVerticalSpacing,
+                  ),
+                  child: _buildCardItem(leadingCards[contentIndex]),
+                );
+              }
+
+              if (hasStackPreview && contentIndex == leadingCards.length) {
                 return _StackedCardListSection(
                   cards: stackPreviewCards,
                   cardChildren: stackPreviewChildren,
@@ -848,7 +945,9 @@ class HomeScreenState extends State<HomeScreen> {
               }
 
               final tailIndex =
-                  index - leadingCards.length - (hasStackPreview ? 1 : 0);
+                  contentIndex -
+                      leadingCards.length -
+                      (hasStackPreview ? 1 : 0);
               return Padding(
                 padding: const EdgeInsets.only(
                   bottom: bankCardVerticalSpacing,
@@ -961,9 +1060,10 @@ class HomeScreenState extends State<HomeScreen> {
     required List<CardData> visibleCards,
   }) {
     final palette = SwalletPalette(widget.isDark);
+    final hasIncomingPlaceholder = _pendingIncomingCard != null;
     final cardArea = isEmptyState
         ? EmptyWalletView(isDark: widget.isDark)
-        : visibleCards.isEmpty
+        : visibleCards.isEmpty && !hasIncomingPlaceholder
             ? Center(
                 child: Text(
                   'No cards found',
@@ -1036,7 +1136,7 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          if (!isEmptyState) ...[
+          if (!isEmptyState && allCards.isNotEmpty) ...[
             _adaptiveContentShell(
               TopNavBar(
                 key: ValueKey(allCards.length),
@@ -1096,7 +1196,8 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (context, cardsBox, _) {
         final allCards = _cardsForDisplay(cardsBox);
         final visibleCards = _filteredCards(allCards);
-        final bool isEmptyState = allCards.isEmpty;
+        final bool isEmptyState =
+            allCards.isEmpty && _pendingIncomingCard == null;
         final bool showSidePane = _sidePane != null && _usesSidePane(context);
         _scheduleSwipeActionsTutorial(
           hasCards: allCards.isNotEmpty,
@@ -1403,10 +1504,251 @@ class _StackedCardListSection extends StatelessWidget {
   }
 }
 
+class _IncomingTopReflowSection extends StatelessWidget {
+  final List<Widget> cardChildren;
+  final double cardWidth;
+  final double progress;
+
+  const _IncomingTopReflowSection({
+    required this.cardChildren,
+    required this.cardWidth,
+    required this.progress,
+  });
+
+  static const Curve _curve = Cubic(0.18, 0.88, 0.24, 1);
+
+  double _lerp(double from, double to, double t) => from + ((to - from) * t);
+  double _arc(double t, double magnitude) => -(4 * t * (1 - t) * magnitude);
+  double _drift(double t, double magnitude) => 4 * t * (1 - t) * magnitude;
+
+  double _phase(double begin, double end, {Curve curve = _curve}) {
+    return Interval(begin, end, curve: curve).transform(progress);
+  }
+
+  double _collapsedTopForStackIndex(int index) {
+    const offsets = _StackedCardListSection._collapsedTopOffsets;
+    const anchorTop = 0.0;
+    final rawTop = index < offsets.length ? offsets[index] : offsets.last;
+    return rawTop - anchorTop;
+  }
+
+  double _collapsedScaleForStackIndex(int index) {
+    final collapsedDepth =
+        index.clamp(0, _StackedCardListSection._maxCollapsedDepth);
+    return 1 - (_StackedCardListSection._collapsedScaleStep * collapsedDepth);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (cardChildren.length < 6) {
+      return const SizedBox.shrink();
+    }
+
+    final cardHeight = cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    final itemHeight = cardHeight + _StackedCardListSection._cardTiltPadding;
+    const itemGap = bankCardVerticalSpacing;
+    final slotHeight = itemHeight + itemGap;
+    final sectionHeight = slotHeight * 6;
+
+    return SizedBox(
+      height: sectionHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          () {
+            final t = _phase(0.04, 0.82);
+            return _buildReflowCard(
+              child: cardChildren[5],
+              top: _lerp(
+                (slotHeight * 2) + _collapsedTopForStackIndex(3),
+                slotHeight * 5,
+                t,
+              ),
+              scale: _lerp(
+                _collapsedScaleForStackIndex(3),
+                1.0,
+                t,
+              ),
+              opacity: _lerp(1.0, 0.97, t),
+              translateX: _drift(t, 10),
+              translateY: _arc(t, 8),
+            );
+          }(),
+          () {
+            final t = _phase(0.08, 0.86);
+            return _buildReflowCard(
+              child: cardChildren[4],
+              top: _lerp(
+                (slotHeight * 2) + _collapsedTopForStackIndex(2),
+                slotHeight + _collapsedTopForStackIndex(3),
+                t,
+              ),
+              scale: _lerp(
+                _collapsedScaleForStackIndex(2),
+                _collapsedScaleForStackIndex(3),
+                t,
+              ),
+              translateX: _drift(t, 5),
+              translateY: _arc(t, 10),
+            );
+          }(),
+          () {
+            final t = _phase(0.1, 0.88);
+            return _buildReflowCard(
+              child: cardChildren[3],
+              top: _lerp(
+                (slotHeight * 2) + _collapsedTopForStackIndex(1),
+                slotHeight + _collapsedTopForStackIndex(2),
+                t,
+              ),
+              scale: _lerp(
+                _collapsedScaleForStackIndex(1),
+                _collapsedScaleForStackIndex(2),
+                t,
+              ),
+              translateX: _drift(t, -4),
+              translateY: _arc(t, 10),
+            );
+          }(),
+          () {
+            final t = _phase(0.12, 0.9);
+            return _buildReflowCard(
+              child: cardChildren[2],
+              top: _lerp(
+                (slotHeight * 2) + _collapsedTopForStackIndex(0),
+                slotHeight + _collapsedTopForStackIndex(1),
+                t,
+              ),
+              scale: _lerp(
+                _collapsedScaleForStackIndex(0),
+                _collapsedScaleForStackIndex(1),
+                t,
+              ),
+              translateX: _drift(t, 3),
+              translateY: _arc(t, 12),
+            );
+          }(),
+          () {
+            final t = _phase(
+              0.04,
+              0.88,
+              curve: const Cubic(0.16, 1, 0.22, 1),
+            );
+            return _buildReflowCard(
+              child: cardChildren[1],
+              top: _lerp(
+                slotHeight,
+                slotHeight + _collapsedTopForStackIndex(0),
+                t,
+              ),
+              scale: _lerp(1.0, _collapsedScaleForStackIndex(0), t),
+              opacity: _lerp(1.0, 0.985, t),
+              translateX: _drift(t, -8),
+              translateY: _arc(t, 18),
+            );
+          }(),
+          () {
+            final t = _phase(
+              0.0,
+              0.84,
+              curve: const Cubic(0.2, 0.96, 0.24, 1),
+            );
+            return _buildReflowCard(
+              child: cardChildren[0],
+              top: 0,
+              scale: _lerp(1.0, 0.992, t),
+              translateY: _arc(t, 4),
+            );
+          }(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReflowCard({
+    required Widget child,
+    required double top,
+    double scale = 1,
+    double opacity = 1,
+    double translateX = 0,
+    double translateY = 0,
+  }) {
+    return _StackedCardPosition(
+      top: top,
+      scale: scale,
+      opacity: opacity,
+      translateX: translateX,
+      translateY: translateY,
+      interactionsEnabled: false,
+      child: child,
+    );
+  }
+}
+
+class _IncomingCardPlaceholder extends StatelessWidget {
+  final GlobalKey slotKey;
+  final double progress;
+  final double cardHeight;
+  final Widget? child;
+
+  const _IncomingCardPlaceholder({
+    required this.slotKey,
+    required this.progress,
+    required this.cardHeight,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rowExtent =
+        cardHeight + _StackedCardListSection._cardTiltPadding + bankCardVerticalSpacing;
+    final motionProgress = const Interval(
+      0.0,
+      0.94,
+      curve: Cubic(0.18, 0.88, 0.24, 1),
+    ).transform(progress);
+    final occupiedHeight = rowExtent * motionProgress;
+    final travelDistance = rowExtent;
+    final translateY = -travelDistance * (1 - motionProgress);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          key: slotKey,
+          width: double.infinity,
+          height: 0,
+        ),
+        SizedBox(
+          height: occupiedHeight,
+          child: child == null
+              ? null
+              : ClipRect(
+                  child: Transform.translate(
+                    offset: Offset(0, translateY),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: bankCardVerticalSpacing,
+                        ),
+                        child: child,
+                      ),
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StackedCardPosition extends StatelessWidget {
   final double top;
   final double scale;
   final double opacity;
+  final double translateX;
+  final double translateY;
   final bool interactionsEnabled;
   final Widget child;
 
@@ -1414,6 +1756,8 @@ class _StackedCardPosition extends StatelessWidget {
     required this.top,
     required this.scale,
     required this.opacity,
+    this.translateX = 0,
+    this.translateY = 0,
     required this.interactionsEnabled,
     required this.child,
   });
@@ -1428,10 +1772,13 @@ class _StackedCardPosition extends StatelessWidget {
         ignoring: !interactionsEnabled,
         child: Opacity(
           opacity: opacity,
-          child: Transform.scale(
-            scale: scale,
-            alignment: Alignment.topCenter,
-            child: child,
+          child: Transform.translate(
+            offset: Offset(translateX, translateY),
+            child: Transform.scale(
+              scale: scale,
+              alignment: Alignment.topCenter,
+              child: child,
+            ),
           ),
         ),
       ),
