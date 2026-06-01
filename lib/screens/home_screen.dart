@@ -22,7 +22,6 @@ import '../widgets/buttons/theme_lottie_toggle.dart';
 import '../widgets/buttons/settings_button.dart';
 import '../widgets/actions/card_action_button.dart';
 
-import '../widgets/delete_card/delete_card_sheet.dart';
 // ✅ IMPORT THE ANIMATION WRAPPER
 import '../widgets/animations/deleting_list_item_wrapper.dart';
 
@@ -62,9 +61,11 @@ class HomeScreenState extends State<HomeScreen>
       'swipe_actions_tutorial_v1_seen';
   static const double _targetCompactCacheExtent = 2500;
   static const Duration _incomingCardSlotDuration = Duration(milliseconds: 2000);
+  static const Duration _leadingDeleteReflowDuration = Duration(milliseconds: 1600);
 
   late final ScrollController _scrollController;
   late final AnimationController _incomingCardPrepController;
+  late final AnimationController _leadingDeleteReflowController;
   final AddCardFlowController _addCardFlowController = AddCardFlowController();
   GlobalKey<NavigatorState> _sidePaneNavigatorKey = GlobalKey();
   final GlobalKey _incomingCardSlotKey = GlobalKey();
@@ -94,8 +95,12 @@ class HomeScreenState extends State<HomeScreen>
   double? _compactCacheExtent;
   final Set<String> _precachedCustomImageKeys = {};
   CardData? _pendingIncomingCard;
+  String? _pendingLeadingDeleteCardId;
+  int? _pendingLeadingDeleteIndex;
+  List<CardData> _pendingLeadingDeleteCards = const <CardData>[];
 
   double get _incomingCardPrepProgress => _incomingCardPrepController.value;
+  double get _leadingDeleteReflowProgress => _leadingDeleteReflowController.value;
 
   // ================= EXTERNAL REVEAL CANCEL =================
 
@@ -536,6 +541,14 @@ class HomeScreenState extends State<HomeScreen>
           setState(() {});
         }
       });
+    _leadingDeleteReflowController = AnimationController(
+      vsync: this,
+      duration: _leadingDeleteReflowDuration,
+    )..addListener(() {
+        if (mounted && _pendingLeadingDeleteCardId != null) {
+          setState(() {});
+        }
+      });
     _cards.addAll(CardRepository.getAll());
     _attachUnlockSettleAnimation();
 
@@ -562,6 +575,7 @@ class HomeScreenState extends State<HomeScreen>
   void dispose() {
     _detachUnlockSettleAnimation(widget.unlockSettleAnimation);
     _incomingCardPrepController.dispose();
+    _leadingDeleteReflowController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -690,7 +704,8 @@ class HomeScreenState extends State<HomeScreen>
           setState(() => _activeSwipeCardId = null);
         },
         onEdit: () => _openEditCard(card, cardId),
-        onDelete: () => _showDeleteSheet(card, cardId),
+        isDeleting: isDeleting,
+        onDeleteConfirmed: () => _deleteCard(card, cardId),
         child: SecureRevealWrapper(
           revealed: _revealedCardId == cardId,
           onAutoLock: () => _autoLock(card),
@@ -807,38 +822,102 @@ class HomeScreenState extends State<HomeScreen>
     });
   }
 
-  void _showDeleteSheet(CardData card, String cardId) {
+  Future<void> _deleteCard(CardData card, String cardId) async {
+    final paneCount = AdaptiveLayout.cardPaneCountForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
+    final visibleCards = _filteredCards(
+      _cardsForDisplay(Hive.box<CardData>(HiveBoxes.cards)),
+    );
+    final leadingDeleteIndex = paneCount == 1
+        ? _leadingDeleteIndexForCard(cardId, visibleCards)
+        : null;
+
+    if (leadingDeleteIndex != null) {
+      await _animateLeadingDelete(card, cardId, leadingDeleteIndex, visibleCards);
+      return;
+    }
+
     setState(() {
+      _deletingCardIds.add(cardId);
+      _revealedCardId = null;
+      _closingRevealCardId = null;
+      _activeSwipeCardId = cardId;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 1120));
+    await CardRepository.delete(card);
+
+    if (!mounted) return;
+    setState(() {
+      _cards.removeWhere((c) => _cardId(c) == cardId);
+      _deletingCardIds.remove(cardId);
+      _revealedCardId = null;
+      _closingRevealCardId = null;
       _swipeResetToken++;
       _activeSwipeCardId = null;
     });
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => DeleteCardSheet(
-        card: card,
-        isDark: widget.isDark,
-        onDeleteConfirmed: () async {
-          setState(() {
-            _deletingCardIds.add(cardId);
-          });
+  }
 
-          await Future.delayed(const Duration(milliseconds: 750));
-          await CardRepository.delete(card);
+  int? _leadingDeleteIndexForCard(String cardId, List<CardData> visibleCards) {
+    final index = visibleCards.indexWhere((card) => _cardId(card) == cardId);
+    if (index < 0 || index > 1 || visibleCards.length <= 2) {
+      return null;
+    }
+    return index;
+  }
 
-          if (mounted) {
-            setState(() {
-              _cards.removeWhere((c) => c.cardNumber == card.cardNumber);
-              _deletingCardIds.remove(cardId);
-              _revealedCardId = null;
-              _swipeResetToken++;
-              _activeSwipeCardId = null;
-            });
-          }
-        },
-      ),
-    );
+  Future<void> _animateLeadingDelete(
+    CardData card,
+    String cardId,
+    int deleteIndex,
+    List<CardData> visibleCards,
+  ) async {
+    if (!mounted) return;
+    cancelAllReveals();
+    _incomingCardPrepController.stop();
+    _incomingCardPrepController.value = 0;
+    _leadingDeleteReflowController.stop();
+    _leadingDeleteReflowController.value = 0;
+
+    final transitionCards = visibleCards
+        .take(2 + kStackPreviewCount + 1)
+        .toList(growable: false);
+
+    setState(() {
+      _pendingIncomingCard = null;
+      _pendingLeadingDeleteCardId = cardId;
+      _pendingLeadingDeleteIndex = deleteIndex;
+      _pendingLeadingDeleteCards = transitionCards;
+      _activeSwipeCardId = cardId;
+    });
+
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      try {
+        await _scrollController.animateTo(
+          0,
+          duration: _leadingDeleteReflowDuration,
+          curve: Curves.easeOutCubic,
+        );
+      } catch (_) {}
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _leadingDeleteReflowController.forward();
+    await CardRepository.delete(card);
+
+    if (!mounted) return;
+    setState(() {
+      _cards.removeWhere((c) => _cardId(c) == cardId);
+      _pendingLeadingDeleteCardId = null;
+      _pendingLeadingDeleteIndex = null;
+      _pendingLeadingDeleteCards = const <CardData>[];
+      _revealedCardId = null;
+      _closingRevealCardId = null;
+      _swipeResetToken++;
+      _activeSwipeCardId = null;
+    });
   }
 
   Widget _buildCardsLayout(List<CardData> visibleCards) {
@@ -856,9 +935,14 @@ class HomeScreenState extends State<HomeScreen>
               cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
           _scheduleCustomImagePrecache(visibleCards, cardWidth: cardWidth);
           final incomingPreparationProgress = _incomingCardPrepProgress;
+          final leadingDeleteProgress = _leadingDeleteReflowProgress;
           final preparingIncomingStack =
               _pendingIncomingCard != null &&
               visibleCards.length >= (kStackPreviewCount + 2);
+          final preparingLeadingDelete =
+              _pendingLeadingDeleteCardId != null &&
+              _pendingLeadingDeleteIndex != null &&
+              _pendingLeadingDeleteCards.isNotEmpty;
           final leadingCards = visibleCards.take(2).toList(growable: false);
           final stackPreviewCards = visibleCards
               .skip(2)
@@ -873,14 +957,29 @@ class HomeScreenState extends State<HomeScreen>
           final reflowChildren = preparingIncomingStack
               ? reflowCards.map(_buildCardItem).toList(growable: false)
               : const <Widget>[];
+          final leadingDeleteChildren = preparingLeadingDelete
+              ? _pendingLeadingDeleteCards
+                    .map(_buildCardItem)
+                    .toList(growable: false)
+              : const <Widget>[];
           final tailCards = preparingIncomingStack
               ? visibleCards.skip(2 + kStackPreviewCount).toList(growable: false)
               : visibleCards.skip(2 + kStackPreviewCount).toList(growable: false);
+          final deleteTailCards = preparingLeadingDelete
+              ? visibleCards
+                    .skip(_pendingLeadingDeleteCards.length)
+                    .toList(growable: false)
+              : const <CardData>[];
           _scheduleTailCardPrewarm(tailCards, cardWidth: cardWidth);
           final hasStackPreview = stackPreviewCards.isNotEmpty;
-          final compactItemCount = preparingIncomingStack
-              ? 2 + tailCards.length
-              : 1 + leadingCards.length + (hasStackPreview ? 1 : 0) + tailCards.length;
+          final compactItemCount = preparingLeadingDelete
+              ? 1 + deleteTailCards.length
+              : preparingIncomingStack
+                  ? 2 + tailCards.length
+                  : 1 +
+                      leadingCards.length +
+                      (hasStackPreview ? 1 : 0) +
+                      tailCards.length;
 
           return ListView.builder(
             controller: _scrollController,
@@ -893,6 +992,25 @@ class HomeScreenState extends State<HomeScreen>
             ),
             itemCount: compactItemCount,
             itemBuilder: (context, index) {
+              if (preparingLeadingDelete) {
+                if (index == 0) {
+                  return _LeadingDeleteReflowSection(
+                    cardChildren: leadingDeleteChildren,
+                    cardWidth: cardWidth,
+                    progress: leadingDeleteProgress,
+                    deleteIndex: _pendingLeadingDeleteIndex!,
+                  );
+                }
+
+                final tailIndex = index - 1;
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: bankCardVerticalSpacing,
+                  ),
+                  child: _buildCardItem(deleteTailCards[tailIndex]),
+                );
+              }
+
               if (index == 0) {
                 return _IncomingCardPlaceholder(
                   slotKey: _incomingCardSlotKey,
@@ -1685,6 +1803,281 @@ class _IncomingTopReflowSection extends StatelessWidget {
   }
 }
 
+class _LeadingDeleteReflowSection extends StatelessWidget {
+  final List<Widget> cardChildren;
+  final double cardWidth;
+  final double progress;
+  final int deleteIndex;
+
+  const _LeadingDeleteReflowSection({
+    required this.cardChildren,
+    required this.cardWidth,
+    required this.progress,
+    required this.deleteIndex,
+  });
+
+  static const Curve _curve = Cubic(0.18, 0.88, 0.24, 1);
+
+  double _lerp(double from, double to, double t) => from + ((to - from) * t);
+  double _arc(double t, double magnitude) => -(4 * t * (1 - t) * magnitude);
+  double _drift(double t, double magnitude) => 4 * t * (1 - t) * magnitude;
+
+  double _phase(double begin, double end, {Curve curve = _curve}) {
+    return Interval(begin, end, curve: curve).transform(progress);
+  }
+
+  double _collapsedTopForStackIndex(int index) {
+    const offsets = _StackedCardListSection._collapsedTopOffsets;
+    return index < offsets.length ? offsets[index] : offsets.last;
+  }
+
+  double _collapsedScaleForStackIndex(int index) {
+    final collapsedDepth =
+        index.clamp(0, _StackedCardListSection._maxCollapsedDepth);
+    return 1 - (_StackedCardListSection._collapsedScaleStep * collapsedDepth);
+  }
+
+  Widget _buildTransitionCard({
+    required Widget child,
+    required double startTop,
+    required double endTop,
+    double startScale = 1,
+    double endScale = 1,
+    required double progress,
+    double driftMagnitude = 0,
+    double arcMagnitude = 0,
+    bool driftLeft = false,
+  }) {
+    return _StackedCardPosition(
+      top: _lerp(startTop, endTop, progress),
+      scale: _lerp(startScale, endScale, progress),
+      opacity: 1,
+      translateX: _drift(progress, driftLeft ? -driftMagnitude : driftMagnitude),
+      translateY: _arc(progress, arcMagnitude),
+      interactionsEnabled: false,
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (cardChildren.length < 7 || deleteIndex > 1) {
+      return const SizedBox.shrink();
+    }
+
+    final cardHeight = cardWidth * (cardAspectRatioHeight / cardAspectRatioWidth);
+    final itemHeight = cardHeight + _StackedCardListSection._cardTiltPadding;
+    const itemGap = bankCardVerticalSpacing;
+    final slotHeight = itemHeight + itemGap;
+    final sectionHeight = slotHeight * 6;
+    const topRow = 0.0;
+    final secondRow = slotHeight;
+    final stack0 = (slotHeight * 2) + _collapsedTopForStackIndex(0);
+    final stack1 = (slotHeight * 2) + _collapsedTopForStackIndex(1);
+    final stack2 = (slotHeight * 2) + _collapsedTopForStackIndex(2);
+    final stack3 = (slotHeight * 2) + _collapsedTopForStackIndex(3);
+    final tailRow = slotHeight * 6;
+
+    final topMotion = _phase(
+      0.34,
+      0.94,
+      curve: const Cubic(0.2, 0.96, 0.24, 1),
+    );
+    final rowToRowMotion = _phase(
+      0.38,
+      0.96,
+      curve: const Cubic(0.16, 1, 0.22, 1),
+    );
+    final stack0Motion = _phase(0.42, 0.98);
+    final stack1Motion = _phase(0.4, 0.96);
+    final stack2Motion = _phase(0.38, 0.94);
+    final tailMotion = _phase(
+      0.34,
+      0.9,
+      curve: const Cubic(0.16, 1, 0.22, 1),
+    );
+    final deletedExit = _phase(0.0, 0.28, curve: const Cubic(0.22, 1, 0.36, 1));
+    final messageOpacity = _phase(0.16, 0.46);
+
+    return SizedBox(
+      height: sectionHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          if (deleteIndex == 0) ...[
+            _buildTransitionCard(
+              child: cardChildren[6],
+              startTop: tailRow,
+              endTop: stack3,
+              startScale: 1,
+              endScale: _collapsedScaleForStackIndex(3),
+              progress: tailMotion,
+              driftMagnitude: 10,
+              arcMagnitude: 8,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[5],
+              startTop: stack3,
+              endTop: stack2,
+              startScale: _collapsedScaleForStackIndex(3),
+              endScale: _collapsedScaleForStackIndex(2),
+              progress: stack2Motion,
+              driftMagnitude: 5,
+              arcMagnitude: 10,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[4],
+              startTop: stack2,
+              endTop: stack1,
+              startScale: _collapsedScaleForStackIndex(2),
+              endScale: _collapsedScaleForStackIndex(1),
+              progress: stack1Motion,
+              driftMagnitude: 4,
+              arcMagnitude: 10,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[3],
+              startTop: stack1,
+              endTop: stack0,
+              startScale: _collapsedScaleForStackIndex(1),
+              endScale: _collapsedScaleForStackIndex(0),
+              progress: stack0Motion,
+              driftMagnitude: 3,
+              arcMagnitude: 12,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[2],
+              startTop: stack0,
+              endTop: secondRow,
+              startScale: _collapsedScaleForStackIndex(0),
+              endScale: 1,
+              progress: rowToRowMotion,
+              driftMagnitude: 8,
+              arcMagnitude: 18,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[1],
+              startTop: secondRow,
+              endTop: topRow,
+              progress: topMotion,
+              driftMagnitude: 6,
+              arcMagnitude: 12,
+              driftLeft: true,
+            ),
+          ] else ...[
+            _buildTransitionCard(
+              child: cardChildren[6],
+              startTop: tailRow,
+              endTop: stack3,
+              startScale: 1,
+              endScale: _collapsedScaleForStackIndex(3),
+              progress: tailMotion,
+              driftMagnitude: 10,
+              arcMagnitude: 8,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[5],
+              startTop: stack3,
+              endTop: stack2,
+              startScale: _collapsedScaleForStackIndex(3),
+              endScale: _collapsedScaleForStackIndex(2),
+              progress: stack2Motion,
+              driftMagnitude: 5,
+              arcMagnitude: 10,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[4],
+              startTop: stack2,
+              endTop: stack1,
+              startScale: _collapsedScaleForStackIndex(2),
+              endScale: _collapsedScaleForStackIndex(1),
+              progress: stack1Motion,
+              driftMagnitude: 4,
+              arcMagnitude: 10,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[3],
+              startTop: stack1,
+              endTop: stack0,
+              startScale: _collapsedScaleForStackIndex(1),
+              endScale: _collapsedScaleForStackIndex(0),
+              progress: stack0Motion,
+              driftMagnitude: 3,
+              arcMagnitude: 12,
+              driftLeft: true,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[2],
+              startTop: stack0,
+              endTop: secondRow,
+              startScale: _collapsedScaleForStackIndex(0),
+              endScale: 1,
+              progress: rowToRowMotion,
+              driftMagnitude: 8,
+              arcMagnitude: 18,
+            ),
+            _buildTransitionCard(
+              child: cardChildren[0],
+              startTop: topRow,
+              endTop: topRow,
+              startScale: 0.992,
+              endScale: 1,
+              progress: topMotion,
+              driftMagnitude: 0,
+              arcMagnitude: 4,
+            ),
+          ],
+          Positioned(
+            top: deleteIndex == 0 ? topRow : secondRow,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: itemHeight,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Opacity(
+                    opacity: messageOpacity,
+                    child: const _DeletedRowMessage(),
+                  ),
+                  Transform.translate(
+                    offset: Offset(-(cardWidth + 48) * deletedExit, 0),
+                    child: cardChildren[deleteIndex],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeletedRowMessage extends StatelessWidget {
+  const _DeletedRowMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = SwalletPalette(isDark);
+
+    return Text(
+      'Card deleted',
+      textAlign: TextAlign.center,
+      style: SwalletText.title.copyWith(
+        color: palette.text,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
 class _IncomingCardPlaceholder extends StatelessWidget {
   final GlobalKey slotKey;
   final double progress;
@@ -1792,10 +2185,11 @@ class _SwipeableCardActions extends StatefulWidget {
   final String cardId;
   final String? activeSwipeCardId;
   final int resetToken;
+  final bool isDeleting;
   final VoidCallback onSwipeStarted;
   final VoidCallback onSwipeClosed;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final Future<void> Function() onDeleteConfirmed;
 
   const _SwipeableCardActions({
     required this.child,
@@ -1803,10 +2197,11 @@ class _SwipeableCardActions extends StatefulWidget {
     required this.cardId,
     required this.activeSwipeCardId,
     required this.resetToken,
+    required this.isDeleting,
     required this.onSwipeStarted,
     required this.onSwipeClosed,
     required this.onEdit,
-    required this.onDelete,
+    required this.onDeleteConfirmed,
   });
 
   @override
@@ -1818,15 +2213,23 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
   static const double _buttonGap = 8;
   static const double _buttonInset = 12;
   static const double _cardActionGap = 12;
-  static const double _actionWidth =
+  static const double _actionPanelWidth =
       _buttonInset + (_buttonSize * 2) + _buttonGap;
-  static const double _openOffset = _actionWidth + _cardActionGap;
+  static const double _confirmPanelWidth = 236;
   static const Duration _snapDuration = Duration(milliseconds: 220);
 
   double _dragOffset = 0;
   bool _isDragging = false;
+  bool _confirmingDelete = false;
 
-  bool get _isOpen => _dragOffset <= -_openOffset * 0.45;
+  double get _panelWidth =>
+      _confirmingDelete ? _confirmPanelWidth : _actionPanelWidth;
+
+  double get _revealWidth =>
+      (_confirmingDelete ? _confirmPanelWidth : _actionPanelWidth) +
+      _cardActionGap;
+
+  bool get _isOpen => _dragOffset <= -_revealWidth * 0.45;
 
   @override
   void didUpdateWidget(covariant _SwipeableCardActions oldWidget) {
@@ -1834,11 +2237,16 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
     if (widget.resetToken != oldWidget.resetToken && _dragOffset != 0) {
       _dragOffset = 0;
       _isDragging = false;
+      _confirmingDelete = false;
     }
     if (widget.activeSwipeCardId != oldWidget.activeSwipeCardId &&
         widget.activeSwipeCardId != widget.cardId &&
         _dragOffset != 0) {
       _dragOffset = 0;
+      _isDragging = false;
+      _confirmingDelete = false;
+    }
+    if (widget.isDeleting && !oldWidget.isDeleting) {
       _isDragging = false;
     }
   }
@@ -1850,7 +2258,7 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
 
   void _handleDragUpdate(DragUpdateDetails details) {
     setState(() {
-      _dragOffset = (_dragOffset + details.delta.dx).clamp(-_openOffset, 0.0);
+      _dragOffset = (_dragOffset + details.delta.dx).clamp(-_revealWidth, 0.0);
     });
   }
 
@@ -1860,7 +2268,10 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
 
     setState(() {
       _isDragging = false;
-      _dragOffset = shouldOpen ? -_openOffset : 0;
+      _dragOffset = shouldOpen ? -_revealWidth : 0;
+      if (!shouldOpen) {
+        _confirmingDelete = false;
+      }
     });
     if (!shouldOpen) {
       widget.onSwipeClosed();
@@ -1871,56 +2282,49 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
     setState(() {
       _isDragging = false;
       _dragOffset = 0;
+      _confirmingDelete = false;
     });
     widget.onSwipeClosed();
   }
 
   void _closeAndRun(VoidCallback action) {
-    setState(() => _dragOffset = 0);
+    setState(() {
+      _dragOffset = 0;
+      _confirmingDelete = false;
+    });
     widget.onSwipeClosed();
     action();
   }
 
+  void _showInlineDeleteConfirmation() {
+    setState(() {
+      _confirmingDelete = true;
+      _dragOffset = -_revealWidth;
+      _isDragging = false;
+    });
+  }
+
+  Future<void> _confirmDelete() async {
+    await widget.onDeleteConfirmed();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final progress = (-_dragOffset / _openOffset).clamp(0.0, 1.0);
+    final progress = (-_dragOffset / _revealWidth).clamp(0.0, 1.0);
     final scale = 1.0 - (0.035 * progress);
+    final revealedWidth = (-_dragOffset).clamp(0.0, _revealWidth);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onHorizontalDragStart: _handleDragStart,
-      onHorizontalDragUpdate: _handleDragUpdate,
-      onHorizontalDragEnd: _handleDragEnd,
-      onHorizontalDragCancel: _handleDragCancel,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.centerRight,
-        children: [
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.centerRight,
-              widthFactor: 1,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CardActionButton(
-                    icon: Icons.edit_rounded,
-                    isDark: widget.isDark,
-                    onTap: () => _closeAndRun(widget.onEdit),
-                  ),
-                  const SizedBox(width: _buttonGap),
-                  CardActionButton(
-                    icon: Icons.delete_rounded,
-                    isDark: widget.isDark,
-                    destructive: true,
-                    onTap: () => _closeAndRun(widget.onDelete),
-                  ),
-                  const SizedBox(width: _buttonInset),
-                ],
-              ),
-            ),
-          ),
-          AnimatedContainer(
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.centerRight,
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragStart: widget.isDeleting ? null : _handleDragStart,
+          onHorizontalDragUpdate: widget.isDeleting ? null : _handleDragUpdate,
+          onHorizontalDragEnd: widget.isDeleting ? null : _handleDragEnd,
+          onHorizontalDragCancel: widget.isDeleting ? null : _handleDragCancel,
+          child: AnimatedContainer(
             duration: _isDragging ? Duration.zero : _snapDuration,
             curve: Curves.easeOutCubic,
             transform: Matrix4.identity()
@@ -1929,7 +2333,163 @@ class _SwipeableCardActionsState extends State<_SwipeableCardActions> {
             transformAlignment: Alignment.center,
             child: widget.child,
           ),
-        ],
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: revealedWidth == 0,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: revealedWidth,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: AnimatedContainer(
+                      duration: _snapDuration,
+                      curve: Curves.easeOutCubic,
+                      width: _panelWidth,
+                      alignment: Alignment.centerRight,
+                      child: _confirmingDelete
+                          ? _InlineDeleteConfirmation(
+                              isDark: widget.isDark,
+                              onCancel: () {
+                                setState(() {
+                                  _confirmingDelete = false;
+                                  _dragOffset =
+                                      -(_actionPanelWidth + _cardActionGap);
+                                });
+                              },
+                              onConfirm: _confirmDelete,
+                            )
+                          : SizedBox(
+                              width: _actionPanelWidth,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CardActionButton(
+                                    icon: Icons.edit_rounded,
+                                    isDark: widget.isDark,
+                                    onTap: () => _closeAndRun(widget.onEdit),
+                                  ),
+                                  const SizedBox(width: _buttonGap),
+                                  CardActionButton(
+                                    icon: Icons.delete_rounded,
+                                    isDark: widget.isDark,
+                                    destructive: true,
+                                    onTap: _showInlineDeleteConfirmation,
+                                  ),
+                                  const SizedBox(width: _buttonInset),
+                                ],
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InlineDeleteConfirmation extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onCancel;
+  final Future<void> Function() onConfirm;
+
+  const _InlineDeleteConfirmation({
+    required this.isDark,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SwalletPalette(isDark);
+
+    return SizedBox(
+      width: double.infinity,
+      child: SizedBox(
+        height: 108,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Delete this card?',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: SwalletText.section.copyWith(color: palette.text),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'This action is permanent and cannot be undone.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: SwalletText.caption.copyWith(
+                  color: palette.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: Material(
+                        color: palette.surfaceHigh,
+                        borderRadius: BorderRadius.circular(16),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: onCancel,
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: SwalletText.button.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: palette.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: Material(
+                        color: SwalletColors.destructive,
+                        borderRadius: BorderRadius.circular(16),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: onConfirm,
+                          child: Center(
+                            child: Text(
+                              'Delete card',
+                              style: SwalletText.button.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: palette.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
